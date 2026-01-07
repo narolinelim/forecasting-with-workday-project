@@ -78,5 +78,8 @@ process_expense_data <- function(df) {
     select(index, everything()) %>%
     ungroup() %>% # Ungroup after rowwise operation
 
+    # Remove rows with NA in item_id
+    filter(!is.na(item_id))
+    
   return(expense_df)
 }
