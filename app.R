@@ -10,17 +10,17 @@ run_setup()
 
 # 2. Load packages
 
-library(shiny)        # Core framework for the web app
-library(bslib)        # For modern Bootstrap themes and styling
-library(DT)           # For interactive data tables
-library(dplyr)        # For data manipulation (filter, select, mutate)
-library(readxl)       # For reading Excel files
-library(openxlsx)     # For creating and formatting Excel exports
-library(tidyr)        # For data tidying (e.g., replace_na)
-library(rmarkdown)    # For generating PDF reports
-library(shinyjs)      # For JavaScript operations (hiding/disabling inputs, onclick events)
-library(tinytex)      # Helper for compiling LaTeX to PDF
-library(RColorBrewer) # For professional color palettes
+library(shiny)
+library(bslib)
+library(DT)
+library(dplyr)
+library(readxl)
+library(openxlsx)
+library(tidyr)
+library(rmarkdown)
+library(shinyjs)
+library(tinytex)
+library(RColorBrewer)
 
 
 # 3. Load UI
@@ -33,9 +33,10 @@ ui <- main_ui_layout()
 server <- function(input, output, session) {
   
   # Memory (to be filled)
-  values <- reactiveValues()
+  values <- reactiveValues(NULL)
   
   main_server_logic(input, output, session, values)
+  main_output()
   
 }
 
