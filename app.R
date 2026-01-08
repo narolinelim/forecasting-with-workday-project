@@ -5,6 +5,7 @@ source("requirements/packages.R")
 
 # 1. Installing packages
 
+shiny::devmode(TRUE)
 run_setup()
 
 
@@ -32,11 +33,9 @@ ui <- main_ui_layout()
 # 4. Load Server
 server <- function(input, output, session) {
   
-  # Memory (to be filled)
-  values <- reactiveValues(NULL)
   
-  main_server_logic(input, output, session, values)
-  main_output()
+  main_server_logic(input, output, session)
+  # main_output()
   
 }
 
