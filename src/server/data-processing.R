@@ -21,6 +21,13 @@ process_funding_data <- function(df) {
   # df: data frame read from the excel sheet
   # Returns:
   # funding_sources_df: processed funding sources data frame
+  #
+  # Dataframe structure:
+  # - source_id: Character
+  # - allowed_categories: List of Character
+  # - valid_from: Date
+  # - valid_to: Date
+  # - amount: Numeric
 
   funding_sources_df <- df %>%
     select(`Source ID`, `Allowed Categories`, `Valid From`, `Valid To`, `Amount`) %>%
@@ -40,7 +47,6 @@ process_funding_data <- function(df) {
     ) %>%
     rowwise() %>%
     mutate(allowed_categories = list(allowed_categories)) %>%
-    unnest(allowed_categories) %>%
 
     # Add index
     mutate(index = row_number()) %>%
@@ -61,6 +67,13 @@ process_expense_data <- function(df) {
   # df: data frame read from the excel sheet
   # Returns:
   # expense_df: processed expense data frame
+  # 
+  # Dataframe structure:
+  # - item_id: Character
+  # - expense_category: Character
+  # - planned_amount: Numeric
+  # - latest_payment_date: Date
+  
 
   expense_df <- df %>%
     select(`Item ID`, `Expense Category`, `Planned Amount`, `Latest Payment Date`) %>%
@@ -76,7 +89,6 @@ process_expense_data <- function(df) {
     # Add index
     mutate(index = row_number()) %>%
     select(index, everything()) %>%
-    ungroup() %>% # Ungroup after rowwise operation
 
     # Remove rows with NA in item_id
     filter(!is.na(item_id))
