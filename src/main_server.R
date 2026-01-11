@@ -62,6 +62,36 @@ main_server_logic <- function(input, output, session, values) {
   })
   
   
+  # Render first priority
+  output$first_priority <- renderUI({
+    
+    if (input$select_first_priority_item == "Latest Payment Date") {
+      latest_payment_date_view()
+    } else {
+      categories_view()
+    }
+    
+  })
+  
+  # Render second priority
+  output$second_priority <- renderUI({
+    
+    if (input$select_second_priority_item == "Latest Payment Date") {
+      latest_payment_date_view()
+    } else if (input$select_second_priority_item == "Categories") {
+      categories_view()
+    } else {
+      div("No second priority.")
+    }
+    
+  })
+  
+  # Drag feature
+  output$new_order <- renderPrint({
+    input$drag_categories
+  })
+  
+  
   # Event: Adding New Funding
   observeEvent(input$add_funding, {
     showModal(upload_funding_modal())
@@ -79,11 +109,15 @@ main_server_logic <- function(input, output, session, values) {
   # Sample table outputs (for viewings only)
   output$sample_budget_table <- renderDT({datatable(penguins)})
   
+  output$sample_leftover_table <- renderDT({datatable(penguins)})
+  
   output$sample_funding_table <- renderDT({datatable(penguins)})
   
   output$sample_expense_table <- renderDT({datatable(penguins)})
   
   output$sample_manual_table <- renderDT({datatable(penguins)})
+  
+  output$sample_table <- renderDT({datatable(penguins)})
   
 }
 

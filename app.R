@@ -3,9 +3,9 @@ source("src/main_ui.R")
 source("src/main_server.R")
 source("requirements/packages.R")
 
+
 # 1. Installing packages
 
-options(shiny.autoreload = TRUE)
 run_setup()
 
 
@@ -24,6 +24,7 @@ library(tinytex)
 library(RColorBrewer)
 library(palmerpenguins)
 library(shinyWidgets)
+library(sortable)
 
 
 # 3. Load UI

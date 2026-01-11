@@ -77,13 +77,33 @@ dashboard_ui <- function() {
           ),
           full_screen = TRUE,
           style = "padding: 16px; font-weight: 400; font-size: 16px;"
-        ),
-        
-        actionButton("budget_download", "↓ Download Budget Allocation",
-                     class = "budget_download_btn")
+        )
       )
 
     ),
+    
+    div(
+      "Unallocated Funding",
+      class = "content-title",
+      id = "leftover-box",
+      
+      div(
+        id = "leftover-container",
+        class = "info-containers",
+        
+        card(
+          div(
+            DTOutput("sample_leftover_table")
+          ),
+          full_screen = TRUE,
+          style = "padding: 16px; font-weight: 400; font-size: 16px;"
+        )
+        
+      )
+    ),
+    
+    actionButton("budget_download", "↓ Download Budget Allocation",
+                 class = "budget_download_btn"),
     
     actionButton("exit_session", "Exit Session", class = "exit_session_btn"),
 

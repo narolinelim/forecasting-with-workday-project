@@ -9,8 +9,7 @@ forecast_ui <- function() {
     class = "result-container",
     
     div(
-      "Forecast",
-      class = "content-title",
+      div("Forecast", class = "content-title"),
       
       div(
         class = "info-containers",
@@ -64,7 +63,7 @@ forecast_ui <- function() {
                 label = NULL,
                 choices = c("Column Priority", "Manual Priority")
               ),
-              style = "margin-top: 5px;"
+              style = "margin-top: 15px;"
             ),
             
             uiOutput("priority_card")
@@ -99,6 +98,7 @@ column_priority_ui <- function() {
     
     div(
       class = "priority-cards",
+      
       card(
         id = "first-priority",
         class = "card-style",
@@ -112,7 +112,9 @@ column_priority_ui <- function() {
               label = NULL,
               choices = c("Latest Payment Date", "Categories")
             )
-          )
+          ),
+          
+          uiOutput("first_priority")
         ),
         style = "padding: 0;"
       )
@@ -131,21 +133,46 @@ column_priority_ui <- function() {
             selectInput(
               "select_second_priority_item",
               label = NULL,
-              choices = c("Categories", "Latest Payment Date")
+              choices = c("Categories", "Latest Payment Date", "None")
             )
-          )
+          ),
+          
+          uiOutput("second_priority")
         ),
-        
         style = "padding: 0;"
       )
     )
   )
   
   
-  
 }
 
 
+
+latest_payment_date_view <- function() {
+  DTOutput("sample_table")
+}
+
+
+categories <- list("Salary", "Travel", "Equipment")
+
+
+categories_view <- function(id) {
+  
+  div(
+    tagList(
+      rank_list(
+        text = "drag your items",
+        labels = categories,
+        input_id = "drag_categories",
+        options = sortable_options(swap = TRUE)
+      ),
+      verbatimTextOutput("new_order")
+    )
+    
+  )
+  
+}
 
 
 
