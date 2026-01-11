@@ -13,7 +13,7 @@ main_server_logic <- function(input, output, session, values) {
   
   
   # Current page
-  current_view <- reactiveVal("dashboard")
+  current_view <- reactiveVal("forecast")
   
   observeEvent(input$dashboard_tab, current_view("dashboard"))
   observeEvent(input$forecast_tab, current_view("forecast"))

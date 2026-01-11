@@ -18,6 +18,8 @@ forecast_ui <- function() {
         # Upload Spreadsheet Card
         
         card(
+          id = "upload-card",
+          
           div(
             p("Upload the Excel file", class = "card-title"),
             
@@ -50,7 +52,7 @@ forecast_ui <- function() {
         # Priority Card
         
         card(
-          id = "set_priority_card",
+          id = "set-priority-card",
           full_screen = TRUE,
           
           div(
@@ -60,14 +62,15 @@ forecast_ui <- function() {
               selectInput(
                 "select_priority",
                 label = NULL,
-                choices = c("Manual Priority", "Column Priority")
+                choices = c("Column Priority", "Manual Priority")
               ),
-              style = "margin-left: 10px; margin-top: 5px;"
+              style = "margin-top: 5px;"
             ),
             
             uiOutput("priority_card")
             
-          )
+          ),
+          style = "padding: 0; font-weight: normal;"
         )
       ),
       
@@ -91,7 +94,52 @@ manual_priority_ui <- function() {
 
 column_priority_ui <- function() {
   
-  div("TBC...")
+  div(
+    id = "priority-container",
+    
+    div(
+      class = "priority-cards",
+      card(
+        id = "first-priority",
+        class = "card-style",
+        
+        div(
+          p("1st Priority", style = "margin-bottom: 5px; font-size: 16px;"),
+          
+          div(
+            selectInput(
+              "select_first_priority_item",
+              label = NULL,
+              choices = c("Latest Payment Date", "Categories")
+            )
+          )
+        ),
+        style = "padding: 0;"
+      )
+    ),
+    
+    div(
+      class = "priority-cards",
+      card(
+        id = "second-priority",
+        class = "card-style",
+        
+        div(
+          p("2nd Priority", style = "margin-bottom: 5px; font-size: 16px;"),
+          
+          div(
+            selectInput(
+              "select_second_priority_item",
+              label = NULL,
+              choices = c("Categories", "Latest Payment Date")
+            )
+          )
+        ),
+        
+        style = "padding: 0;"
+      )
+    )
+  )
   
   
   

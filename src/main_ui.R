@@ -150,15 +150,15 @@ main_ui_layout <- function() {
         
         .card-title {
           font-size: 20px;
-          margin-left: 10px;
           margin-bottom: 0;
+          font-weight: 600;
         }
         
         #upload-container {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          margin: 15px 10px 0 10px;
+          margin-top: 15px;
         }
         
         #left-upload {
@@ -230,7 +230,31 @@ main_ui_layout <- function() {
           border-radius: 15px;
         }
         
+        #priority-container {
+          display: flex;
+          gap: 20px;
+          width: 100%;
+        }
         
+        .priority-cards {
+          flex: 1;
+          min-width: 0;
+        }
+        
+        #set-priority-card .html-fill-container,
+        #upload-card .html-fill-container {
+          padding: 16px 25px;
+        }
+        
+        #priority-container .html-fill-container {
+          padding: 16px 25px;
+        }
+        
+        .card-style {
+          padding: 0;
+          background-color: #F5F5F5;
+          border: none;
+        }
         
         
         
