@@ -22,6 +22,9 @@ library(shinyjs)
 library(tinytex)
 library(RColorBrewer)
 
+library(gurobi)
+library(Matrix)
+
 
 # 3. Load UI
 
