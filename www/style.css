@@ -315,13 +315,11 @@
   margin: 30px 0 20px 0;
 }
 
-/* Ensure table rows are not triggering search */
-#sample_manual_table tbody tr {
-  pointer-events: auto;
-}
-
+/* Prevent text selection during drag */
 #sample_manual_table tbody td {
-  cursor: default;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
 }
 
 /* FUNDING AND EXPENSE PAGES */
