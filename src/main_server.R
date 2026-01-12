@@ -14,6 +14,36 @@ main_server_logic <- function(input, output, session, values) {
   
   # Current page
   current_view <- reactiveVal("dashboard")
+
+  # Test data for manual priority table
+  table_data <- reactiveVal({
+    data.frame(
+      Priority = 1:5,
+      Project_Name = c(
+        "Project Alpha",
+        "Project Beta",
+        "Project Gamma",
+        "Project Delta",
+        "Project Epsilon"
+      ),
+      Category = c(
+        "Research",
+        "Infrastructure",
+        "Education",
+        "Research",
+        "Infrastructure"
+      ),
+      Amount = c(50000, 75000, 30000, 45000, 60000),
+      Payment_Date = as.Date(c(
+        "2026-03-15",
+        "2026-04-01",
+        "2026-02-20",
+        "2026-05-10",
+        "2026-03-25"
+      )),
+      stringsAsFactors = FALSE
+    )
+  })
   
   observeEvent(input$dashboard_tab, current_view("dashboard"))
   observeEvent(input$forecast_tab, current_view("forecast"))
@@ -57,7 +87,8 @@ main_server_logic <- function(input, output, session, values) {
     current_view("dashboard")
   })
   
-  
+
+  # --- FEATURES: Manual Priority ---
   # Render priority mode
   output$priority_card <- renderUI({
     
@@ -68,8 +99,49 @@ main_server_logic <- function(input, output, session, values) {
     }
     
   })
+
+  # JavaScript callback for row reorder
+  callback <- c(
+    "table.on('row-reorder', function(e, details, edit){",
+    "  var oldRows = [], newRows = [];",
+    "  for(let i=0; i < details.length; ++i){",
+    "    oldRows.push(details[i].oldData);",
+    "    newRows.push(details[i].newData);",
+    "  }",
+    "  Shiny.setInputValue('manual_table_rowreorder', {old: oldRows, new: newRows});",
+    "});"
+  )
+
+  # Create proxy for table updates
+  proxy <- dataTableProxy("sample_manual_table")
+
+  # Observe row reordering events
+  observeEvent(input$manual_table_rowreorder, {
+    req(input$manual_table_rowreorder)
+
+    # Get old and new positions
+    old <- unlist(input$manual_table_rowreorder$old)
+    new <- unlist(input$manual_table_rowreorder$new)
+
+    # Get current data
+    dat <- table_data()
+
+    # Reorder rows
+    dat[new, ] <- dat[old, ]
+
+    # Update Priority column to reflect new order
+    dat$Priority <- 1:nrow(dat)
+
+    # Update reactive value
+    table_data(dat)
+
+    # Replace data in table without resetting pagination
+    replaceData(proxy, dat, resetPaging = FALSE)
+  })
+
+
   
-  
+  # --- FEATURES: Column Priority ---
   # Render first priority
   output$first_priority <- renderUI({
     
@@ -121,9 +193,21 @@ main_server_logic <- function(input, output, session, values) {
   output$sample_funding_table <- renderDT({datatable(penguins)})
   
   output$sample_expense_table <- renderDT({datatable(penguins)})
-  
-  output$sample_manual_table <- renderDT({datatable(penguins)})
-  
+
+  output$sample_manual_table <- renderDT({
+    datatable(
+      table_data(),
+      extensions = 'RowReorder',
+      selection = 'none',
+      callback = JS(callback),
+      options = list(
+        rowReorder = TRUE,
+        pageLength = 25
+      ),
+      rownames = FALSE
+    )
+  })
+
   output$sample_table <- renderDT({datatable(penguins)})
   
 }
