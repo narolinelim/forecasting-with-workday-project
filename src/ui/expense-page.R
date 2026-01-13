@@ -1,11 +1,6 @@
-
-
 # UI for Expense Page
-
 expense_ui <- function() {
-  
   # note: content-title messing with bold text!
-  
   div(
     class = "result-container",
     
@@ -23,7 +18,6 @@ expense_ui <- function() {
         div(
           actionButton("add_expense", "+ Add Expense", class = "add_data_btn")
         )
-        
       ),
       
       card(
@@ -34,18 +28,12 @@ expense_ui <- function() {
         class = "info-containers",
         style = "padding: 16px;"
       )
-      
     ),
-    
-    actionButton("initial_download", "↓ Download Excel file", class = "initial-excel-download")
-    
+    actionButton("initial_download", "↓ Download Excel file", class = "initial-excel-download") 
   )
-  
 }
 
-
-upload_expense_modal <- function() {
-  
+upload_expense_modal <- function() {  
   tagAppendAttributes(
     modalDialog(
       title = div(
@@ -92,7 +80,6 @@ upload_expense_modal <- function() {
           )
         ),
         
-        
         # Latest Payment Date
         div(
           id = "latest-payment-date",
@@ -120,13 +107,10 @@ upload_expense_modal <- function() {
             placeholder = "Enter note... (optional)"
           )
         )
-        
       )
     ),
     class = "add-expense-popup"
   )
-  
-  
 }
 
 
