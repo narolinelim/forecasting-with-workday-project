@@ -3,6 +3,9 @@ source("src/main_ui.R")
 source("src/main_server.R")
 source("requirements/packages.R")
 
+
+options(shiny.autoreload = TRUE)
+
 # 1. Installing packages
 
 run_setup()
@@ -21,6 +24,9 @@ library(rmarkdown)
 library(shinyjs)
 library(tinytex)
 library(RColorBrewer)
+library(palmerpenguins)
+library(shinyWidgets)
+library(sortable)
 
 library(gurobi)
 library(Matrix)
@@ -53,8 +59,8 @@ server <- function(input, output, session) {
     allocation_result = data.frame()
   )
   
-  main_server_logic(input, output, session, values)
-  main_output()
+  main_server_logic(input, output, session)
+  # main_output()
   
 }
 

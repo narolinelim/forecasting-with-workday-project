@@ -1,6 +1,7 @@
 
+options(repos = c(CRAN = "https://cloud.r-project.org"))
 
-REQUIRED_PACKAGES <- c("shiny", "bslib", "DT", "dplyr", "readxl", "openxlsx", "tidyr", "rmarkdown", "shinyjs", "tinytex", "RColorBrewer", "gurobi", "Matrix")
+REQUIRED_PACKAGES <- c("shiny", "bslib", "DT", "dplyr", "readxl", "openxlsx", "tidyr", "rmarkdown", "shinyjs", "tinytex", "RColorBrewer", "palmerpenguins", "shinyWidgets", "sortable")
 
 run_setup <- function() {
   # Identify which packages are not yet installed on the system
