@@ -116,7 +116,7 @@ main_server_logic <- function(input, output, session, values) {
 
       values$funding_sources <- funding_sources_df
       values$expenses <- expense_df
-      showNotification("Upload successful", type = "message", duration = 3)
+      showNotification("Data saved successfully", type = "message", duration = 3)
     }, error = function(e) {
       showNotification(paste("Upload failed:", e$message), type = "error", duration = NULL)
     })
@@ -218,7 +218,15 @@ main_server_logic <- function(input, output, session, values) {
   })
 
   output$sample_expense_table <- renderDT({
-    datatable(values$expenses)
+    datatable(
+      values$expenses |> select(-old_index),
+      options = list(
+        pageLength = 10,
+        scrollX = TRUE,
+        dom = '<"row"<"col-sm-12"l>><"row"<"col-sm-12"f>>rtip'
+      ),
+      rownames = FALSE
+    )
   })
 
   output$sample_manual_table <- renderDT({
