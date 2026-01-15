@@ -13,10 +13,10 @@ add_funding_button <- function(input, output, session, values) {
 
 add_expense_button <- function(input, output, session, values) {
   new_row <- data.frame(
-    priority = paste0("E-", nrow(values$expenses) + 1),
-    item_id = input$expense_item_id,
-    expense_category = input$expense_category,
-    planned_amount = as.numeric(input$planned_amount),
+    priority = nrow(values$expenses) + 1,
+    item_id = paste0("E-", nrow(values$expenses) + 1),
+    expense_category = input$expense_type,
+    planned_amount = as.numeric(input$expense_amount),
     latest_payment_date = as.Date(input$latest_payment_date),
     notes = input$expense_note,
     old_index = nrow(values$expenses) + 1

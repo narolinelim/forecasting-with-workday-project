@@ -48,7 +48,7 @@ input_excel_download <- function(values) {
   colnames(export_expenses) <- c("Priority", "Item ID", "Expense Category", "Planned Amount", "Latest Payment Date", "Notes", "old_index")
   writeData(wb, "Expenses", export_expenses |> select(-old_index), withFilter = TRUE)
 
-  colnames(export_funding) <- c("Source ID", "Allowed Categories", "Valid From", "Valid To", "Amount", "Notes")
+  colnames(export_funding) <- c("Source ID", "Funding Source", "Allowed Categories", "Valid From", "Valid To", "Amount", "Notes")
   writeData(wb, "Funding", export_funding, withFilter = TRUE)
 
   wb
@@ -77,12 +77,11 @@ create_budget_template_wb <- function() {
     "Funding",
     data.frame(
       `Source ID` = character(),
-      `Name` = character(),
+      `Funding Source` = character(),
       `Allowed categories` = character(),
       `Valid From` = character(),
       `Valid To` = character(),
       `Amount` = numeric(),
-      `Probability` = numeric(),
       `Notes` = character(),
       check.names = FALSE
     )
