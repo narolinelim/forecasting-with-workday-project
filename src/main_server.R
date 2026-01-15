@@ -7,10 +7,11 @@ source("src/server/data-processing.R")
 source("src/server/io.R")
 source("src/server/sorting.R")
 source("src/server/graph.R")
+source("src/server/buttons.R")
 
 main_server_logic <- function(input, output, session, values) {
   # Current page
-  current_view <- reactiveVal("dashboard")
+  current_view <- reactiveVal("funding")
 
   # --- EVENTS: Navigation between tabs ---
   observeEvent(input$dashboard_tab, current_view("dashboard"))
@@ -197,11 +198,21 @@ main_server_logic <- function(input, output, session, values) {
   # Adding new funding form
   observeEvent(input$add_funding, {
     showModal(upload_funding_modal())
+
+    observeEvent(input$add_funding_confirm, {
+      add_funding_button(input, output, session, values)
+      removeModal()
+    })
   })
 
   # Adding new expense form
   observeEvent(input$add_expense, {
     showModal(upload_expense_modal())
+
+    observeEvent(input$add_expense_confirm, {
+      add_expense_button(input, output, session, values)
+      removeModal()
+    })
   })
 
   # Sample table outputs (for viewings only)
