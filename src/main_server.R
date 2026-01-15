@@ -241,7 +241,7 @@ main_server_logic <- function(input, output, session, values) {
       ),
       rownames = FALSE
     )
-  })
+  }, server = TRUE)
 
   # output$sample_table <- renderDT({
   #   datatable(
