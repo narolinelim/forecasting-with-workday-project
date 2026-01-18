@@ -35,7 +35,7 @@ main_ui_layout <- function() {
     useShinyjs(),
     
     sidebar = sidebar(
-      width = 300,
+      width = 270,
       
       actionButton("dashboard_tab", "Dashboard", class = "dashboard_tab_btn", class = "tab-buttons"),
       actionButton("forecast_tab", "Forecast", class = "forecast_tab_btn", class = "tab-buttons"),
@@ -45,7 +45,7 @@ main_ui_layout <- function() {
     
     uiOutput("tab_content"),
     
-    
+
     tags$body(tags$link(rel = "stylesheet", href = "style.css"))
     
     

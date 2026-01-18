@@ -23,9 +23,9 @@ dashboard_ui <- function() {
           ),
           
           value_box(
-            title = "Ending Balance",
+            title = "Number of Shortfalls",
             "0",
-            "Balance after all expenses",
+            "Total number of shortfalls",
             full_screen = FALSE,
             class = "info-box"
           )
@@ -45,10 +45,9 @@ dashboard_ui <- function() {
             ),
 
             value_box(
-              title = "Shortfall Percentage",
+              title = "Shortfall Breakdown",
               "N/A",
-              full_screen = FALSE,
-              class = "info-box"
+              full_screen = TRUE
             )
           )
         )

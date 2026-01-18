@@ -73,64 +73,117 @@ manual_priority_ui <- function() {
   )
 }
 
+
 # Column Priority View
 column_priority_ui <- function() {
+  
   div(
-    id = "priority-container",
     
     div(
-      class = "priority-cards",
-      card(
-        id = "first-priority",
-        class = "card-style",
-
-        div(
-          p("1st Priority", style = "margin-bottom: 5px; font-size: 16px;"),
+      id = "priority-container",
+      
+      div(
+        class = "priority-cards",
+        card(
+          id = "first-priority",
+          class = "card-style",
           
           div(
-            class = "select_priority_dropdown",
-            selectInput(
-              "select_first_priority_item",
-              label = NULL,
-              choices = c("Latest Payment Date", "Categories")
-            )
+            p("1st Priority", style = "margin-bottom: 5px; font-size: 16px;"),
+            
+            div(
+              class = "select_priority_dropdown",
+              selectInput(
+                "select_first_priority_item",
+                label = NULL,
+                choices = c("Payment Date", "Categories")
+              )
+            ),
+            uiOutput("first_priority")
           ),
-          uiOutput("first_priority")
-        ),
-        style = "padding: 0;"
+          style = "padding: 0;"
+        )
+      ),
+      
+      div(
+        class = "priority-cards",
+        card(
+          id = "second-priority",
+          class = "card-style",
+          
+          div(
+            p("2nd Priority", style = "margin-bottom: 5px; font-size: 16px;"),
+            
+            div(
+              class = "select_priority_dropdown",
+              
+              selectInput(
+                "select_second_priority_item",
+                label = NULL,
+                choices = c("Categories", "Payment Date", "None")
+              )
+            ),
+            uiOutput("second_priority")
+          ),
+          style = "padding: 0;"
+        )
       )
+      
     ),
     
+    hr(),
+    
+    # Resulting Table from arranging priority
     div(
-      class = "priority-cards",
-      card(
-        id = "second-priority",
-        class = "card-style",
-        
+      p("Result Table", class = "card-title"),
+      
+      div(
+        DTOutput("sample_priority_table"),
+        style = "padding: 16px; font-weight: 400; font-size: 16px;"
+      )
+    )
+  )
+
+  
+}
+
+# Column Priority: Latest Payment Date View
+payment_date_view <- function() {
+  #DTOutput("sample_table")
+
+  div(
+    id = "payment-date-option",
+    
+    radioButtons(
+      inputId = "payment-date-options",
+      label = NULL,
+      choiceNames = list(
         div(
-          p("2nd Priority", style = "margin-bottom: 5px; font-size: 16px;"),
+          class = "radio-row",
           
           div(
-            class = "select_priority_dropdown",
-            
-            selectInput(
-              "select_second_priority_item",
-              label = NULL,
-              choices = c("Categories", "Latest Payment Date", "None")
-            )
-          ),
-          uiOutput("second_priority")
+            p("Earliest Payment Date", class = "radio-title"),
+            p("Sort expenses by earliest payment date", class = "radio-body")
+          )
+          
         ),
-        style = "padding: 0;"
-      )
+        
+        div(
+          class = "radio-row",
+          
+          div(
+            p("Latest Payment Date", class = "radio-title"),
+            p("Sort expenses by latest payment date", class = "radio-body")
+            
+          )
+        )
+      ),
+      choiceValues = c("earliest_payment_date", "latest_payment_date")
     )
   )
 }
 
-# Column Priority: Latest Payment Date View
-latest_payment_date_view <- function() {
-  DTOutput("sample_table")
-}
+
 
 # Predefined Categories
 categories <- list("Salary", "Travel", "Equipment", "Cheese")
@@ -156,10 +209,7 @@ categories_view <- function() {
           rank_list(
             text = NULL,
             labels = categories,
-            input_id = "drag_categories",
-            options = sortable_options(
-              swap = TRUE
-            )
+            input_id = "drag_categories"
           )
         )
       )

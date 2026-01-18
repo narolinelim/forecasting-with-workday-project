@@ -4,8 +4,6 @@ source("src/main_server.R")
 source("requirements/packages.R")
 
 
-options(shiny.autoreload = TRUE)
-
 # 1. Installing packages
 
 run_setup()
@@ -27,9 +25,11 @@ library(RColorBrewer)
 library(palmerpenguins)
 library(shinyWidgets)
 library(sortable)
+library(ggplot2)
+library(plotly)
 
-#library(gurobi)
-#library(Matrix)
+library(gurobi)
+library(Matrix)
 
 
 # 3. Load UI
