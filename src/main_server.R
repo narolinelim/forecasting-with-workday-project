@@ -10,7 +10,7 @@ source("src/server/graph.R")
 
 main_server_logic <- function(input, output, session, values) {
   # Current page
-  current_view <- reactiveVal("forecast")
+  current_view <- reactiveVal("dashboard")
   
 
   # --- EVENTS: Navigation between tabs ---
