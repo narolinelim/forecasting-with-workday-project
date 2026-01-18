@@ -472,6 +472,7 @@ hr {
 
 .dropdown-toggle:hover {
   background-color: #1D1F21 !important;
+  color: white !important;
 }
 
 .dropdown-toggle::after {
