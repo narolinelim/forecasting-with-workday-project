@@ -16,7 +16,7 @@ dashboard_ui <- function() {
           
           value_box(
             title = "Total Balance",
-            "12000",
+            total_balance,
             "Balance before the expense",
             full_screen = FALSE,
             class = "info-box"
@@ -32,23 +32,12 @@ dashboard_ui <- function() {
         ),
         
         div(
-          class = "value-box-row2",
-          layout_columns(
-            col_widths = c(6, 6),
-
-            value_box(
-              title = "Expense Breakdown",
-              value = "Circos graph",
-              class = "info-box",
-              #tags$img(src = "circos.png", class = "circos-graph"),
-              full_screen = TRUE
-            ),
-
-            value_box(
-              title = "Shortfall Breakdown",
-              shortfall_bar,
-              full_screen = TRUE
-            )
+          class = "expense-graph",
+          card(
+            p("Expense and Shortfall Breakdown", style = "font-size: 16px;"),
+            full_screen = TRUE,
+            plotlyOutput("shortfall_plot", height = "100%"),
+            style = "font-weight: normal; padding: 24px 16px;"
           )
         )
       )

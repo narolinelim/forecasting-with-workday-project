@@ -307,6 +307,10 @@ main_server_logic <- function(input, output, session, values) {
       penguins
     )
   })
+  
+  output$shortfall_plot <- renderPlotly({
+    create_shortfall_bar()
+  })
 
   # output$sample_table <- renderDT({
   #   datatable(

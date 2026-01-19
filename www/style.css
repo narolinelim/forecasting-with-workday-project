@@ -56,16 +56,6 @@ hr {
   border-radius: 15px;
 }
 
-.value-box-row2 {
-  height: auto;
-}
-
-.circos-graph {
-  width: 100%;
-  height: auto;
-  object-fit: contain;
-  display: block;
-}
 
 .exit-session-popup .modal-header {
   justify-content: center;
