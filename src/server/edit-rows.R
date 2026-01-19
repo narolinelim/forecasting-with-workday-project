@@ -56,7 +56,7 @@ add_expense_button <- function(input, values) {
 delete_row <- function(df, selected_rows) {
   if (length(selected_rows) > 0 && all(selected_rows %in% seq_len(nrow(df)))) {
     df <- df[-selected_rows, ]
-    df$priority <- seq_len(nrow(df)) # Reset priority
+    df$priority <- seq_len(nrow(df))
 
     showNotification(
       paste("Deleted", length(selected_rows), "row(s)."),

@@ -7,7 +7,7 @@ source("src/server/data-processing.R")
 source("src/server/io.R")
 source("src/server/sorting.R")
 source("src/server/graph.R")
-source("src/server/buttons.R")
+source("src/server/edit-rows.R")
 
 main_server_logic <- function(input, output, session, values) {
   # Current page
@@ -98,22 +98,25 @@ main_server_logic <- function(input, output, session, values) {
     input$drag_categories
   })
 
-  # --- MANUAL ROW REORDERING LOGIC ---
+  # --- EVENT: MANUAL ROW REORDERING LOGIC ---
   # Temp order and proxy table
   pending_order <- reactiveVal(NULL)
   proxy <- dataTableProxy("sample_manual_table")
 
+  # Update temp order when user drags rows
   observeEvent(input$newOrder, {
     new_idx <- match(input$newOrder, values$expenses$priority)
     pending_order(values$expenses[new_idx, ])
   })
 
+  # Save manual order
   observeEvent(input$save_manual_order, {
     values$expenses <- row_reorder(input$newOrder, values, proxy, id_col = "priority")
     pending_order(NULL)
     showNotification("Manual order saved", type = "message", duration = 3)
   })
 
+  # Cancel manual order
   observeEvent(input$cancel_manual_order, {
     pending_order(NULL)
     showNotification("Manual order cancelled", type = "message", duration = 3)
