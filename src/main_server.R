@@ -196,6 +196,11 @@ main_server_logic <- function(input, output, session, values) {
     # - Connect 'ordering_rules' to the UI ordering rules drag-and-drop
     # ----------------------------
   })
+  
+  observe({
+    print(str(input$spreadsheet_upload))
+  })
+  
 
   # Adding new funding form
   observeEvent(input$add_funding, {
