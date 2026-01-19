@@ -1,7 +1,4 @@
-
-
 # UI for Funding Page
-
 funding_ui <- function() {
   
   div(
@@ -21,7 +18,6 @@ funding_ui <- function() {
         div(
           actionButton("add_funding", "+ Add Funding", class = "add_data_btn")
         )
-        
       ),
       
       card(
@@ -32,11 +28,8 @@ funding_ui <- function() {
         class = "info-containers",
         style = "padding: 16px;"
       )
-      
     )
-  
   )
-  
 }
 
 
@@ -58,7 +51,6 @@ upload_funding_modal <- function() {
         div(
           id = "funding-source",
           class = "elongated-input",
-          
           
           div("Source Name", class = "data-input-headers"),
 
@@ -89,7 +81,6 @@ upload_funding_modal <- function() {
           )
         ),
         
-        
         # Validity Date
         div(
           id = "date-container",
@@ -119,7 +110,6 @@ upload_funding_modal <- function() {
           )
         ),
         
-        
         # Amount
         div(
           id = "funding-amount",
@@ -134,7 +124,6 @@ upload_funding_modal <- function() {
           )
         ),
         
-        
         # Note
         div(
           id = "funding-note",
@@ -148,13 +137,10 @@ upload_funding_modal <- function() {
             placeholder = "Enter note... (optional)"
           )
         )
-        
       )
     ),
     class = "add-funding-popup"
-  )
-  
-  
+  ) 
 }
 
 

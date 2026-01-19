@@ -1,16 +1,9 @@
-
-
 # UI for Dashboard
-
-
 dashboard_ui <- function() {
-  
   div(
     class = "result-container",
-    
-    
+
     # Main Dashboard Section
-    
     div(
       "Dashboard",
       class = "content-title",
@@ -18,7 +11,6 @@ dashboard_ui <- function() {
       
       div(
         class = "info-containers",
-        
         layout_columns(
           col_widths = c(6, 6),
           
@@ -31,20 +23,19 @@ dashboard_ui <- function() {
           ),
           
           value_box(
-            title = "Ending Balance",
+            title = "Number of Shortfalls",
             "0",
-            "Balance after all expenses",
+            "Total number of shortfalls",
             full_screen = FALSE,
             class = "info-box"
           )
-        
         ),
         
         div(
           class = "value-box-row2",
           layout_columns(
             col_widths = c(6, 6),
-            
+
             value_box(
               title = "Expense Breakdown",
               value = "Circos graph",
@@ -52,22 +43,18 @@ dashboard_ui <- function() {
               #tags$img(src = "circos.png", class = "circos-graph"),
               full_screen = TRUE
             ),
-            
+
             value_box(
-              title = "Shortfall Percentage",
+              title = "Shortfall Breakdown",
               "N/A",
-              full_screen = FALSE,
-              class = "info-box"
+              full_screen = TRUE
             )
           )
         )
       )
-      
     ),
     
-    
     # Budget Allocation Section
-    
     div(
       "Budget Allocation",
       class = "content-title",
@@ -75,7 +62,6 @@ dashboard_ui <- function() {
       
       div(
         class = "info-containers",
-        
         card(
           div(
             DTOutput("sample_budget_table")
@@ -84,12 +70,9 @@ dashboard_ui <- function() {
           style = "padding: 16px; font-weight: 400; font-size: 16px;"
         )
       )
-
     ),
     
-    
     # Unallocated Funding Section
-    
     div(
       "Unallocated Funding",
       class = "content-title",
@@ -97,7 +80,6 @@ dashboard_ui <- function() {
       
       div(
         class = "info-containers",
-        
         card(
           div(
             DTOutput("sample_leftover_table")
@@ -105,17 +87,9 @@ dashboard_ui <- function() {
           full_screen = TRUE,
           style = "padding: 16px; font-weight: 400; font-size: 16px;"
         )
-        
       )
     ),
-    
-    
-    actionButton("budget_download", "↓ Download Budget Allocation",
-                 class = "budget_download_btn"),
-    
-    actionButton("exit_session", "Exit Session", class = "exit_session_btn"),
-
-      
+    actionButton("budget_download", "↓ Download Budget Allocation", class = "budget_download_btn"),
+    actionButton("exit_session", "Exit Session", class = "exit_session_btn")
   )
-
 }

@@ -91,17 +91,19 @@ main_sorting_expenses <- function(expenses_data,
 }
 
 # --- Manual Row Reordering ---
-row_reorder <- function(input, table_data, proxy, id_col = "Priority") {
+row_reorder <- function(input, values, proxy, id_col) {
   observeEvent(input$newOrder, {
-    dat0 <- table_data()
+    # Match output with indexes
+    new_idx <- match(input$newOrder, values$expenses[[id_col]])
 
-    dat1 <- dat0[match(input$newOrder, dat0[[id_col]]), ]
+    # Reorder the dataframe
+    values$expenses <- values$expenses[new_idx, ]
 
-    dat1[[id_col]] <- 1:nrow(dat1)
-
-    table_data(dat1)
-
-    replaceData(proxy, dat1, resetPaging = FALSE, rownames = FALSE)
+    # Update the new priority
+    values$expenses[[id_col]] <- seq_len(nrow(values$expenses))
+    
+    # Update the DataTable proxy to reflect changes
+    replaceData(proxy, values$expenses, resetPaging = FALSE, rownames = FALSE)
   })
 }
 
