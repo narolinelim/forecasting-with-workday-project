@@ -1,13 +1,6 @@
 main_output <- function(input, output, session, values) {
-  # Function for downloading excel files
-  #
-  # Arguments:
-  # input: Shiny input object
-  # output: Shiny output object
-  # session
-  # values: reactiveValues containing expenses and funding_sources dataframes
-
-
+  #' Function for downloading excel files
+  
   # --- HANDLER: Download Excel Template ---
   output$download_template <- downloadHandler(
     filename = function() "budget_template.xlsx",
@@ -34,13 +27,14 @@ main_output <- function(input, output, session, values) {
   # --- HANDLER: Download Allocation Report ---
 }
 
+
 # Helper functions:
 
 input_excel_download <- function(values) {
-  # Download current data as Excel file
-  #
-  # Arguments:
-  # values: reactiveValues containing expenses and funding_sources dataframes
+  #' Download current data as Excel file
+  #'
+  #' @param values: reactiveValues containing current data
+  #' @return: wb: Excel workbook object 
 
   wb <- createWorkbook()
 
@@ -89,7 +83,9 @@ input_excel_download <- function(values) {
 }
 
 create_budget_template_wb <- function() {
-  # Create Excel template workbook
+  #' Create Excel template workbook
+  #' 
+  #' @return: wb: Excel workbook object with template structure
   
   wb <- createWorkbook()
   addWorksheet(wb, "Expenses")

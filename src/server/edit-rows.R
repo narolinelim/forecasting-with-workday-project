@@ -1,4 +1,9 @@
 add_funding_button <- function(input, values) {
+  #' Add a new funding source row to the funding_sources dataframe
+  #' 
+  #' @param input: Shiny input object
+  #' @param values: reactiveValues containing funding_sources dataframe
+
   new_row <- data.frame(
     source_id = paste0("FS-", nrow(values$funding_sources) + 1),
     funding_source = if (is.null(input$source_name_input)) NA else input$source_name_input,
@@ -54,6 +59,12 @@ add_expense_button <- function(input, values) {
 }
 
 delete_row <- function(df, selected_rows) {
+  #' Delete selected rows from the dataframe
+  #'
+  #' @param df: data frame from which rows will be deleted
+  #' @param selected_rows: vector of row indices to be deleted
+  #' @return: updated data frame after deletion
+
   if (length(selected_rows) > 0 && all(selected_rows %in% seq_len(nrow(df)))) {
     df <- df[-selected_rows, ]
     if ("priority" %in% names(df)) {

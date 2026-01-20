@@ -92,11 +92,19 @@ main_sorting_expenses <- function(expenses_data,
 
 # --- Manual Row Reordering ---
 row_reorder <- function(newOrder, expenses, proxy, id_col) {
+  #' Updates the expenses dataframe based on the new order provided by the user.
+  #'
+  #' @param newOrder: vector of item IDs in the new order
+  #' @param expenses: current expenses dataframe
+  #' @param proxy: DT proxy object for updating the DataTable
+  #' @param id_col: name of the column containing unique item IDs
+  #' @return: updated expenses dataframe with new priority
+
   new_idx <- match(newOrder, expenses[[id_col]])
   df <- expenses[new_idx, ] |> mutate(priority = seq_len(nrow(expenses)))
   replaceData(proxy, df, resetPaging = FALSE, rownames = FALSE)
 
-  return(df) # Return updated dataframe
+  return(df)
 }
 
 # JavaScript callback for row reordering

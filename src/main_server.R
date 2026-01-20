@@ -102,7 +102,7 @@ main_server_logic <- function(input, output, session, values) {
     input$drag_categories
   })
 
-  # --- EVENT: Manual Row Reordering ---
+  # --- FEATURE: Manual Row Reordering ---
   # Temp order and proxy table
   pending_order <- reactiveVal(NULL)
   proxy <- dataTableProxy("sample_manual_table")
@@ -219,11 +219,12 @@ main_server_logic <- function(input, output, session, values) {
   })
 
   # --- EVENTS: Add Funding Button ---
-  # Adding new funding form
+  # Open add funding modal
   observeEvent(input$add_funding, {
     showModal(upload_funding_modal())
   })
 
+  # Adding new funding
   observeEvent(input$add_funding_confirm, {
     add_funding_button(input, values)
     removeModal()
@@ -245,11 +246,12 @@ main_server_logic <- function(input, output, session, values) {
   })
 
   # --- EVENTS: Add Expense Button ---
-  # Adding new expense form
+  # Open add expense modal
   observeEvent(input$add_expense, {
     showModal(upload_expense_modal())
   })
-
+  
+  # Adding new expense
   observeEvent(input$add_expense_confirm, {
     add_expense_button(input, values)
     removeModal()
@@ -270,7 +272,7 @@ main_server_logic <- function(input, output, session, values) {
     values$expenses <- delete_row(values$expenses, selected)
   })
 
-  # Sample table outputs (for viewings only)
+  # --- Sample table outputs (for viewings only) ---
   # output$sample_budget_table <- renderDT({
   #   datatable(penguins)
   # })
@@ -354,18 +356,6 @@ main_server_logic <- function(input, output, session, values) {
       rownames = FALSE
     )
   })
-
-  # output$sample_table <- renderDT({
-  #   datatable(
-  #     values$expenses(),
-  #     options = list(
-  #       pageLength = 10,
-  #       scrollY = "300px",
-  #       scrollX = TRUE,
-  #       dom = '<"row"<"col-sm-12"l>><"row"<"col-sm-12"f>>rtip'
-  #     )
-  #   )
-  # })
 }
 
 
