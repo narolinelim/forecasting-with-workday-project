@@ -60,6 +60,13 @@ main_server_logic <- function(input, output, session, values) {
     )
   })
 
+  # --- EVENT: End Session ---
+  observeEvent(input$end_session, {
+    showNotification("Session Ended. All data cleared.", type = "message", duration = 3)
+    removeModal()
+    session$reload()
+  })
+
   # --- EVENT: Return to session ---
   observeEvent(input$return_to_session, {
     removeModal()
