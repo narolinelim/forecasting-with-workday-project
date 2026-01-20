@@ -26,7 +26,7 @@ forecast_ui <- function() {
                   label = NULL,
                   buttonLabel = "Choose File",
                   placeholder = "No file chosen",
-                  accept = c(".xlsx")
+                  accept = c(".xlsx", ".xls")
                 )
               ),
               

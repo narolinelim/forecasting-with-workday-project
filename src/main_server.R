@@ -11,8 +11,9 @@ source("src/server/edit-rows.R")
 
 main_server_logic <- function(input, output, session, values) {
   # Current page
-  current_view <- reactiveVal("forecast")
+  current_view <- reactiveVal("dashboard")
   
+  clicked_month <- reactiveVal(NULL)
 
   # --- EVENTS: Navigation between tabs ---
   observeEvent(input$dashboard_tab, current_view("dashboard"))
@@ -217,6 +218,11 @@ main_server_logic <- function(input, output, session, values) {
     # - Connect 'ordering_rules' to the UI ordering rules drag-and-drop
     # ----------------------------
   })
+  
+  observe({
+    print(str(input$spreadsheet_upload))
+  })
+  
 
   # --- EVENTS: Add Funding Button ---
   # Adding new funding form
@@ -370,6 +376,30 @@ main_server_logic <- function(input, output, session, values) {
       rownames = FALSE
     )
   })
+  
+  output$shortfall_plot <- renderPlotly({
+    create_shortfall_bar()
+  })
+  
+  
+  observeEvent(event_data("plotly_click"), {
+    clicked_bar <- event_data("plotly_click")
+    req(clicked_bar)
+    clicked_month(clicked_bar$x)
+    print(clicked_month())
+  })
+  
+  output$circos_container <- renderUI({
+    cm <- clicked_month()
+    
+    if (is.null(cm)) {
+      tags$p("click on a month to see circos plot")
+    } else {
+      plotOutput("circos_plot", height = "400px")
+    }
+  })
+  
+
 
   # output$sample_table <- renderDT({
   #   datatable(
