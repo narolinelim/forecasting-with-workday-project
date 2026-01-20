@@ -22,12 +22,11 @@ expense_ui <- function() {
       
       card(
         div(
-          DTOutput("sample_expense_table"),
-
           div(
             class = "data-table-footer",
             uiOutput("delete_expense_btn")
-          )
+          ),
+          DTOutput("sample_expense_table")
         ),
         full_screen = TRUE,
         class = "info-containers",

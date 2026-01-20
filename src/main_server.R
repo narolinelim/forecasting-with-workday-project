@@ -234,7 +234,10 @@ main_server_logic <- function(input, output, session, values) {
   output$delete_funding_btn <- renderUI({
     selected <- input$sample_funding_table_rows_selected
     if (length(selected) > 0) {
-      actionButton("delete_funding", "Delete Selected Funding", class = "delete-data-btn")
+      div(
+        class = "add-delete-btn",
+        actionButton("delete_funding", "Delete Selected Funding", class = "delete-data-btn")
+      )
     }
   })
 
@@ -260,7 +263,10 @@ main_server_logic <- function(input, output, session, values) {
   output$delete_expense_btn <- renderUI({
     selected <- input$sample_expense_table_rows_selected
     if (length(selected) > 0) {
-      actionButton("delete_expense", "Delete Selected Expense", class = "delete-data-btn")
+      div(
+        class = "add-delete-btn",
+        actionButton("delete_expense", "Delete Selected Expense", class = "delete-data-btn")
+      )
     }
   })
 
