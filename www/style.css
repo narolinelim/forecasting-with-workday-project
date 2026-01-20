@@ -227,7 +227,7 @@ hr {
 
 .categories-table {
   border: 1px solid #8D959E;
-  
+
 }
 
 .categories-header {
@@ -451,32 +451,20 @@ hr {
   padding: 6px 12px;
 }
 
-
-/* DELETE TABLE ROW */
-
-.dropdown-toggle {
-  background-color: #CACACA !important;
-  border: none !important;
-  color: #404040 !important;
+.delete-expense, .delete-funding {
+  margin-bottom: 10px;
 }
 
-.dropdown-toggle:hover {
-  background-color: #1D1F21 !important;
-  color: white !important;
+.delete-data-btn {
+  background-color: #FFDCDC;
+  border: none;
+  border-radius: 15px;
 }
 
-.dropdown-toggle::after {
-  display: none !important
+.delete-data-btn:hover {
+  background-color: #1D1F21;
+  color: white;
 }
-
-.dataTables_info {
-  padding: 0 !important;
-}
-
-.row.align-items-center {
-  margin-bottom: 20px !important;
-}
-
 
   
 

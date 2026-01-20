@@ -7,6 +7,7 @@ source("src/server/data-processing.R")
 source("src/server/io.R")
 source("src/server/sorting.R")
 source("src/server/graph.R")
+source("src/server/edit-rows.R")
 
 main_server_logic <- function(input, output, session, values) {
   # Current page
@@ -69,6 +70,10 @@ main_server_logic <- function(input, output, session, values) {
     if (input$select_priority == "Manual Priority") {
       manual_priority_ui()
     } else {
+      if (!is.null(pending_order())) {
+        showNotification("Unsaved manual order discarded", type = "message", duration = 3)
+        pending_order(NULL)
+      }
       column_priority_ui()
     }
   })
@@ -98,14 +103,30 @@ main_server_logic <- function(input, output, session, values) {
     input$drag_categories
   })
 
-  # --- MANUAL ROW REORDERING LOGIC ---
-  # Create proxy for table updates
+  # --- EVENT: Manual Row Reordering ---
+  # Temp order and proxy table
+  pending_order <- reactiveVal(NULL)
   proxy <- dataTableProxy("sample_manual_table")
 
-  # Observe row reordering events
-  row_reorder(input, values, proxy, id_col = "priority")
+  # Update temp order when user drags rows
+  observeEvent(input$newOrder, {
+    new_idx <- match(input$newOrder, values$expenses$priority)
+    pending_order(values$expenses[new_idx, ])
+  })
 
-  
+  # Save manual order
+  observeEvent(input$save_manual_order, {
+    values$expenses <- row_reorder(input$newOrder, values$expenses, proxy, id_col = "priority")
+    pending_order(NULL)
+    showNotification("Manual order saved", type = "message", duration = 3)
+  })
+
+  # Cancel manual order
+  observeEvent(input$cancel_manual_order, {
+    pending_order(NULL)
+    showNotification("Manual order cancelled", type = "message", duration = 3)
+  })
+
   # --- EVENT: Upload Expenses and Funding Data ---
   observeEvent(input$spreadsheet_upload, {
     req(input$spreadsheet_upload)
@@ -120,7 +141,7 @@ main_server_logic <- function(input, output, session, values) {
       values$expenses <- expense_df
       showNotification("Data saved successfully", type = "message", duration = 3)
     }, error = function(e) {
-      showNotification(paste("Upload failed:", e$message), type = "error", duration = NULL)
+      showNotification(paste("Upload failed:", e$message), type = "error", duration = 3)
     })
   })
   
@@ -203,46 +224,101 @@ main_server_logic <- function(input, output, session, values) {
   })
   
 
+  # --- EVENTS: Add Funding Button ---
   # Adding new funding form
   observeEvent(input$add_funding, {
     showModal(upload_funding_modal())
   })
 
+  observeEvent(input$add_funding_confirm, {
+    add_funding_button(input, values)
+    removeModal()
+  })
+
+  # --- EVENTS: Delete Funding Button ---
+  # Delete button pop up
+  observeEvent(input$sample_funding_table_rows_selected, {
+    selected <- input$sample_funding_table_rows_selected
+    
+    removeUI(selector = ".delete-funding *", immediate = TRUE)
+    
+    if (length(selected) > 0) {
+      insertUI(
+        selector = ".delete-funding",
+        where = "afterBegin",
+        ui = actionButton("delete_funding", "Delete Selected Funding", class = "delete-data-btn")
+      )
+    }
+  })
+
+  # Deleting selected funding
+  observeEvent(input$delete_funding, {
+    selected <- input$sample_funding_table_rows_selected
+    values$funding_sources <- delete_row(values$funding_sources, selected)
+  })
+
+  # --- EVENTS: Add Expense Button ---
   # Adding new expense form
   observeEvent(input$add_expense, {
     showModal(upload_expense_modal())
   })
 
+  observeEvent(input$add_expense_confirm, {
+    add_expense_button(input, values)
+    removeModal()
+  })
+
+  # --- EVENTS: Delete Expense Button ---
+  observeEvent(input$sample_expense_table_rows_selected, {
+    selected <- input$sample_expense_table_rows_selected
+    
+    removeUI(selector = ".delete-expense *", immediate = TRUE)
+    
+    if (length(selected) > 0) {
+      insertUI(
+        selector = ".delete-expense",
+        where = "afterBegin",
+        ui = actionButton("delete_expense", "Delete Selected Expense", class = "delete-data-btn")
+      )
+    }
+  })
+  
+
+  # Deleting selected expense
+  observeEvent(input$delete_expense, {
+    selected <- input$sample_expense_table_rows_selected
+    values$expenses <- delete_row(values$expenses, selected)
+  })
+
+  # Sample table outputs (for viewings only)
+  # output$sample_budget_table <- renderDT({
+  #   datatable(penguins)
+  # })
+
+  # output$sample_leftover_table <- renderDT({
+  #   datatable(penguins)
+  # })
 
   output$sample_funding_table <- renderDT({
     
     datatable(
-      as.data.frame(penguins[1:5,]),
-      extensions = "Buttons",
+      values$funding_sources,
       options = list(
-        dom = "<'row align-items-center'
+        dom = "<'row align-items-center mb-2'
                 <'col-sm-6'l>
+                <'col-sm-6 text-end'<'delete-funding'>>
                 <'col-sm-6 text-end'B>
               >
-              <'row'<'col-sm-12'f>>
+              <'row mb-2'<'col-sm-12'f>>
               t
               <'row'
                 <'col-sm-5'i>
                 <'col-sm-7'p>
               >",
-        buttons = list(
-          list(
-            extend = "collection",
-            className = "delete-row",
-            text = "Delete row",
-            action = DT::JS(
-              "function (e,dt,node,config) {
-                  dt.rows('.selected').remove().draw();
-              }"
-            )
-          )
-        )
-      )
+        pageLength = 10,
+        scrollX = TRUE
+      ),
+      rownames = FALSE
     )
   }, server = FALSE)
   
@@ -250,40 +326,34 @@ main_server_logic <- function(input, output, session, values) {
   output$sample_expense_table <- renderDT({
     datatable(
       values$expenses |> select(-old_index),
-      extensions = "Buttons",
       options = list(
         pageLength = 10,
         scrollX = TRUE,
-        dom = "<'row align-items-center'
+        dom = "<'row align-items-center mb-2'
                 <'col-sm-6'l>
+                <'col-sm-6 text-end'<'delete-expense'>>
                 <'col-sm-6 text-end'B>
               >
-              <'row'<'col-sm-12'f>>
+              <'row mb-2'<'col-sm-12'f>>
               t
               <'row'
                 <'col-sm-5'i>
                 <'col-sm-7'p>
-              >",
-        buttons = list(
-          list(
-            extend = "collection",
-            className = "delete-row",
-            text = "Delete row",
-            action = DT::JS(
-              "function (e,dt,node,config) {
-                  dt.rows('.selected').remove().draw();
-              }"
-            )
-          )
-        )
+              >"
       ),
       rownames = FALSE
     )
   }, server = FALSE)
 
   output$sample_manual_table <- renderDT({
+    if(!is.null(pending_order())) {
+      df <- pending_order()
+    }
+    else {
+      df <- values$expenses
+    }
     datatable(
-      values$expenses |> select(-old_index),
+      df |> select(-old_index),
       extensions = 'RowReorder',
       selection = 'none',
       callback = JS(row_reorder_callback),
@@ -297,7 +367,13 @@ main_server_logic <- function(input, output, session, values) {
   
   output$sample_priority_table <- renderDT({
     datatable(
-      penguins
+      values$expenses |> select(-old_index),
+      options = list(
+        pageLength = 10,
+        scrollX = TRUE,
+        dom = '<"row"<"col-sm-12"l>><"row"<"col-sm-12"f>>rtip'
+      ),
+      rownames = FALSE
     )
   })
   

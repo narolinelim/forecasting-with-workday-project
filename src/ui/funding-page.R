@@ -22,7 +22,12 @@ funding_ui <- function() {
       
       card(
         div(
-          DTOutput("sample_funding_table")
+          DTOutput("sample_funding_table"),
+
+          div(
+            class = "data-table-footer",
+            uiOutput("delete_funding_btn")
+          )
         ),
         full_screen = TRUE,
         class = "info-containers",

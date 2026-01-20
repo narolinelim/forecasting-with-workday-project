@@ -25,31 +25,31 @@ read_excel_data <- function(file_path, sheet_name) {
   return(list(funding_sources = funding_sources_df, expense = expense_df))
 }
 
-data_validation <- function(df) {
-  # Validate the data frame for required columns and data types
-  #
-  # Arguments:
-  # df: data frame to validate
-  #
-  # Returns:
-  # is_valid: Boolean indicating if the data frame is valid
+# data_validation <- function(df) {
+#   # Validate the data frame for required columns and data types
+#   #
+#   # Arguments:
+#   # df: data frame to validate
+#   #
+#   # Returns:
+#   # is_valid: Boolean indicating if the data frame is valid
 
-  if ("Funding" %in% df$sheet_name) {
-    required_columns <- c("source_id", "allowed_categories", "valid_from", "valid_to", "amount")
-  } else if ("Expense" %in% df$sheet_name) {
-    required_columns <- c("item_id", "expense_category", "planned_amount", "latest_payment_date")
-  } else {
-    return(FALSE)
-  }
+#   if ("Funding" %in% df$sheet_name) {
+#     required_columns <- c("source_id", "allowed_categories", "valid_from", "valid_to", "amount")
+#   } else if ("Expense" %in% df$sheet_name) {
+#     required_columns <- c("item_id", "expense_category", "planned_amount", "latest_payment_date")
+#   } else {
+#     return(FALSE)
+#   }
 
-  is_valid <- all(required_columns %in% names(df))
-  if (!is_valid) {
-    showNotification("Data validation failed: missing required columns.", type = "error", duration = NULL)
-    stop("Data validation failed.")
-    return(FALSE)
-  }
-  return(df)
-}
+#   is_valid <- all(required_columns %in% names(df))
+#   if (!is_valid) {
+#     showNotification("Data validation failed: missing required columns.", type = "error", duration = NULL)
+#     stop("Data validation failed.")
+#     return(FALSE)
+#   }
+#   return(df)
+# }
 
 process_funding_data <- function(df) {
   # Read the dataframe, select and rename columns for the funding data
@@ -66,8 +66,8 @@ process_funding_data <- function(df) {
   # - amount: Numeric
 
   funding_sources_df <- df %>%
-    select(`Source ID`, `Allowed Categories`, `Valid From`, `Valid To`, `Amount`, `Notes`) %>%
-    setNames(nm = c("source_id", "allowed_categories", "valid_from", "valid_to", "amount", "notes")) %>%
+    select(`Source ID`, `Funding Source`, `Allowed Categories`, `Valid From`, `Valid To`, `Amount`, `Notes`) %>%
+    setNames(nm = c("source_id", "funding_source", "allowed_categories", "valid_from", "valid_to", "amount", "notes")) %>%
 
     # Convert data types
     mutate(

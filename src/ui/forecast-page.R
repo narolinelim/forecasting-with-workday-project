@@ -68,7 +68,9 @@ forecast_ui <- function() {
 # Manual Priority View
 manual_priority_ui <- function() {
   div(
-    DTOutput("sample_manual_table"),
+    DTOutput("sample_manual_table"),        
+    actionButton("save_manual_order", "Save order", class = "btn-primary"),
+    actionButton("cancel_manual_order", "Cancel", class = "btn-default"),
     style = "padding: 16px; font-weight: 400; font-size: 16px;"
   )
 }

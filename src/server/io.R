@@ -44,11 +44,37 @@ input_excel_download <- function(values) {
   export_expenses <- values$expenses
   export_funding <- values$funding_sources
 
-  # Rename columns and output
-  colnames(export_expenses) <- c("Priority", "Item ID", "Expense Category", "Planned Amount", "Latest Payment Date", "Notes", "old_index")
+  # Rename columns and output data
+  expense_name_map <- c(
+    priority = "Priority",
+    item_id = "Item ID",
+    expense_category = "Expense Category",
+    planned_amount = "Planned Amount",
+    latest_payment_date = "Latest Payment Date",
+    notes = "Notes",
+    old_index = "old_index"
+  )
+  for (old_name in names(expense_name_map)) {
+    if (old_name %in% names(export_expenses)) {
+      names(export_expenses)[names(export_expenses) == old_name] <- expense_name_map[[old_name]]
+    }
+  }
   writeData(wb, "Expenses", export_expenses |> select(-old_index), withFilter = TRUE)
 
-  colnames(export_funding) <- c("Source ID", "Allowed Categories", "Valid From", "Valid To", "Amount", "Notes")
+  funding_name_map <- c(
+    source_id = "Source ID",
+    funding_source = "Funding Source",
+    allowed_categories = "Allowed Categories",
+    valid_from = "Valid From",
+    valid_to = "Valid To",
+    amount = "Amount",
+    notes = "Notes"
+  )
+  for (old_name in names(funding_name_map)) {
+    if (old_name %in% names(export_funding)) {
+      names(export_funding)[names(export_funding) == old_name] <- funding_name_map[[old_name]]
+    }
+  }
   writeData(wb, "Funding", export_funding, withFilter = TRUE)
 
   wb
@@ -77,12 +103,11 @@ create_budget_template_wb <- function() {
     "Funding",
     data.frame(
       `Source ID` = character(),
-      `Name` = character(),
+      `Funding Source` = character(),
       `Allowed categories` = character(),
       `Valid From` = character(),
       `Valid To` = character(),
       `Amount` = numeric(),
-      `Probability` = numeric(),
       `Notes` = character(),
       check.names = FALSE
     )
