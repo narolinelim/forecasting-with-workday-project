@@ -12,6 +12,7 @@ main_server_logic <- function(input, output, session, values) {
   # Current page
   current_view <- reactiveVal("dashboard")
   
+  clicked_month <- reactiveVal(NULL)
 
   # --- EVENTS: Navigation between tabs ---
   observeEvent(input$dashboard_tab, current_view("dashboard"))
@@ -212,14 +213,6 @@ main_server_logic <- function(input, output, session, values) {
     showModal(upload_expense_modal())
   })
 
-  # Sample table outputs (for viewings only)
-  # output$sample_budget_table <- renderDT({
-  #   datatable(penguins)
-  # })
-
-  # output$sample_leftover_table <- renderDT({
-  #   datatable(penguins)
-  # })
 
   output$sample_funding_table <- renderDT({
     
@@ -311,6 +304,26 @@ main_server_logic <- function(input, output, session, values) {
   output$shortfall_plot <- renderPlotly({
     create_shortfall_bar()
   })
+  
+  
+  observeEvent(event_data("plotly_click"), {
+    clicked_bar <- event_data("plotly_click")
+    req(clicked_bar)
+    clicked_month(clicked_bar$x)
+    print(clicked_month())
+  })
+  
+  output$circos_container <- renderUI({
+    cm <- clicked_month()
+    
+    if (is.null(cm)) {
+      tags$p("click on a month to see circos plot")
+    } else {
+      plotOutput("circos_plot", height = "400px")
+    }
+  })
+  
+
 
   # output$sample_table <- renderDT({
   #   datatable(

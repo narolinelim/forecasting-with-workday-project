@@ -31,14 +31,29 @@ dashboard_ui <- function() {
           )
         ),
         
-        div(
-          class = "expense-graph",
-          card(
-            p("Expense and Shortfall Breakdown", style = "font-size: 16px;"),
-            full_screen = TRUE,
-            plotlyOutput("shortfall_plot", height = "100%"),
-            style = "font-weight: normal; padding: 24px 16px;"
-          )
+        card(
+          class = "graphic-output",
+          p("Expense and Shortfall Breakdown", style = "font-size: 16px;"),
+          layout_columns(
+            col_widths = c(6, 6),
+            
+            card(
+              id = "shortfall-graph",
+              full_screen = TRUE,
+              height = 600,
+              card_header("Shortfall Breakdown"),
+              plotlyOutput("shortfall_plot", height = "100%")
+            ),
+              
+            card(
+              id = "expense-graph",
+              full_screen = TRUE,
+              card_header("Expense Breakdown"),
+              uiOutput("circos_container")
+            )
+          ),
+          
+          style = "font-weight: normal;"
         )
       )
     ),

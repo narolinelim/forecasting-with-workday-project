@@ -5,24 +5,10 @@ library(plotly)
 library(dplyr)
 library(tidyr)
 library(lubridate)
+library(circlize)
 
 
-# SHORTFALL PLOT
-
-# Three potential plots:
-# - bar chart
-# - step line graph
-# - stacked bar chart
-
-
-# Mock dataframe
-
-"
-Y axis: total shortfall amount
-X axis: timeline in weeks or months
-
-"
-
+# Funding Source
 sources <- data.frame(
   ID = c("FS001", "FS002", "FS003", "FS004", "FS005", "FS006", "FS007", "FS008", "FS009", "FS010"),
   Categories = I(list(
@@ -35,6 +21,20 @@ sources <- data.frame(
   ValidTo = c("30/06/2025", "31/08/2025", "30/09/2025", "31/12/2025", "31/10/2025", 
               "31/12/2025", "31/12/2025", "30/11/2025", "31/12/2025", "31/12/2025"),
   Amount = c(15000, 12000, 8000, 20000, 10000, 18000, 36000, 5000, 14000, 10000)
+)
+
+# Expense Data Frame
+expenses <- data.frame(
+  ID = c("E009", "E014", "E015", "E013", "E001", "E002", "E003", "E004", "E005", 
+         "E006", "E007", "E008", "E010", "E011", "E012"),
+  Category = c("Travel", "Equipment", "Travel", "Salary", "Salary", "Equipment", 
+               "Travel", "Salary", "Equipment", "Travel", "Salary", "Equipment", 
+               "Salary", "Equipment", "Travel"),
+  Amount = c(6000, 20000, 15000, 10000, 5000, 8000, 3000, 12000, 15000, 4000, 
+             8000, 10000, 15000, 12000, 5000),
+  Date = c("10/08/2025", "20/12/2025", "25/12/2025", "01/01/2025", "15/02/2025", 
+           "20/02/2025", "10/03/2025", "15/04/2025", "20/05/2025", "10/06/2025", 
+           "15/07/2025", "20/07/2025", "15/09/2025", "20/10/2025", "10/11/2025")
 )
 
 total_balance <- sum(sources$Amount)
@@ -66,6 +66,22 @@ ordered_allocation <- data.frame(
                "TRUE", "TRUE", "TRUE")
 )
 
+
+# SHORTFALL PLOT
+
+# Three potential plots:
+# - bar chart
+# - step line graph
+# - stacked bar chart
+
+
+# Mock dataframe
+
+"
+Y axis: total shortfall amount
+X axis: timeline in weeks or months
+
+"
 
 create_shortfall_bar <- function() {
   
@@ -133,7 +149,7 @@ create_shortfall_bar <- function() {
     )
   
   
-  subplot(
+  p <- subplot(
     shortfall_number_bar,
     shortfall_amount_bar,
     nrows = 2,
@@ -149,7 +165,6 @@ create_shortfall_bar <- function() {
       ),
       margin = list(t = 80, b = 40),
       grid = list(rows = 2, columns = 1, pattern = "independent"),
-      height = 600,
       legend = list(
         orientation = "h",
         x = 0.5,
@@ -157,13 +172,46 @@ create_shortfall_bar <- function() {
         y = -0.2,
         yanchor = "top"
       )
-    )
+    ) 
+  
+  p$x$source <- "A"
+  p <- event_register(p, "plotly_click")
+  
+  return (p)
   
 }
 
 
-
 # CIRCOS PLOT
+
+"
+  Two sides: funding and expenses,
+  
+  feature activation: when user clicks on a bar in the bar graph,
+  app should show the circos plot of allocation at that point in time
+
+"
+
+# Mock dataframe
+
+"
+
+"
+
+create_circos_plot <- function() {
+  
+  
+  circos.initialize()
+}
+
+
+
+
+
+
+
+
+
 
 
 
