@@ -452,13 +452,19 @@ hr {
 }
 
 .delete-expense, .delete-funding {
-  margin-bottom: 10px;
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+  position: relative;
 }
+
 
 .delete-data-btn {
   background-color: #FFDCDC;
   border: none;
   border-radius: 15px;
+  position: absolute;
+  z-index: 10;
 }
 
 .delete-data-btn:hover {
@@ -466,6 +472,9 @@ hr {
   color: white;
 }
 
+.dataTables_filter {
+  margin-top: 20px;
+}
   
 
 

@@ -11,9 +11,10 @@ source("src/server/edit-rows.R")
 
 main_server_logic <- function(input, output, session, values) {
   # Current page
-  current_view <- reactiveVal("dashboard")
+  current_view <- reactiveVal("expense")
   
   clicked_month <- reactiveVal(NULL)
+
 
   # --- EVENTS: Navigation between tabs ---
   observeEvent(input$dashboard_tab, current_view("dashboard"))
@@ -236,26 +237,12 @@ main_server_logic <- function(input, output, session, values) {
   })
 
   # --- EVENTS: Delete Funding Button ---
-  # Delete button pop up
-  observeEvent(input$sample_funding_table_rows_selected, {
-    selected <- input$sample_funding_table_rows_selected
-    
-    removeUI(selector = ".delete-funding *", immediate = TRUE)
-    
-    if (length(selected) > 0) {
-      insertUI(
-        selector = ".delete-funding",
-        where = "afterBegin",
-        ui = actionButton("delete_funding", "Delete Selected Funding", class = "delete-data-btn")
-      )
-    }
-  })
-
   # Deleting selected funding
   observeEvent(input$delete_funding, {
     selected <- input$sample_funding_table_rows_selected
     values$funding_sources <- delete_row(values$funding_sources, selected)
   })
+  
 
   # --- EVENTS: Add Expense Button ---
   # Adding new expense form
@@ -269,47 +256,23 @@ main_server_logic <- function(input, output, session, values) {
   })
 
   # --- EVENTS: Delete Expense Button ---
-  observeEvent(input$sample_expense_table_rows_selected, {
-    selected <- input$sample_expense_table_rows_selected
-    
-    removeUI(selector = ".delete-expense *", immediate = TRUE)
-    
-    if (length(selected) > 0) {
-      insertUI(
-        selector = ".delete-expense",
-        where = "afterBegin",
-        ui = actionButton("delete_expense", "Delete Selected Expense", class = "delete-data-btn")
-      )
-    }
-  })
-  
-
   # Deleting selected expense
   observeEvent(input$delete_expense, {
     selected <- input$sample_expense_table_rows_selected
     values$expenses <- delete_row(values$expenses, selected)
   })
 
-  # Sample table outputs (for viewings only)
-  # output$sample_budget_table <- renderDT({
-  #   datatable(penguins)
-  # })
-
-  # output$sample_leftover_table <- renderDT({
-  #   datatable(penguins)
-  # })
 
   output$sample_funding_table <- renderDT({
     
     datatable(
       values$funding_sources,
       options = list(
-        dom = "<'row align-items-center mb-2'
+        dom = "<'row align-items-center'
                 <'col-sm-6'l>
-                <'col-sm-6 text-end'<'delete-funding'>>
                 <'col-sm-6 text-end'B>
               >
-              <'row mb-2'<'col-sm-12'f>>
+              <'row'<'col-sm-12'f>>
               t
               <'row'
                 <'col-sm-5'i>
@@ -329,12 +292,11 @@ main_server_logic <- function(input, output, session, values) {
       options = list(
         pageLength = 10,
         scrollX = TRUE,
-        dom = "<'row align-items-center mb-2'
+        dom = "<'row align-items-center'
                 <'col-sm-6'l>
-                <'col-sm-6 text-end'<'delete-expense'>>
                 <'col-sm-6 text-end'B>
               >
-              <'row mb-2'<'col-sm-12'f>>
+              <'row'<'col-sm-12'f>>
               t
               <'row'
                 <'col-sm-5'i>

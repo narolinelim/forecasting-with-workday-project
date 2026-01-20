@@ -22,6 +22,10 @@ expense_ui <- function() {
       
       card(
         div(
+          div(
+            class = "delete-expense",
+            actionButton("delete_expense", "Delete Selected Expense", class = "delete-data-btn")
+          ),
           DTOutput("sample_expense_table")
         ),
         full_screen = TRUE,
