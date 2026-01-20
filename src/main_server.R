@@ -69,6 +69,7 @@ main_server_logic <- function(input, output, session, values) {
     if (input$select_priority == "Manual Priority") {
       manual_priority_ui()
     } else {
+      pending_order(NULL)
       column_priority_ui()
     }
   })
