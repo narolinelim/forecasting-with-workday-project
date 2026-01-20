@@ -320,7 +320,6 @@ main_server_logic <- function(input, output, session, values) {
   }, server = FALSE)
 
   output$sample_manual_table <- renderDT({
-    print(pending_order())
     if(!is.null(pending_order())) {
       df <- pending_order()
     }

@@ -11,15 +11,15 @@ add_funding_button <- function(input, values) {
   )
 
   must_have <- c("source_id", "allowed_categories", "valid_from", "valid_to", "amount")
-    for (col in must_have) {
-      val <- new_row[[col]]
-      if (any(is.na(val))) {
-        showNotification(
-          "Missing required field",
-          type = "error",
-          duration = 5
-        )
-      return(NULL)
+  for (col in must_have) {
+    val <- new_row[[col]]
+    if (any(is.na(val))) {
+      showNotification(
+        "Missing required field",
+        type = "error",
+        duration = 5
+      )
+    return(NULL)
     }
   }
 
@@ -38,15 +38,15 @@ add_expense_button <- function(input, values) {
   )
 
   must_have <- c("expense_category", "planned_amount", "latest_payment_date")
-    for (col in must_have) {
-      val <- new_row[[col]]
-      if (any(is.na(val))) {
-        showNotification(
-          "Missing required field",
-          type = "error",
-          duration = 5
-        )
-      return(NULL)
+  for (col in must_have) {
+    val <- new_row[[col]]
+    if (any(is.na(val))) {
+      showNotification(
+        "Missing required field",
+        type = "error",
+        duration = 5
+      )
+    return(NULL)
     }
   }
 
