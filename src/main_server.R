@@ -71,10 +71,6 @@ main_server_logic <- function(input, output, session, values) {
     if (input$select_priority == "Manual Priority") {
       manual_priority_ui()
     } else {
-      if (!is.null(pending_order())) {
-        showNotification("Unsaved manual order discarded", type = "message", duration = 3)
-        pending_order(NULL)
-      }
       column_priority_ui()
     }
   })
@@ -124,9 +120,21 @@ main_server_logic <- function(input, output, session, values) {
 
   # Cancel manual order
   observeEvent(input$cancel_manual_order, {
+    if (is.null(pending_order())) {
+      showNotification("No manual order to cancel", type = "warning", duration = 3)
+      return()
+    }
     pending_order(NULL)
     showNotification("Manual order cancelled", type = "message", duration = 3)
   })
+
+  # When leaving manual priority view, clear pending order
+  observeEvent(input$select_priority, {
+    if (!is.null(pending_order()) && input$select_priority != "Manual Priority") {
+      pending_order(NULL)
+      showNotification("Unsaved manual order discarded", type = "message", duration = 3)
+    }
+  }, ignoreNULL = FALSE)
 
   # --- EVENT: Upload Expenses and Funding Data ---
   observeEvent(input$spreadsheet_upload, {
