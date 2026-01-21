@@ -26,7 +26,7 @@ main_server_logic <- function(input, output, session, values) {
   output$tab_content <- renderUI({
     switch(
       current_view(),
-      "dashboard" = dashboard_ui(),
+      "dashboard" = dashboard_ui(total_balance = sum(values$funding_sources$amount)),
       "forecast" = forecast_ui(),
       "funding" = funding_ui(),
       "expense" = expense_ui()

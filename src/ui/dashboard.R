@@ -1,5 +1,5 @@
 # UI for Dashboard
-dashboard_ui <- function() {
+dashboard_ui <- function(total_balance) {
   div(
     class = "result-container",
 
