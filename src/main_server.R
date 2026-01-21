@@ -11,7 +11,7 @@ source("src/server/edit-rows.R")
 
 main_server_logic <- function(input, output, session, values) {
   # Current page
-  current_view <- reactiveVal("expense")
+  current_view <- reactiveVal("dashboard")
   
   clicked_month <- reactiveVal(NULL)
 
@@ -147,7 +147,7 @@ main_server_logic <- function(input, output, session, values) {
   observeEvent(input$spreadsheet_upload, {
     req(input$spreadsheet_upload)
     path <- input$spreadsheet_upload$datapath
-    
+
     tryCatch({
       data_list <- read_excel_data(path)
       funding_sources_df <- data_list$funding_sources
@@ -356,7 +356,9 @@ main_server_logic <- function(input, output, session, values) {
   
   output$shortfall_plot <- renderPlotly({
     shortfall_data <- create_shortfall_bar()
-    shortfall_data$shortfall_plot
+    p <- shortfall_data$shortfall_plot
+    str(plotly::plotly_build(p)$x$layout$height)  # <-- check this
+    p
   })
   
   output$shortfall_number <- renderUI({
@@ -372,15 +374,25 @@ main_server_logic <- function(input, output, session, values) {
     print(clicked_month())
   })
   
+  # output$circos_container <- renderUI({
+  #   cm <- clicked_month()
+  #   
+  #   if (is.null(cm)) {
+  #     tags$p("click on a month to see circos plot")
+  #   } else {
+  #     plotOutput("circos_plot", height = "400px")
+  #   }
+  # })
+  
+  
   output$circos_container <- renderUI({
-    cm <- clicked_month()
-    
-    if (is.null(cm)) {
-      tags$p("click on a month to see circos plot")
-    } else {
-      plotOutput("circos_plot", height = "400px")
-    }
+    plotOutput("circos_plot", height = "100%")
   })
+  
+  output$circos_plot <- renderPlot({
+    create_circos_plot()
+  }, res = 96)
+  
 }
 
 

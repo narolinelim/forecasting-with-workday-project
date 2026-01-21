@@ -6,10 +6,11 @@ library(dplyr)
 library(tidyr)
 library(lubridate)
 library(circlize)
+library(chorddiag)
 
 
 # Funding Source
-sources <- data.frame(
+funding <- data.frame(
   ID = c("FS001", "FS002", "FS003", "FS004", "FS005", "FS006", "FS007", "FS008", "FS009", "FS010"),
   Categories = I(list(
     c("Salary"), c("Equipment"), c("Travel"), c("Salary", "Travel"), 
@@ -37,8 +38,11 @@ expenses <- data.frame(
            "15/07/2025", "20/07/2025", "15/09/2025", "20/10/2025", "10/11/2025")
 )
 
-total_balance <- sum(sources$Amount)
+expense_ordered <- expenses[order(expenses$ID),]
 
+
+
+# Allocation Result Data Frame
 ordered_allocation <- data.frame(
   ExpenseID = c("E013", "E003", "E006", "E009",
                 "E012", "E001", "E004", "E007",
@@ -65,6 +69,8 @@ ordered_allocation <- data.frame(
                "FALSE", "TRUE", "TRUE", "TRUE",
                "TRUE", "TRUE", "TRUE")
 )
+
+total_balance <- sum(funding$Amount)
 
 
 # SHORTFALL PLOT
@@ -194,17 +200,125 @@ create_shortfall_bar <- function() {
 
 "
 
-# Mock dataframe
+# Allocation Summary Data Frame
+df_allocations <- data.frame(
+  SourceID = c(
+    "FS003","FS007","FS009","FS004","FS001",
+    "FS004","FS007","FS003","FS010","FS001",
+    "FS002","FS005","FS007","FS010","FS004",
+    "FS006","FS002","FS006","FS009","FS007",
+    "FS010"
+  ),
+  ExpenseID = c(
+    "E009","E014","E014","E015","E001",
+    "E001","E002","E003","E003","E004",
+    "E005","E005","E005","E006","E007",
+    "E007","E008","E010","E010","E011",
+    "E012"
+  ),
+  ExpenseCategory = c(
+    "Travel","Equipment","Equipment","Travel","Salary",
+    "Salary","Equipment","Travel","Travel","Salary",
+    "Equipment","Equipment","Equipment","Travel","Salary",
+    "Salary","Equipment","Salary","Salary","Equipment",
+    "Travel"
+  ),
+  AllocatedAmount = c(
+    6000,13000,7000,15000,3000,
+    2000,8000,2000,1000,12000,
+    2000,10000,3000,4000,3000,
+    5000,10000,13000,2000,12000,
+    5000
+  )
+)
 
-"
+# Funding Summary Data Frame
+after_allocation_funding <- data.frame(
+  SourceID = c(
+    "FS001","FS002","FS003","FS004","FS005",
+    "FS006","FS007","FS008","FS009","FS010"
+  ),
+  InitialAmount = c(
+    15000, 12000, 8000, 20000, 10000,
+    18000, 36000, 5000, 14000, 10000
+  ),
+  UsedAmount = c(
+    15000, 12000, 8000, 20000, 10000,
+    18000, 36000, 0, 9000, 10000
+  ),
+  RemainingAmount = c(
+    0, 0, 0, 0, 0,
+    0, 0, 5000, 5000, 0
+  )
+)
 
-"
 
 create_circos_plot <- function() {
   
+  sources_ids <- unique(funding$ID)
+  expenses_ids <- unique(expense_ordered$ID)
+  sectors <- c(sources_ids, expenses_ids)
   
-  circos.initialize()
+  mat <- matrix(0, nrow = length(sectors), ncol = length(sectors))
+  rownames(mat) <- sectors
+  colnames(mat) <- sectors
+  
+  for (i in 1:nrow(df_allocations)) {
+    mat[df_allocations$SourceID[i], df_allocations$ExpenseID[i]] <- df_allocations$AllocatedAmount[i]
+  }
+  
+  for (i in 1:nrow(after_allocation_funding)) {
+    mat[after_allocation_funding$SourceID[i], after_allocation_funding$SourceID[i]] <- after_allocation_funding$RemainingAmount[i]
+  }
+  
+  
+  link.visible <- mat > 0
+  diag(link.visible) <- FALSE
+  
+  
+  funding_length <- length(sources_ids)
+  expense_length <- length(expenses_ids)
+  all_sectors_length <- length(sectors)
+  
+  gap_vector <- rep(3, all_sectors_length)
+  names(gap_vector) <- sectors
+  
+  gap_vector[sources_ids[funding_length]] <- 15
+  gap_vector[expenses_ids[expense_length]] <- 15
+  
+  circos.par(gap.after = gap_vector)
+  
+  funding_colors <- rainbow(funding_length)
+  expense_colors <- heat.colors(expense_length)
+  
+  grid.col <- c(setNames(funding_colors, sources_ids),
+                setNames(expense_colors, expenses_ids))
+  
+  chordDiagram(mat,
+               grid.col = grid.col,
+               annotationTrack = "grid",
+               preAllocateTracks = list(track.height = 0.08),
+               self.link = 1,
+               link.visible = link.visible,
+               reduce = FALSE)
+  
+  
+  circos.track(track.index = 1, panel.fun = function(x, y) {
+    circos.text(CELL_META$xcenter, CELL_META$ylim[1],
+                CELL_META$sector.index,
+                facing = "clockwise", niceFacing = TRUE,
+                adj = c(0, 0.5), cex = 0.6)
+  }, bg.border = NA)
+  
+  
+  circos.clear()
+  
 }
+
+
+
+
+
 
 
 
