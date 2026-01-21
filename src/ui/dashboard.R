@@ -1,5 +1,5 @@
 # UI for Dashboard
-dashboard_ui <- function() {
+dashboard_ui <- function(total_balance) {
   div(
     class = "result-container",
 
@@ -16,7 +16,7 @@ dashboard_ui <- function() {
           
           value_box(
             title = "Total Balance",
-            "12000",
+            total_balance,
             "Balance before the expense",
             full_screen = FALSE,
             class = "info-box"
@@ -24,32 +24,36 @@ dashboard_ui <- function() {
           
           value_box(
             title = "Number of Shortfalls",
-            "0",
+            uiOutput("shortfall_number"),
             "Total number of shortfalls",
             full_screen = FALSE,
             class = "info-box"
           )
         ),
         
-        div(
-          class = "value-box-row2",
+        card(
+          class = "graphic-output",
+          p("Expense and Shortfall Breakdown", style = "font-size: 16px;"),
           layout_columns(
             col_widths = c(6, 6),
-
-            value_box(
-              title = "Expense Breakdown",
-              value = "Circos graph",
-              class = "info-box",
-              #tags$img(src = "circos.png", class = "circos-graph"),
-              full_screen = TRUE
+            
+            card(
+              id = "shortfall-graph",
+              full_screen = TRUE,
+              height = 600,
+              card_header("Shortfall Breakdown"),
+              plotlyOutput("shortfall_plot", height = "100%")
             ),
-
-            value_box(
-              title = "Shortfall Breakdown",
-              "N/A",
-              full_screen = TRUE
+              
+            card(
+              id = "expense-graph",
+              full_screen = TRUE,
+              card_header("Expense Breakdown"),
+              uiOutput("circos_container")
             )
-          )
+          ),
+          
+          style = "font-weight: normal;"
         )
       )
     ),

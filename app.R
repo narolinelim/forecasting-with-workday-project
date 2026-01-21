@@ -10,7 +10,7 @@ run_setup()
 
 
 # 2. Load packages
-
+library(circlize)
 library(shiny)
 library(bslib)
 library(DT)
@@ -54,7 +54,8 @@ server <- function(input, output, session) {
     ),
     expenses = data.frame(
       priority = integer(),
-      item_id = character(),
+      expense_id = character(),
+      expense_name = character(),
       expense_category = character(),
       planned_amount = numeric(),
       latest_payment_date = as.Date(character()),

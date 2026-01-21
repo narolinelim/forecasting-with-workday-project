@@ -34,7 +34,8 @@ add_funding_button <- function(input, values) {
 add_expense_button <- function(input, values) {
   new_row <- data.frame(
     priority = nrow(values$expenses) + 1,
-    item_id = paste0("E-", nrow(values$expenses) + 1),
+    expense_id = paste0("E-", nrow(values$expenses) + 1),
+    expense_name = if (is.null(input$expense_name_input)) NA else input$expense_name_input,
     expense_category = if (is.null(input$expense_type)) NA else input$expense_type,
     planned_amount = if (is.null(input$expense_amount)) NA else as.numeric(input$expense_amount),
     latest_payment_date = if (is.null(input$latest_payment_date)) NA else as.Date(input$latest_payment_date),
@@ -42,7 +43,7 @@ add_expense_button <- function(input, values) {
     old_index = nrow(values$expenses) + 1
   )
 
-  must_have <- c("expense_category", "planned_amount", "latest_payment_date")
+  must_have <- c("expense_name", "expense_category", "planned_amount", "latest_payment_date")
   for (col in must_have) {
     val <- new_row[[col]]
     if (any(is.na(val))) {

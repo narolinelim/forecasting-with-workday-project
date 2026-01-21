@@ -49,7 +49,8 @@ input_excel_download <- function(values) {
   # Rename columns and output data
   expense_name_map <- c(
     priority = "Priority",
-    item_id = "Item ID",
+    expense_id = "Expense ID",
+    expense_name = "Expense Name",
     expense_category = "Expense Category",
     planned_amount = "Planned Amount",
     latest_payment_date = "Latest Payment Date",

@@ -11,8 +11,10 @@ source("src/server/edit-rows.R")
 
 main_server_logic <- function(input, output, session, values) {
   # Current page
-  current_view <- reactiveVal("forecast")
+  current_view <- reactiveVal("expense")
   
+  clicked_month <- reactiveVal(NULL)
+
 
   # --- EVENTS: Navigation between tabs ---
   observeEvent(input$dashboard_tab, current_view("dashboard"))
@@ -24,7 +26,7 @@ main_server_logic <- function(input, output, session, values) {
   output$tab_content <- renderUI({
     switch(
       current_view(),
-      "dashboard" = dashboard_ui(),
+      "dashboard" = dashboard_ui(total_balance = sum(values$funding_sources$amount)),
       "forecast" = forecast_ui(),
       "funding" = funding_ui(),
       "expense" = expense_ui()
@@ -58,6 +60,13 @@ main_server_logic <- function(input, output, session, values) {
     )
   })
 
+  # --- EVENT: End Session ---
+  observeEvent(input$end_session, {
+    showNotification("Session Ended. All data cleared.", type = "message", duration = 3)
+    removeModal()
+    session$reload()
+  })
+
   # --- EVENT: Return to session ---
   observeEvent(input$return_to_session, {
     removeModal()
@@ -69,10 +78,6 @@ main_server_logic <- function(input, output, session, values) {
     if (input$select_priority == "Manual Priority") {
       manual_priority_ui()
     } else {
-      if (!is.null(pending_order())) {
-        showNotification("Unsaved manual order discarded", type = "message", duration = 3)
-        pending_order(NULL)
-      }
       column_priority_ui()
     }
   })
@@ -122,9 +127,21 @@ main_server_logic <- function(input, output, session, values) {
 
   # Cancel manual order
   observeEvent(input$cancel_manual_order, {
+    if (is.null(pending_order())) {
+      showNotification("No manual order to cancel", type = "warning", duration = 3)
+      return()
+    }
     pending_order(NULL)
     showNotification("Manual order cancelled", type = "message", duration = 3)
   })
+
+  # When leaving manual priority view, clear pending order
+  observeEvent(input$select_priority, {
+    if (!is.null(pending_order()) && input$select_priority != "Manual Priority") {
+      pending_order(NULL)
+      showNotification("Unsaved manual order discarded", type = "message", duration = 3)
+    }
+  }, ignoreNULL = FALSE)
 
   # --- EVENT: Upload Expenses and Funding Data ---
   observeEvent(input$spreadsheet_upload, {
@@ -217,6 +234,11 @@ main_server_logic <- function(input, output, session, values) {
     # - Connect 'ordering_rules' to the UI ordering rules drag-and-drop
     # ----------------------------
   })
+  
+  observe({
+    print(str(input$spreadsheet_upload))
+  })
+  
 
   # --- EVENTS: Add Funding Button ---
   # Open add funding modal
@@ -231,19 +253,12 @@ main_server_logic <- function(input, output, session, values) {
   })
 
   # --- EVENTS: Delete Funding Button ---
-  # Delete button pop up
-  output$delete_funding_btn <- renderUI({
-    selected <- input$sample_funding_table_rows_selected
-    if (length(selected) > 0) {
-      actionButton("delete_funding", "Delete Selected Funding", class = "delete-data-btn")
-    }
-  })
-
   # Deleting selected funding
   observeEvent(input$delete_funding, {
     selected <- input$sample_funding_table_rows_selected
     values$funding_sources <- delete_row(values$funding_sources, selected)
   })
+  
 
   # --- EVENTS: Add Expense Button ---
   # Open add expense modal
@@ -258,28 +273,12 @@ main_server_logic <- function(input, output, session, values) {
   })
 
   # --- EVENTS: Delete Expense Button ---
-  # Delete button pop up
-  output$delete_expense_btn <- renderUI({
-    selected <- input$sample_expense_table_rows_selected
-    if (length(selected) > 0) {
-      actionButton("delete_expense", "Delete Selected Expense", class = "delete-data-btn")
-    }
-  })
-
   # Deleting selected expense
   observeEvent(input$delete_expense, {
     selected <- input$sample_expense_table_rows_selected
     values$expenses <- delete_row(values$expenses, selected)
   })
 
-  # --- Sample table outputs (for viewings only) ---
-  # output$sample_budget_table <- renderDT({
-  #   datatable(penguins)
-  # })
-
-  # output$sample_leftover_table <- renderDT({
-  #   datatable(penguins)
-  # })
 
   output$sample_funding_table <- renderDT({
     
@@ -355,6 +354,34 @@ main_server_logic <- function(input, output, session, values) {
       ),
       rownames = FALSE
     )
+  })
+  
+  output$shortfall_plot <- renderPlotly({
+    shortfall_data <- create_shortfall_bar()
+    shortfall_data$shortfall_plot
+  })
+  
+  output$shortfall_number <- renderUI({
+    shortfall_data <- create_shortfall_bar()
+    shortfall_data$total_shortfalls
+  })
+  
+  
+  observeEvent(event_data("plotly_click"), {
+    clicked_bar <- event_data("plotly_click")
+    req(clicked_bar)
+    clicked_month(clicked_bar$x)
+    print(clicked_month())
+  })
+  
+  output$circos_container <- renderUI({
+    cm <- clicked_month()
+    
+    if (is.null(cm)) {
+      tags$p("click on a month to see circos plot")
+    } else {
+      plotOutput("circos_plot", height = "400px")
+    }
   })
 }
 

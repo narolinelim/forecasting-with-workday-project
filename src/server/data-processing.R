@@ -66,21 +66,21 @@ process_expense_data <- function(df) {
   #' - latest_payment_date: Date
   
   expense_df <- df %>%
-    select(`Priority`,`Item ID`, `Expense Category`, `Planned Amount`, `Latest Payment Date`, `Notes`) %>%
-    setNames(nm = c("priority", "item_id", "expense_category", "planned_amount", "latest_payment_date", "notes")) %>%
+    select(`Priority`, `Expense ID`, `Expense Name`, `Expense Category`, `Planned Amount`, `Latest Payment Date`, `Notes`) %>%
+    setNames(nm = c("priority", "expense_id", "expense_name", "expense_category", "planned_amount", "latest_payment_date", "notes")) %>%
 
     # Convert data types
     mutate(
       latest_payment_date = as.Date(latest_payment_date),
       planned_amount = as.numeric(planned_amount),
-      item_id = as.character(item_id)
+      expense_id = as.character(expense_id)
     ) %>%
 
     # Add index
     mutate(old_index = row_number()) %>%
 
-    # Remove rows with NA in item_id
-    filter(!is.na(item_id))
+    # Remove rows with NA in expense_id
+    filter(!is.na(expense_id))
     
   return(expense_df)
 }
