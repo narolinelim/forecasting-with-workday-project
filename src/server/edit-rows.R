@@ -34,8 +34,7 @@ add_expense_button <- function(input, values) {
     expense_category = if (is.null(input$expense_type)) NA else input$expense_type,
     planned_amount = if (is.null(input$expense_amount)) NA else as.numeric(input$expense_amount),
     latest_payment_date = if (is.null(input$latest_payment_date)) NA else as.Date(input$latest_payment_date),
-    notes = if (is.null(input$expense_note)) NA else input$expense_note,
-    old_index = nrow(values$expenses) + 1
+    notes = if (is.null(input$expense_note)) NA else input$expense_note
   )
 
   must_have <- c("expense_name", "expense_category", "planned_amount", "latest_payment_date")

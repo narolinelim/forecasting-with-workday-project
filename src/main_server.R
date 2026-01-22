@@ -186,6 +186,7 @@ main_server_logic <- function(input, output, session, values) {
       category_order = input$drag_categories
     )
   })
+
   
 
   observe({
@@ -241,6 +242,7 @@ main_server_logic <- function(input, output, session, values) {
     print(str(input$spreadsheet_upload))
   })
   
+
 
   # --- EVENTS: Add Funding Button ---
 
@@ -330,7 +332,7 @@ main_server_logic <- function(input, output, session, values) {
 
   output$sample_expense_table <- renderDT({
     req(values$expenses)
-    df <- values$expenses |> select(-old_index)
+    df <- values$expenses
     colnames(df) <- display_expense_names[names(df)]
     datatable(
       df,
@@ -357,7 +359,7 @@ main_server_logic <- function(input, output, session, values) {
       df <- pending_order()
     }
     else {
-      df <- values$expenses |> select(-old_index)
+      df <- values$expenses
     }
 
     colnames(df) <- display_expense_names[names(df)]
@@ -400,7 +402,6 @@ main_server_logic <- function(input, output, session, values) {
     clicked_bar <- event_data("plotly_click")
     req(clicked_bar)
     clicked_month(clicked_bar$x)
-    print(clicked_month())
   })
   
   output$circos_container <- renderUI({

@@ -52,15 +52,14 @@ input_excel_download <- function(values) {
     expense_category = "Expense Category",
     planned_amount = "Planned Amount",
     latest_payment_date = "Latest Payment Date",
-    notes = "Notes",
-    old_index = "old_index"
+    notes = "Notes"
   )
   for (old_name in names(expense_name_map)) {
     if (old_name %in% names(export_expenses)) {
       names(export_expenses)[names(export_expenses) == old_name] <- expense_name_map[[old_name]]
     }
   }
-  writeData(wb, "Expenses", export_expenses |> select(-old_index), withFilter = TRUE)
+  writeData(wb, "Expenses", export_expenses, withFilter = TRUE)
 
   funding_name_map <- c(
     source_id = "Source ID",
