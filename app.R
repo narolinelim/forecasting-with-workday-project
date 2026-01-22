@@ -28,7 +28,7 @@ library(sortable)
 library(ggplot2)
 library(plotly)
 
-library(gurobi)
+# library(gurobi)
 library(Matrix)
 
 
