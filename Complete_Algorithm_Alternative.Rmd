@@ -20,17 +20,18 @@ library(ROI.plugin.highs)
 ```
 
 ```{r}
-# --- Helper Function ---
-date_to_int <- function(date_str) {
+# Input format: DD/MM/YYYY
+# Output format: Integer (Days since base_date)
+date_to_int <- function(date_str, base_date) {
   dt <- as.Date(date_str, format = "%d/%m/%Y")
-  base <- as.Date("2025-01-01")
-  return(as.numeric(dt - base) + 1)
+  # Return numeric difference + 1 (so the first day is Day 1, not Day 0)
+  return(as.numeric(dt - base_date) + 1)
 }
 ```
 
 *DATA INPUT*
 ```{r}
-# Source Data Frame
+# Source Data Frame, assume in the order of preference, first will have the highest allocation priority
 sources <- data.frame(
   ID = c("FS001", "FS002", "FS003", "FS004", "FS005", "FS006", "FS007", "FS008", "FS009", "FS010"),
   # Here we have use I(list(...)) is because we want to store multiple categories (with different number of categories per funding source, i.e. Salary for F1, Equipement AND Salary for F2)
@@ -39,14 +40,13 @@ sources <- data.frame(
     c("Equipment", "Travel"), c("Salary"), c("Equipment"), c("Travel"), 
     c("Salary", "Equipment"), c("Salary", "Equipment", "Travel")
   )),
-  ValidFrom = c("01/02/2025", "01/02/2025", "01/03/2025", "01/02/2025", "01/04/2025", 
-                "01/06/2025", "01/01/2025", "01/05/2025", "01/07/2025", "01/02/2025"),
-  ValidTo = c("30/06/2025", "31/08/2025", "30/09/2025", "31/12/2025", "31/10/2025", 
+  ValidFrom = c("01/02/2025", "01/02/2025", "01/02/2025", "01/02/2025", "01/04/2025", 
+                "01/01/2025", "01/01/2025", "01/05/2025", "01/07/2025", "01/02/2025"),
+  ValidTo = c("30/06/2025", "31/08/2025", "30/12/2025", "31/12/2025", "31/10/2025", 
               "31/12/2025", "31/12/2025", "30/11/2025", "31/12/2025", "31/12/2025"),
-  Amount = c(15000, 12000, 8000, 20000, 10000, 18000, 36000, 5000, 14000, 10000)
+  Amount = c(15000, 12000, 10000, 20000, 10000, 18000, 36000, 5000, 14000, 10000)
 )
 
-sources$Categories
 
 # Expense Data Frame
 expenses <- data.frame(
@@ -55,12 +55,21 @@ expenses <- data.frame(
   Category = c("Travel", "Equipment", "Travel", "Salary", "Salary", "Equipment", 
                "Travel", "Salary", "Equipment", "Travel", "Salary", "Equipment", 
                "Salary", "Equipment", "Travel"),
-  Amount = c(6000, 20000, 15000, 10000, 5000, 8000, 3000, 12000, 15000, 4000, 
-             8000, 10000, 15000, 12000, 5000),
-  Date = c("10/08/2025", "20/12/2025", "25/12/2025", "01/01/2025", "15/02/2025", 
+  Amount = c(6000, 20000, 20000, 20000, 5000, 8000, 3000, 12000, 15000, 4000, 
+             8000, 10000, 15000, 12000, 10000),
+  Date = c("10/08/2025", "20/12/2025", "25/12/2025", "01/05/2025", "15/02/2025", 
            "20/02/2025", "10/03/2025", "15/04/2025", "20/05/2025", "10/06/2025", 
            "15/07/2025", "20/07/2025", "15/09/2025", "20/10/2025", "10/11/2025")
 )
+
+
+# Dynamically setting the time
+# 1. Collect all date columns from both dataframes
+all_dates <- c(sources$ValidFrom, sources$ValidTo, expenses$Date)
+# 2. Convert to Date objects to find the minimum
+date_objects <- as.Date(unique(all_dates), format = "%d/%m/%Y")
+# 3. Find the earliest date
+global_min_date <- min(date_objects, na.rm = TRUE)
 
 # getting total number of funding source and expenses (NOT total amount)
 n_sources <- nrow(sources)
@@ -81,9 +90,9 @@ for (i in 1:n_sources) {
     
     # 2. Time Validity Check
     # Convert dates to integers (Day of Year)
-    s_from <- date_to_int(sources$ValidFrom[i])
-    s_to   <- date_to_int(sources$ValidTo[i])
-    e_date <- date_to_int(expenses$Date[j]) # Assumes this is the actual payment date
+    s_from <- date_to_int(sources$ValidFrom[i], global_min_date)
+    s_to   <- date_to_int(sources$ValidTo[i], global_min_date)
+    e_date <- date_to_int(expenses$Date[j], global_min_date) # Assumes this is the actual payment date
     
     # LOGIC: The payment date must be INSIDE the funding window (Inclusive)
     # ValidFrom <= PaymentDate <= ValidTo
@@ -142,181 +151,214 @@ result <- solve_model(model, with_ROI(solver = "highs"))
 ```
 
 *RESULT*
+# Partial filling function
 ```{r}
-if (result$status == "optimal" || result$status == "success") {
+apply_greedy_fill <- function(result, sources, expenses, compatibility) {
   
-  # A. Extract X (Allocations) from the raw ompr model
-  df_x <- get_solution(result, x[i, j])
+  n_sources <- nrow(sources)
+  n_expenses <- nrow(expenses)
   
-  # Create matrix to ensure correct ordering (Source 1..N, Expense 1..M)
+  # A. Reconstruct the Optimal Allocation Matrix (Fully Funded Only)
+  x_sol_raw <- get_solution(result, x[i, j])
   mat_x <- matrix(0, nrow = n_sources, ncol = n_expenses)
-  for (r in 1:nrow(df_x)) {
-    mat_x[df_x$i[r], df_x$j[r]] <- df_x$value[r]
+  for (r in 1:nrow(x_sol_raw)) {
+    mat_x[x_sol_raw$i[r], x_sol_raw$j[r]] <- x_sol_raw$value[r]
   }
   
-  # Flatten Row-by-Row to match Gurobi vector format
-  vec_x <- as.vector(t(mat_x))
+  # B. Calculate Remaining Capacity per Source
+  current_source_usage <- rowSums(mat_x)
+  source_remaining <- sources$Amount - current_source_usage
+  source_remaining[source_remaining < 1e-6] <- 0 # Fix floating point dust
   
-  # B. Extract Y (Binary Flags) from the raw ompr model
-  df_y <- get_solution(result, y[j])
+  # C. Identify Unfunded Expenses (Binary y[j] == 0)
+  y_sol_raw <- get_solution(result, y[j])
+  # Order by j to ensure we respect priority (index 1 is highest priority)
+  y_sol_raw <- y_sol_raw[order(y_sol_raw$j), ]
+  unfunded_indices <- y_sol_raw$j[y_sol_raw$value < 0.5]
   
-  # Ensure strictly sorted by Expense ID
-  df_y <- df_y[order(df_y$j), ]
-  vec_y <- df_y$value
-  
-  # C. Overwrite 'result' with the Gurobi-style list
-  # This allows your original print code to run exactly as is.
-  result <- list()
-  result$status <- "OPTIMAL" 
-  result$x <- c(vec_x, vec_y) 
-  
-} else {
-  result <- list(status = "INFEASIBLE")
-}
-
-if (result$status == "OPTIMAL") {
-  cat("\n============================================================\n")
-  cat(sprintf("%-60s\n", "                   FINAL SOLUTION REPORT                    "))
-  cat("============================================================\n")
-  
-  # Extract Solution Vectors
-  # result$x = [ x_{1,1}, x_{1,2}, ..., x_{n,m}, {y_1, y_2, ..., y_m} ]
-  sol <- result$x
-  # sol_x: The first block (allocations).
-  # sol_y: The second block (binary flags).
-  sol_x <- sol[1:(n_sources * n_expenses)]
-  sol_y <- sol[(n_sources * n_expenses + 1):length(sol)]
-  
-  # Reshape sol_x back to matrix for easy reading
-  x_matrix <- matrix(sol_x, nrow = n_sources, ncol = n_expenses, byrow = TRUE)
-  
-  # --- 1. FILLED EXPENSES ---
-  cat("\n--- Filled Expenses ---\n")
-  # It uses > 0.5 instead of == 1 to avoid floating-point errors (e.g., 0.999999).
-  filled_indices <- which(sol_y > 0.5)
-  unfilled_indices <- which(sol_y < 0.5)
-  
-  for (j in filled_indices) {
-    cat(sprintf("%s: %s ($%s)\n", 
-                expenses$ID[j], expenses$Category[j], 
-                format(expenses$Amount[j], big.mark=",")))
-  }
-  
-  # --- 2. UNFILLED EXPENSES ---
-  cat("\n--- nfilled Expenses ---\n")
-  for (j in unfilled_indices) {
-    cat(sprintf("%s: %s ($%s) - Due: %s\n", 
-                expenses$ID[j], expenses$Category[j], 
-                format(expenses$Amount[j], big.mark=","),
-                expenses$Date[j]))
-  }
-  
-  cat(sprintf("\nSummary: %d Filled / %d Missed\n", length(filled_indices), length(unfilled_indices)))
-  
-  # --- 3. ALLOCATION DETAILS ---
-  cat("\n--- Allocation Details ---\n")
-  cat(sprintf("%-8s %-8s %-15s %s\n", "Source", "Expense", "Exp. Category", "Amount Allocated"))
-  cat("------------------------------------------------------------\n")
-  
-  for (i in 1:n_sources) {
-    for (j in filled_indices) {
-      val <- x_matrix[i, j]
-      # if Source i contributed money to Expense j.
-      if (val > 1e-6) {
-        cat(sprintf("%-8s -> %-8s %-15s $%s\n", 
-                    sources$ID[i], expenses$ID[j], expenses$Category[j], 
-                    format(val, nsmall=2, big.mark=",")))
+  # D. The Greedy Loop
+  for (j in unfunded_indices) {
+    amount_needed <- expenses$Amount[j]
+    
+    # Try to find money in compatible sources
+    for (i in 1:n_sources) {
+      if (amount_needed < 1e-6) break 
+      
+      # Check compatibility AND available funds
+      if (compatibility[i, j] == 1 && source_remaining[i] > 1e-6) {
+        take_amount <- min(amount_needed, source_remaining[i])
+        
+        # Update Matrix & Balances
+        mat_x[i, j] <- mat_x[i, j] + take_amount
+        source_remaining[i] <- source_remaining[i] - take_amount
+        amount_needed <- amount_needed - take_amount
       }
     }
   }
   
-  # --- 4. REMAINING BALANCES ---
+  return(mat_x)
+}
+```
+
+# Table output function
+```{r}
+print_financial_report <- function(mat_x, sources, expenses) {
+  
+  n_sources <- nrow(sources)
+  n_expenses <- nrow(expenses)
+  
+  cat("\n============================================================\n")
+  cat(sprintf("%-60s\n", "                   FINAL SOLUTION REPORT                    "))
+  cat("============================================================\n")
+  
+  # Calculate Status based on matrix totals
+  expense_total_alloc <- colSums(mat_x)
+  idx_full <- which(expense_total_alloc >= expenses$Amount - 1e-5)
+  idx_partial <- which(expense_total_alloc > 1e-5 & expense_total_alloc < expenses$Amount - 1e-5)
+  idx_none <- which(expense_total_alloc <= 1e-5)
+  
+  # --- 1. FULLY FUNDED ---
+  cat("\n--- Fully Funded Expenses ---\n")
+  if(length(idx_full) > 0) {
+    for (j in idx_full) {
+      cat(sprintf("%s: %s ($%s)\n", expenses$ID[j], expenses$Category[j], format(expenses$Amount[j], big.mark=",")))
+    }
+  } else { cat("None.\n") }
+  
+  # --- 2. PARTIALLY FUNDED ---
+  cat("\n--- Partially Funded Expenses ---\n")
+  if(length(idx_partial) > 0) {
+    for (j in idx_partial) {
+      filled_amt <- expense_total_alloc[j]
+      percent <- (filled_amt / expenses$Amount[j]) * 100
+      cat(sprintf("%s: %s ($%s / $%s) - %.1f%% Covered\n", expenses$ID[j], expenses$Category[j], format(filled_amt, big.mark=","), format(expenses$Amount[j], big.mark=","), percent))
+    }
+  } else { cat("None.\n") }
+  
+  # --- 3. UNFUNDED ---
+  cat("\n--- Unfunded Expenses ---\n")
+  if(length(idx_none) > 0) {
+    for (j in idx_none) {
+      cat(sprintf("%s: %s ($%s) - Due: %s\n", expenses$ID[j], expenses$Category[j], format(expenses$Amount[j], big.mark=","), expenses$Date[j]))
+    }
+  } else { cat("None.\n") }
+  
+  cat(sprintf("\nSummary: %d Full / %d Partial / %d Missed\n", length(idx_full), length(idx_partial), length(idx_none)))
+  
+  # --- 4. ALLOCATION DETAILS ---
+  cat("\n--- Allocation Details ---\n")
+  cat(sprintf("%-8s %-8s %-15s %s\n", "Source", "Expense", "Exp. Category", "Amount Allocated"))
+  cat("------------------------------------------------------------\n")
+  for (i in 1:n_sources) {
+    for (j in 1:n_expenses) {
+      val <- mat_x[i, j]
+      if (val > 1e-6) {
+        cat(sprintf("%-8s -> %-8s %-15s $%s\n", sources$ID[i], expenses$ID[j], expenses$Category[j], format(val, nsmall=2, big.mark=",")))
+      }
+    }
+  }
+  
+  # --- 5. REMAINING BALANCES ---
   cat("\n--- Remaining Fund Balances ---\n")
   cat(sprintf("%-8s %-10s %-10s %-10s %s\n", "Fund ID", "Initial", "Used", "Remaining", "Allowed Categories"))
   cat("-----------------------------------------------------------------\n")
-  
   total_unused <- 0
   for (i in 1:n_sources) {
-    # calculates how much of each source was "spent."
-    used <- sum(x_matrix[i, ])
+    used <- sum(mat_x[i, ])
     remaining <- sources$Amount[i] - used
     if (remaining < 1e-6) remaining <- 0
     total_unused <- total_unused + remaining
-    
     cats_str <- paste(unlist(sources$Categories[i]), collapse = ", ")
-    
-  cat(sprintf("%-8s %-10s %-10s %-10s %s\n", 
-                sources$ID[i], 
-                format(sources$Amount[i], big.mark=",", nsmall=0), 
-                format(round(used), big.mark=",", nsmall=0), 
-                format(round(remaining), big.mark=",", nsmall=0), 
-                cats_str))
+    cat(sprintf("%-8s %-10s %-10s %-10s %s\n", sources$ID[i], format(sources$Amount[i], big.mark=",", nsmall=0), format(round(used), big.mark=",", nsmall=0), format(round(remaining), big.mark=",", nsmall=0), cats_str))
   }
   cat("-----------------------------------------------------------------\n")
   cat(sprintf("TOTAL UNUSED FUNDS: $%s\n", format(total_unused, big.mark=",")))
-  
-} else {
-  cat("No optimal solution found.\n")
 }
+```
 
+# Output DataFrame
+```{r}
+create_financial_dfs <- function(mat_x, sources, expenses) {
+  
+  n_sources <- nrow(sources)
+  n_expenses <- nrow(expenses)
+  
+  # --- 1. Allocations DataFrame ---
+  # Find all non-zero entries in the matrix
+  # which(..., arr.ind=TRUE) returns a matrix of [row_index, col_index]
+  alloc_idx <- which(mat_x > 1e-6, arr.ind = TRUE)
+  
+  # Construct the dataframe directly from indices
+  df_allocations <- data.frame(
+    SourceID = sources$ID[alloc_idx[, 1]],
+    ExpenseID = expenses$ID[alloc_idx[, 2]],
+    ExpenseCategory = expenses$Category[alloc_idx[, 2]],
+    AllocatedAmount = mat_x[alloc_idx]
+  )
+  # Optional: Sort by Source then Expense
+  df_allocations <- df_allocations[order(df_allocations$SourceID, df_allocations$ExpenseID), ]
+  
+  
+  # --- 2. Expense Status DataFrame ---
+  # Calculate how much was allocated to each expense (Column Sums)
+  expense_filled_amounts <- colSums(mat_x)
+  
+  df_expenses_status <- expenses
+  df_expenses_status$FilledAmount <- expense_filled_amounts
+  
+  # Determine status: Fully Filled if allocated >= requested (minus tiny error)
+  df_expenses_status$IsFilled <- expense_filled_amounts >= (expenses$Amount - 1e-5)
+  
+  # Add a readable Status column
+  df_expenses_status$Status <- ifelse(df_expenses_status$IsFilled, "Full",
+                               ifelse(df_expenses_status$FilledAmount > 1e-6, "Partial", "Unfunded"))
+  
+  
+  # --- 3. Funds Summary DataFrame ---
+  # Calculate how much each source used (Row Sums)
+  source_used_amounts <- rowSums(mat_x)
+  
+  df_funds_summary <- data.frame(
+    SourceID = sources$ID,
+    InitialAmount = sources$Amount,
+    UsedAmount = source_used_amounts,
+    RemainingAmount = sources$Amount - source_used_amounts
+  )
+  # Clean up negative zeros
+  df_funds_summary$RemainingAmount[df_funds_summary$RemainingAmount < 0] <- 0
+  
+  # Return all 3 as a named list
+  return(list(
+    allocations = df_allocations,
+    expenses = df_expenses_status,
+    funds = df_funds_summary
+  ))
+}
 ```
 
 
 
 ```{r}
-if (result$status == "optimal" || result$status == "success") { # ROI sometimes uses "success"
+if (result$status == "optimal" || result$status == "success") {
   
-  # 1. Extract Allocations (x variables)
-  # get_solution returns a dataframe: i, j, value
-  x_sol <- get_solution(result, x[i, j]) %>%
-    subset(value > 1e-6) # Filter out zero allocations
+  # Partial fill
+  final_matrix <- apply_greedy_fill(result, sources, expenses, compatibility)
   
-  df_allocations <- data.frame(
-    SourceID = sources$ID[x_sol$i],
-    ExpenseID = expenses$ID[x_sol$j],
-    ExpenseCategory = expenses$Category[x_sol$j],
-    AllocatedAmount = x_sol$value
-  )
+  # Print report in R
+  print_financial_report(final_matrix, sources, expenses)
   
-  # 2. Extract Expense Status (y variables)
-  y_sol <- get_solution(result, y[j])
+  # Generate DataFrames
+  dfs <- create_financial_dfs(final_matrix, sources, expenses)
   
-  df_expenses_status <- expenses
-  # Map the binary result back to the expenses dataframe
-  # Note: y_sol$j ensures we match indices correctly
-  df_expenses_status$IsFilled <- FALSE
-  df_expenses_status$IsFilled[y_sol$j] <- (y_sol$value > 0.5)
-  
-  # 3. Funds Summary
-  # We aggregate the x_sol dataframe to see total usage per source
-  usage_per_source <- aggregate(value ~ i, data = x_sol, sum)
-  
-  df_funds_summary <- data.frame(
-    SourceID = sources$ID,
-    InitialAmount = sources$Amount
-  )
-  
-  # Merge usage data (handling sources that spent 0)
-  df_funds_summary$UsedAmount <- 0
-  match_idx <- match(usage_per_source$i, 1:n_sources)
-  df_funds_summary$UsedAmount[match_idx] <- usage_per_source$value
-  
-  df_funds_summary$RemainingAmount <- df_funds_summary$InitialAmount - df_funds_summary$UsedAmount
-  
-  # --- PRINT RESULTS ---
-  print("--- Allocations ---")
-  print(df_allocations)
-  
-  print("--- Expense Status ---")
-  print(df_expenses_status[, c("ID", "Category", "Amount", "IsFilled")])
-  
-  print("--- Funds Summary ---")
-  print(df_funds_summary)
+  df_allocations <- dfs$allocations
+  df_expenses_status <- dfs$expenses
+  df_funds_summary <- dfs$funds
   
 } else {
-  cat("No optimal solution found.")
+  cat("No optimal solution found.\n")
 }
 ```
+
 
 
 ```{r}
