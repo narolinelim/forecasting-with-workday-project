@@ -356,9 +356,7 @@ main_server_logic <- function(input, output, session, values) {
   
   output$shortfall_plot <- renderPlotly({
     shortfall_data <- create_shortfall_bar()
-    p <- shortfall_data$shortfall_plot
-    str(plotly::plotly_build(p)$x$layout$height)  # <-- check this
-    p
+    shortfall_data$shortfall_plot
   })
   
   output$shortfall_number <- renderUI({
@@ -371,27 +369,29 @@ main_server_logic <- function(input, output, session, values) {
     clicked_bar <- event_data("plotly_click")
     req(clicked_bar)
     clicked_month(clicked_bar$x)
-    print(clicked_month())
   })
   
-  # output$circos_container <- renderUI({
-  #   cm <- clicked_month()
-  #   
-  #   if (is.null(cm)) {
-  #     tags$p("click on a month to see circos plot")
-  #   } else {
-  #     plotOutput("circos_plot", height = "400px")
-  #   }
-  # })
+  circos_month <- reactive({
+    cm <- clicked_month()
+    req(cm)
+    create_circos_plot(month = cm)
+  })
   
+  output$circos_plot <- renderChorddiag({
+    circos_month()
+  })
   
   output$circos_container <- renderUI({
-    plotOutput("circos_plot", height = "100%")
+    cm <- clicked_month()
+    print(cm)
+
+    if (is.null(cm)) {
+      tags$p("Click on a month to see the chord diagram.")
+    } else {
+      chorddiagOutput("circos_plot", height = "100%")
+    }
   })
   
-  output$circos_plot <- renderPlot({
-    create_circos_plot()
-  }, res = 96)
   
 }
 

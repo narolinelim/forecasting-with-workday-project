@@ -252,8 +252,63 @@ after_allocation_funding <- data.frame(
   )
 )
 
+allocation_df <- data.frame(
+  ExpenseID = c(
+    "E001","E001","E002","E003","E003","E004",
+    "E005","E005","E005","E006","E007","E007",
+    "E008","E009","E010","E010","E012","E011",
+    "E014","E014","E015"
+  ),
+  ExpenseCategory = c(
+    "Salary","Salary","Equipment","Travel","Travel","Salary",
+    "Equipment","Equipment","Equipment","Travel","Salary","Salary",
+    "Equipment","Travel","Salary","Salary","Travel","Equipment",
+    "Equipment","Equipment","Travel"
+  ),
+  ExpenseAmount = c(
+    5000,5000,8000,3000,3000,12000,
+    15000,15000,15000,4000,8000,8000,
+    10000,6000,15000,15000,5000,12000,
+    20000,20000,15000
+  ),
+  AllocatedAmount = c(
+    3000,2000,8000,2000,1000,12000,
+    2000,10000,3000,4000,3000,5000,
+    10000,6000,13000,2000,5000,12000,
+    13000,7000,15000
+  ),
+  LatestPaymentDate = as.Date(c(
+    "2025-02-15","2025-02-15","2025-02-20","2025-03-10","2025-03-10","2025-04-15",
+    "2025-05-20","2025-05-20","2025-05-20","2025-06-10","2025-07-15","2025-07-15",
+    "2025-07-20","2025-08-10","2025-09-15","2025-09-15","2025-10-11","2025-10-20",
+    "2025-12-20","2025-12-20","2025-12-25"
+  )),
+  SourceID = c(
+    "FS001","FS004","FS007","FS003","FS010","FS001",
+    "FS002","FS005","FS007","FS010","FS004","FS006",
+    "FS002","FS003","FS006","FS009","FS010","FS007",
+    "FS007","FS009","FS004"
+  ),
+  SourceValidFrom = as.Date(c(
+    "2025-02-01","2025-02-01","2025-01-01","2025-03-01","2025-02-01","2025-02-01",
+    "2025-02-01","2025-04-01","2025-01-01","2025-02-01","2025-02-01","2025-06-01",
+    "2025-02-01","2025-03-01","2025-06-01","2025-07-01","2025-02-01","2025-01-01",
+    "2025-01-01","2025-07-01","2025-02-01"
+  )),
+  SourceValidTo = as.Date(c(
+    "2025-06-30","2025-12-31","2025-12-31","2025-09-30","2025-12-31","2025-06-30",
+    "2025-08-31","2025-10-31","2025-12-31","2025-12-31","2025-12-31","2025-12-31",
+    "2025-08-31","2025-09-30","2025-12-31","2025-12-31","2025-12-31","2025-12-31",
+    "2025-12-31","2025-12-31","2025-12-31"
+  )),
+  stringsAsFactors = FALSE
+)
 
-create_circos_plot <- function() {
+rows_until_month <- allocation_df %>%
+  filter(LatestPaymentDate <= "2025-03-01")
+
+
+create_circos_plot <- function(month) {
   
   sources_ids <- unique(funding$ID)
   expenses_ids <- unique(expense_ordered$ID)
@@ -262,6 +317,9 @@ create_circos_plot <- function() {
   mat <- matrix(0, nrow = length(sectors), ncol = length(sectors))
   rownames(mat) <- sectors
   colnames(mat) <- sectors
+  
+  # rows_until_month <- allocation_df %>%
+  #   filter(LatestPaymentDate <= month)
   
   for (i in 1:nrow(df_allocations)) {
     mat[df_allocations$SourceID[i], df_allocations$ExpenseID[i]] <- df_allocations$AllocatedAmount[i]
@@ -272,51 +330,26 @@ create_circos_plot <- function() {
   }
   
   
-  link.visible <- mat > 0
-  diag(link.visible) <- FALSE
-  
-  
   funding_length <- length(sources_ids)
   expense_length <- length(expenses_ids)
-  all_sectors_length <- length(sectors)
   
-  gap_vector <- rep(3, all_sectors_length)
-  names(gap_vector) <- sectors
-  
-  gap_vector[sources_ids[funding_length]] <- 15
-  gap_vector[expenses_ids[expense_length]] <- 15
-  
-  circos.par(gap.after = gap_vector)
   
   funding_colors <- rainbow(funding_length)
   expense_colors <- heat.colors(expense_length)
+  sector_colors <- c(funding_colors, expense_colors)
   
-  grid.col <- c(setNames(funding_colors, sources_ids),
-                setNames(expense_colors, expenses_ids))
-  
-  chordDiagram(mat,
-               grid.col = grid.col,
-               annotationTrack = "grid",
-               preAllocateTracks = list(track.height = 0.08),
-               self.link = 1,
-               link.visible = link.visible,
-               reduce = FALSE)
-  
-  
-  circos.track(track.index = 1, panel.fun = function(x, y) {
-    circos.text(CELL_META$xcenter, CELL_META$ylim[1],
-                CELL_META$sector.index,
-                facing = "clockwise", niceFacing = TRUE,
-                adj = c(0, 0.5), cex = 0.6)
-  }, bg.border = NA)
-  
-  
-  circos.clear()
+  chorddiag(mat,
+            groupColors = sector_colors,
+            groupNames = sectors,
+            groupThickness = 0.1,
+            showTicks = TRUE,
+            margin = 100,
+            tooltipNames = sectors,
+            tooltipUnit = "$",
+            tooltipGroupConnector = " → ",
+            chordedgeColor = "#B3B6B7")
   
 }
-
-
-
 
 
 
