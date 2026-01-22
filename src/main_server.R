@@ -75,7 +75,7 @@ main_server_logic <- function(input, output, session, values) {
 
   # Render priority mode
   output$priority_card <- renderUI({
-    if (input$select_priority == "Manual Priority") {
+    if (isTruthy(input$select_priority) && input$select_priority == "Manual Priority") {
       manual_priority_ui()
     } else {
       column_priority_ui()
@@ -168,74 +168,85 @@ main_server_logic <- function(input, output, session, values) {
   # This section handles sorting of expenses based on user selection:
   # - Manual sorting (drag-and-drop order from UI)
   # - Sort by column (user-defined criteria and category order)
-  # The output 'values$expenses_sorted' includes 'final_order' column
+  # The output 'values$expenses_sorted' includes final order column
   # and will be used as input for the allocation algorithm
   # ----------------------------
 
+
   # ----------------------------
-  # 1. Watch for changes in sorting mode from UI
-  # 'sorting_mode' should come from a dropdown: "manual" or "by_rules"
+  # New logic for column sorting 0120
   # ----------------------------
-  observeEvent(input$sorting_mode, {
-    # Get the selected sorting mode
-    mode_selected <- input$sorting_mode
-
-    # Get the processed expenses data from previous step
-    # Must include 'original_index' for tie-breaking
-    expenses_data <- values$expenses_data
-
-    # ----------------------------
-    # 2. Manual sorting
-    # ----------------------------
-    if (mode_selected == "manual") {
-      # TODO: Retrieve user's drag-and-drop order from UI
-      # This should be a dataframe 'manual_order' with column 'id'
-      # matching expenses_data$id
-      manual_order <- NULL # placeholder
-
-      # Call the sorting function
-      expenses_sorted <- main_sorting_expenses(
-        expenses_data = expenses_data,
-        mode = "manual",
-        manual_order = manual_order
-      )
-    } else if (mode_selected == "by_rules") {
-      # ----------------------------
-      # 3. Sort by column (by_rules)
-      # ----------------------------
-      # TODO: Retrieve user's ordering rules from UI
-      # Example format:
-      # list(
-      #   criteria = c("latest_payment_date", "category"),
-      #   category_order = c("salary", "travel", "research")
-      # )
-      ordering_rules <- NULL # placeholder
-
-      # Call the sorting function
-      expenses_sorted <- main_sorting_expenses(
-        expenses_data = expenses_data,
-        mode = "by_rules",
-        ordering_rules = ordering_rules
-      )
-    } else {
-      stop("Invalid sorting mode selected")
-    }
-
-    # ----------------------------
-    # 4. Save sorted expenses to reactive values
-    # The sorted dataframe includes 'final_order' column and will be
-    # used as input for the allocation algorithm
-    # ----------------------------
-    values$expenses_sorted <- expenses_sorted
-
-    # ----------------------------
-    # TODOs for future integration:
-    # - Connect 'manual_order' to the actual UI drag-and-drop result
-    # - Connect 'ordering_rules' to the UI ordering rules drag-and-drop
-    # ----------------------------
+  # 1.Dynamically generate the sorting rules list
+  current_ordering_rules <- reactive({
+    list(
+      p1_item        = input$select_first_priority_item,
+      p1_date_dir    = input$`payment-date-options`, 
+      p2_item        = input$select_second_priority_item,
+      p2_date_dir    = input$`payment-date-options`, 
+      category_order = input$drag_categories
+    )
   })
 
+  
+
+  observe({
+    # Debug print
+    cat("\n[Server Signal] Observer Triggered! Mode:", input$select_priority, "\n")
+    
+    # Get current rules
+    rules <- current_ordering_rules()
+    
+    # Retrieve data
+    data_to_sort <- if(!is.null(values$expenses) && nrow(values$expenses) > 0) {
+      values$expenses
+    } else {
+      # mock data
+      data.frame(
+        priority = 1:5,
+        expense_id = c("EXP001", "EXP002", "EXP003", "EXP004", "EXP005"),
+        expense_name = c("Staff A", "Trip", "Staff B", "Laptop", "Snacks"),
+        expense_category = c("Salary", "Travel", "Salary", "Equipment", "Cheese"),
+        planned_amount = c(5000, 200, 4500, 1200, 50),
+        latest_payment_date = as.Date(c("2024-03-01", "2024-01-15", "2024-02-10", "2024-01-15", "2024-03-15")),
+        notes = c("", "Conf. in Sydney", "Monthly", "Laptop", "Kitchen"),
+        stringsAsFactors = FALSE
+      )
+    }
+    
+    # Decide the mode based on the user’s selection
+    target_mode <- if(isTruthy(input$select_priority) && input$select_priority == "Column Priority") "by_rules" else "manual"
+    
+    # Execute sorting
+    sorted_result <- main_sorting_expenses(
+      expenses_data = data_to_sort,
+      mode = target_mode,
+      ordering_rules = rules
+    )
+    
+    # Write back values
+    if (!is.null(values$expenses) && nrow(values$expenses) > 0) {
+      values$expenses <- sorted_result
+    }
+    
+  }) %>% bindEvent(
+    input$select_priority,
+    input$select_first_priority_item,
+    input$select_second_priority_item,
+    input$`payment-date-options`, 
+    input$drag_categories,
+    # Ensure it runs even if some inputs are empty
+    ignoreInit = FALSE,
+    ignoreNULL = FALSE
+  )
+
+  observe({
+    print(str(input$spreadsheet_upload))
+  })
+  
+
+
   # --- EVENTS: Add Funding Button ---
+
   # Adding new funding form
   observeEvent(input$add_funding, {
     showModal(upload_funding_modal())

@@ -1,92 +1,140 @@
 
 
 # Handles the sorting of expenses
-
-
 library(dplyr)
+library(rlang)
 
 # Main sorting function
 # This function sorts the expenses data based on user selection.
-# It supports two modes:
-# 1. "manual"   - sorting according to user drag-and-drop order
-# 2. "by_rules" - sorting according to user-defined column rules (criteria and category order)
+# 1. "manual"   - sorting according to user drag-and-drop order (handled by DT/Shiny)
+# 2. "by_rules" - sorting according to column priorities and dynamic category order
 main_sorting_expenses <- function(expenses_data, 
-                                  mode = "NULL",           # "manual" or "by_rules"
-                                  manual_order = NULL,     # Dataframe representing user's drag-and-drop order (for manual mode)
+                                  mode = NULL,           # "manual" or "by_rules"
+                                  # manual_order = NULL,     # Dataframe representing user's drag-and-drop order (for manual mode)
                                   ordering_rules = NULL) { # List representing user's sorting rules (for by_rules mode)
-  
-  # ----------------------------
-  # 1. Manual sorting (implementation later)
-  # ----------------------------
-  if (mode == "manual") {
-    if (is.null(manual_order)) {
-      stop("Manual mode selected but manual_order is NULL")
-    }
 
-    expenses_sorted <- expenses_data
-    
-  } 
+  # =========================================================
+  # Debug information print
+  # =========================================================
+  cat("\n--- [Sorting Debug Info] ---\n")
+  cat("Current Mode:", ifelse(is.null(mode), "NULL", mode), "\n")
   
-  # ----------------------------
-  # 2. Sort by column (by_rules)
-  # ----------------------------
-  else if (mode == "by_rules") {
+  if (!is.null(ordering_rules)) {
+    cat("Rule 1 (P1):", ordering_rules$p1_item, "\n")
+    cat("Rule 2 (P2):", ordering_rules$p2_item, "\n")
+    
+    # Print date sorting direction
+    if ("Payment Date" %in% c(ordering_rules$p1_item, ordering_rules$p2_item)) {
+      date_dir_text <- if(isTruthy(ordering_rules$p1_date_dir) && ordering_rules$p1_date_dir == "latest_payment_date") {
+        "Latest -> Earliest (Descending)"
+      } else {
+        "Earliest -> Latest (Ascending)"
+      }
+      cat("Date Direction:", date_dir_text, "\n")
+    }
+    
+    # Print category drag-and-drop order
+    if (!is.null(ordering_rules$category_order)) {
+      cat("Category Drag Order:", paste(ordering_rules$category_order, collapse = " > "), "\n")
+    }
+  }
+  cat("----------------------------\n\n")
+
+  # ---------------------------------------------------------
+  # 1. Column Sorting
+  # ---------------------------------------------------------
+  if (mode == "by_rules") {
     
     if (is.null(ordering_rules)) {
       stop("By_rules mode selected but ordering_rules is NULL")
     }
     
-    # ----------------------------
-    # Example of ordering_rules:
-    # list(
-    #   criteria = c("latest_payment_date", "category"),
-    #   category_order = c("salary", "travel", "research")
-    # )
-    # ----------------------------
+    # A. Reflect the order of category blocks dragged by the user on the page
+    # Convert `expense_category` to a factor; the order of `levels` represents the user's desired sequence
     
-    # 2.1 Convert category column to factor based on user-defined order
-    # This ensures that the 'category' column will be sorted according to the order specified by the user.
-    # Example:
-    #   Suppose expenses_data$category = c("travel", "salary", "research")
-    #   and ordering_rules$category_order = c("salary", "travel", "research")
-    #   After conversion:
-    #     factor levels are: salary < travel < research
-    #   So when we sort, rows with 'salary' will come first, then 'travel', then 'research'.
-    
-    if ("category" %in% names(expenses_data)) {
-      if (!is.null(ordering_rules$category_order)) {
-        expenses_data$category <- factor(
-          expenses_data$category,
+    if (!is.null(ordering_rules$category_order)) {
+      expenses_data <- expenses_data %>%
+        mutate(expense_category = factor(
+          expense_category, 
           levels = ordering_rules$category_order
-        )
-      }
+        ))
     }
     
-    # 2.2 Combine criteria columns + original_index to create a complete sorting order. 
-    sort_cols <- c(ordering_rules$criteria, "original_index")
+    # B. Define a mapping function: determine the sorting expression based on the project type
+    # Logic: if it's Categories, use the drag-and-drop order; if it's Date, use the earliest/latest direction
     
-    # 2.3 Apply dplyr::arrange to sort according to the defined columns
+    get_sort_expression <- function(p_item, p_date_dir) {
+      if (is.null(p_item) || p_item == "None") return(NULL)
+      
+      if (p_item == "Categories") {
+        # Sort directly according to the factor order set by mutate
+        return(expr(expense_category))
+      } 
+      
+      if (p_item == "Payment Date") {
+        # Determine ascending or descending order based on the direction parameter
+        if (!is.null(p_date_dir) && p_date_dir == "latest_payment_date") {
+          return(expr(desc(latest_payment_date)))
+        } else {
+          return(expr(latest_payment_date))
+        }
+      }
+      return(NULL)
+    }
+    
+    # C. Construct a multi-level sorting list
+    sort_list <- list()
+    
+    # 1st Priority
+    p1_expr <- get_sort_expression(ordering_rules$p1_item, ordering_rules$p1_date_dir)
+    if (!is.null(p1_expr)) sort_list[[length(sort_list) + 1]] <- p1_expr
+    
+    # 2nd Priority
+    p2_expr <- get_sort_expression(ordering_rules$p2_item, ordering_rules$p2_date_dir)
+    if (!is.null(p2_expr)) sort_list[[length(sort_list) + 1]] <- p2_expr
+    
+    # D. Tie-breaker
+    # When payment date and categories are the same, this preserves the current relative order when rules are equal
+    sort_list[[length(sort_list) + 1]] <- expr(priority)
+    
+    # E. Perform the sorting and rewrite the indices
+    # Use !!! to unquote the expressions in the list for the arrange function
     expenses_sorted <- expenses_data %>%
-      arrange(across(all_of(sort_cols)))
+      arrange(!!!sort_list) %>%
+      mutate(priority = row_number())
+    
+    # return(expenses_sorted)
+    
   } 
   
-  # ----------------------------
-  # 3. Handle invalid mode input
-  # ----------------------------
-  else {
-    stop("mode must be either 'manual' or 'by_rules'")
+  # ---------------------------------------------------------
+  # 2. Manual Sorting
+  # ---------------------------------------------------------
+  else if (mode == "manual") {
+    expenses_sorted <- expenses_data %>%
+      mutate(priority = row_number())
+    return(expenses_sorted)
   }
+  # =========================================================
+  # Print a snapshot of the sorted results
+  # =========================================================
+  cat("\n>>> [Sorting Result Preview] <<<\n")
+  if (nrow(expenses_sorted) > 0) {
+    # Select key columns to display
+    preview_df <- expenses_sorted %>%
+      select(priority, expense_id, expense_category, latest_payment_date) %>%
+      head(10) # Print the first 10 rows
+    
+    print(preview_df)
+    
+    if (nrow(expenses_sorted) > 10) {
+      cat("... (and", nrow(expenses_sorted) - 10, "more rows)\n")
+    }
+  } else {
+    cat("Warning: No sorted data to display.\n")
+  }
+  cat("================================\n\n")
   
-  # ----------------------------
-  # 4. Add final_order column
-  # This column represents the row position after sorting (1 for first, 2 for second, ...)
-  # ----------------------------
-  expenses_sorted <- expenses_sorted %>%
-    mutate(final_order = row_number())
-  
-  # ----------------------------
-  # 5. Return the sorted dataframe
-  # ----------------------------
   return(expenses_sorted)
 }
 
