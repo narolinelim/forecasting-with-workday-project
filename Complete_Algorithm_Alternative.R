@@ -1,25 +1,16 @@
----
-title: "Complete_Algorithm"
-author: "Benhao Gu"
-date: "2026-01-08"
-output:
-  pdf_document: default
-  html_document: default
----
-
-```{r setup, include=FALSE}
+## ----setup, include=FALSE---------------------------------------------------------------------
 knitr::opts_chunk$set(echo = TRUE)
-```
 
-```{r}
+
+## ---------------------------------------------------------------------------------------------
 # install.packages(c("ompr", "ompr.roi", "ROI", "ROI.plugin.highs"))
 library(ompr)
 library(ompr.roi)
 library(ROI)
 library(ROI.plugin.highs)
-```
 
-```{r}
+
+## ---------------------------------------------------------------------------------------------
 # Input format: DD/MM/YYYY
 # Output format: Integer (Days since base_date)
 date_to_int <- function(date_str, base_date) {
@@ -27,10 +18,9 @@ date_to_int <- function(date_str, base_date) {
   # Return numeric difference + 1 (so the first day is Day 1, not Day 0)
   return(as.numeric(dt - base_date) + 1)
 }
-```
 
-*DATA INPUT*
-```{r}
+
+## ---------------------------------------------------------------------------------------------
 # Source Data Frame, assume in the order of preference, first will have the highest allocation priority
 # sources <- data.frame(
 #   ID = c("FS001", "FS002", "FS003", "FS004", "FS005", "FS006", "FS007", "FS008", "FS009", "FS010"),
@@ -97,10 +87,9 @@ global_min_date <- min(date_objects, na.rm = TRUE)
 # getting total number of funding source and expenses (NOT total amount)
 n_sources <- nrow(sources)
 n_expenses <- nrow(expenses)
-```
 
-*PRE-PROCESSING*
-```{r}
+
+## ---------------------------------------------------------------------------------------------
 # This is a matrix with size n_sources x n_expenses (row is each funding sources, and column is each expenses sources), such that if the payment date of the expense fall within the valid from and valid to of the funding AND categories of the expense match with the allowed category of the source, then it will be marked as 1, otherwise 0
 # We build a Compatibility Matrix (Valid = 1, Invalid = 0)
 compatibility <- matrix(0, nrow = n_sources, ncol = n_expenses)
@@ -129,10 +118,9 @@ for (i in 1:n_sources) {
     }
   }
 }
-```
 
-*MODEL CONSTRUCTION*
-```{r}
+
+## ---------------------------------------------------------------------------------------------
 # Maximise Sum(Weight_j * y_j)
 # Coefficients for x[i,j] are 0. Coefficients for y[j] are the weights.
 # It works because $$2^k > \sum_{i=0}^{k-1} 2^i$$, so it will always incentivise to use the funding to fulfil the expenses with higher priority
@@ -166,16 +154,13 @@ model <- MIPModel() %>%
   # If compatibility[i, j] == 0, then x[i, j] must be 0
   add_constraint(x[i, j] == 0, i = 1:n_sources, j = 1:n_expenses, compatibility[i, j] == 0)
 
-```
 
-*OPTIMIZE*
-```{r}
+
+## ---------------------------------------------------------------------------------------------
 result <- solve_model(model, with_ROI(solver = "highs"))
-```
 
-*RESULT*
-# Partial filling function
-```{r}
+
+## ---------------------------------------------------------------------------------------------
 apply_greedy_fill <- function(result, sources, expenses, compatibility) {
   
   n_sources <- nrow(sources)
@@ -221,10 +206,9 @@ apply_greedy_fill <- function(result, sources, expenses, compatibility) {
   
   return(mat_x)
 }
-```
 
-# Table output function
-```{r}
+
+## ---------------------------------------------------------------------------------------------
 print_financial_report <- function(mat_x, sources, expenses) {
   
   n_sources <- nrow(sources)
@@ -297,10 +281,9 @@ print_financial_report <- function(mat_x, sources, expenses) {
   cat("-----------------------------------------------------------------\n")
   cat(sprintf("TOTAL UNUSED FUNDS: $%s\n", format(total_unused, big.mark=",")))
 }
-```
 
-# Output DataFrame
-```{r}
+
+## ---------------------------------------------------------------------------------------------
 create_financial_dfs <- function(mat_x, sources, expenses) {
   
   n_sources <- nrow(sources)
@@ -357,11 +340,9 @@ create_financial_dfs <- function(mat_x, sources, expenses) {
     funds = df_funds_summary
   ))
 }
-```
 
 
-
-```{r}
+## ---------------------------------------------------------------------------------------------
 if (result$status == "optimal" || result$status == "success") {
   
   # Partial fill
@@ -380,32 +361,30 @@ if (result$status == "optimal" || result$status == "success") {
 } else {
   cat("No optimal solution found.\n")
 }
-```
 
 
-
-```{r}
+## ---------------------------------------------------------------------------------------------
 # SourceID: ID of the funding source (e.g., FS001).
 # ExpenseID: ID of the expense being paid (e.g., E004).
 # ExpenseCategory: The category of the expense (e.g., Salary).
 # AllocatedAmount: The exact dollar amount transferred.
 df_allocations
-```
 
-```{r}
+
+## ---------------------------------------------------------------------------------------------
 # All original columns (ID, Category, Amount, Date) plus:
 # IsFilled: A Boolean (TRUE/FALSE) indicating if the optimization solver selected this expense.
 df_expenses_status
-```
 
-```{r}
+
+## ---------------------------------------------------------------------------------------------
 # SourceID: ID of the fund.
 # InitialAmount: The starting budget.
 # UsedAmount: Total allocated in this solution (sum(x_matrix[i, ])).
 # RemainingAmount: What is left over (Initial - Used).
 df_funds_summary
-```
 
-```{r}
-knitr::purl(input = "Complete_Algorithm_Alternative.Rmd", output = "Complete_Algorithm_Alternative.R")
-```
+
+## ---------------------------------------------------------------------------------------------
+# knitr::purl(input = "Complete_Algorithm_Alternative.Rmd", output = "Complete_Algorithm_Alternative.R")
+
