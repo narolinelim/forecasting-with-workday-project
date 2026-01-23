@@ -15,9 +15,6 @@ main_server_logic <- function(input, output, session, values) {
   
   clicked_month <- reactiveVal(NULL)
   
-  values$expenses_backup <- NULL
-
-
   # --- EVENTS: Navigation between tabs ---
   observeEvent(input$dashboard_tab, current_view("dashboard"))
   observeEvent(input$forecast_tab, current_view("forecast"))
@@ -225,14 +222,10 @@ main_server_logic <- function(input, output, session, values) {
     
     # Retrieve data
     data_to_sort <- values$expenses
-    
-    # Decide the mode based on the user’s selection
-    target_mode <- if(isTruthy(input$select_priority) && input$select_priority == "Column Priority") "by_rules" else "manual"
-    
+        
     # Execute sorting
-    sorted_result <- main_sorting_expenses(
+    sorted_result <- col_ordering(
       expenses_data = data_to_sort,
-      mode = target_mode,
       ordering_rules = rules
     )
     
@@ -251,8 +244,6 @@ main_server_logic <- function(input, output, session, values) {
     ignoreInit = FALSE,
     ignoreNULL = FALSE
   )
-
-
 
   # --- EVENTS: Add Funding Button ---
 
