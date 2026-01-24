@@ -6,10 +6,11 @@ library(dplyr)
 library(tidyr)
 library(lubridate)
 library(circlize)
+library(chorddiag)
 
 
 # Funding Source
-sources <- data.frame(
+funding <- data.frame(
   ID = c("FS001", "FS002", "FS003", "FS004", "FS005", "FS006", "FS007", "FS008", "FS009", "FS010"),
   Categories = I(list(
     c("Salary"), c("Equipment"), c("Travel"), c("Salary", "Travel"), 
@@ -37,8 +38,11 @@ expenses <- data.frame(
            "15/07/2025", "20/07/2025", "15/09/2025", "20/10/2025", "10/11/2025")
 )
 
-total_balance <- sum(sources$Amount)
+expense_ordered <- expenses[order(expenses$ID),]
 
+
+
+# Allocation Result Data Frame
 ordered_allocation <- data.frame(
   ExpenseID = c("E013", "E003", "E006", "E009",
                 "E012", "E001", "E004", "E007",
@@ -65,6 +69,8 @@ ordered_allocation <- data.frame(
                "FALSE", "TRUE", "TRUE", "TRUE",
                "TRUE", "TRUE", "TRUE")
 )
+
+total_balance <- sum(funding$Amount)
 
 
 # SHORTFALL PLOT
@@ -194,17 +200,164 @@ create_shortfall_bar <- function() {
 
 "
 
-# Mock dataframe
+# Allocation Summary Data Frame
+df_allocations <- data.frame(
+  SourceID = c(
+    "FS003","FS007","FS009","FS004","FS001",
+    "FS004","FS007","FS003","FS010","FS001",
+    "FS002","FS005","FS007","FS010","FS004",
+    "FS006","FS002","FS006","FS009","FS007",
+    "FS010"
+  ),
+  ExpenseID = c(
+    "E009","E014","E014","E015","E001",
+    "E001","E002","E003","E003","E004",
+    "E005","E005","E005","E006","E007",
+    "E007","E008","E010","E010","E011",
+    "E012"
+  ),
+  ExpenseCategory = c(
+    "Travel","Equipment","Equipment","Travel","Salary",
+    "Salary","Equipment","Travel","Travel","Salary",
+    "Equipment","Equipment","Equipment","Travel","Salary",
+    "Salary","Equipment","Salary","Salary","Equipment",
+    "Travel"
+  ),
+  AllocatedAmount = c(
+    6000,13000,7000,15000,3000,
+    2000,8000,2000,1000,12000,
+    2000,10000,3000,4000,3000,
+    5000,10000,13000,2000,12000,
+    5000
+  )
+)
 
-"
+# Funding Summary Data Frame
+after_allocation_funding <- data.frame(
+  SourceID = c(
+    "FS001","FS002","FS003","FS004","FS005",
+    "FS006","FS007","FS008","FS009","FS010"
+  ),
+  InitialAmount = c(
+    15000, 12000, 8000, 20000, 10000,
+    18000, 36000, 5000, 14000, 10000
+  ),
+  UsedAmount = c(
+    15000, 12000, 8000, 20000, 10000,
+    18000, 36000, 0, 9000, 10000
+  ),
+  RemainingAmount = c(
+    0, 0, 0, 0, 0,
+    0, 0, 5000, 5000, 0
+  )
+)
 
-"
+allocation_df <- data.frame(
+  ExpenseID = c(
+    "E001","E001","E002","E003","E003","E004",
+    "E005","E005","E005","E006","E007","E007",
+    "E008","E009","E010","E010","E012","E011",
+    "E014","E014","E015"
+  ),
+  ExpenseCategory = c(
+    "Salary","Salary","Equipment","Travel","Travel","Salary",
+    "Equipment","Equipment","Equipment","Travel","Salary","Salary",
+    "Equipment","Travel","Salary","Salary","Travel","Equipment",
+    "Equipment","Equipment","Travel"
+  ),
+  ExpenseAmount = c(
+    5000,5000,8000,3000,3000,12000,
+    15000,15000,15000,4000,8000,8000,
+    10000,6000,15000,15000,5000,12000,
+    20000,20000,15000
+  ),
+  AllocatedAmount = c(
+    3000,2000,8000,2000,1000,12000,
+    2000,10000,3000,4000,3000,5000,
+    10000,6000,13000,2000,5000,12000,
+    13000,7000,15000
+  ),
+  LatestPaymentDate = as.Date(c(
+    "2025-02-15","2025-02-15","2025-02-20","2025-03-10","2025-03-10","2025-04-15",
+    "2025-05-20","2025-05-20","2025-05-20","2025-06-10","2025-07-15","2025-07-15",
+    "2025-07-20","2025-08-10","2025-09-15","2025-09-15","2025-10-11","2025-10-20",
+    "2025-12-20","2025-12-20","2025-12-25"
+  )),
+  SourceID = c(
+    "FS001","FS004","FS007","FS003","FS010","FS001",
+    "FS002","FS005","FS007","FS010","FS004","FS006",
+    "FS002","FS003","FS006","FS009","FS010","FS007",
+    "FS007","FS009","FS004"
+  ),
+  SourceValidFrom = as.Date(c(
+    "2025-02-01","2025-02-01","2025-01-01","2025-03-01","2025-02-01","2025-02-01",
+    "2025-02-01","2025-04-01","2025-01-01","2025-02-01","2025-02-01","2025-06-01",
+    "2025-02-01","2025-03-01","2025-06-01","2025-07-01","2025-02-01","2025-01-01",
+    "2025-01-01","2025-07-01","2025-02-01"
+  )),
+  SourceValidTo = as.Date(c(
+    "2025-06-30","2025-12-31","2025-12-31","2025-09-30","2025-12-31","2025-06-30",
+    "2025-08-31","2025-10-31","2025-12-31","2025-12-31","2025-12-31","2025-12-31",
+    "2025-08-31","2025-09-30","2025-12-31","2025-12-31","2025-12-31","2025-12-31",
+    "2025-12-31","2025-12-31","2025-12-31"
+  )),
+  stringsAsFactors = FALSE
+)
 
-create_circos_plot <- function() {
+
+create_circos_plot <- function(month) {
+  print(month)
+  
+  sources_ids <- unique(funding$ID)
+  expenses_ids <- unique(expense_ordered$ID)
+  sectors <- c(sources_ids, expenses_ids)
+  
+  rows_until_month <- allocation_df %>%
+    filter(LatestPaymentDate < month)
+  print(rows_until_month)
+  
+  if (nrow(rows_until_month) == 0) {
+    return (htmltools::tags$div("No allocation this month."))
+  }
+  
+  mat <- matrix(0, nrow = length(sectors), ncol = length(sectors))
+  rownames(mat) <- sectors
+  colnames(mat) <- sectors
+  
+  # allocating to expenses
+  for (i in 1:nrow(rows_until_month)) {
+    mat[rows_until_month$SourceID[i], rows_until_month$ExpenseID[i]] <- rows_until_month$AllocatedAmount[i]
+  }
+  print(mat)
+  
+  # leftover funding self-links
+  for (i in 1:nrow(after_allocation_funding)) {
+    mat[after_allocation_funding$SourceID[i], after_allocation_funding$SourceID[i]] <- after_allocation_funding$RemainingAmount[i]
+  }
   
   
-  circos.initialize()
+  funding_length <- length(sources_ids)
+  expense_length <- length(expenses_ids)
+  
+  
+  funding_colors <- rainbow(funding_length)
+  expense_colors <- heat.colors(expense_length)
+  sector_colors <- c(funding_colors, expense_colors)
+  
+  chorddiag(mat,
+            groupColors = sector_colors,
+            groupNames = sectors,
+            groupThickness = 0.1,
+            showTicks = TRUE,
+            margin = 100,
+            tooltipNames = sectors,
+            tooltipUnit = "$",
+            tooltipGroupConnector = " → ",
+            chordedgeColor = "#B3B6B7")
+  
 }
+
+
 
 
 

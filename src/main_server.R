@@ -8,6 +8,7 @@ source("src/server/io.R")
 source("src/server/sorting.R")
 source("src/server/graph.R")
 source("src/server/edit-rows.R")
+source("src/server/testing.R")
 
 main_server_logic <- function(input, output, session, values) {
   # Current page
@@ -116,6 +117,37 @@ main_server_logic <- function(input, output, session, values) {
       div("No second priority.", class = "no-second-priority")
     }
   })
+  
+  # --- EVENT: Mutual Exclusion for Priority Dropdowns ---
+  observeEvent(input$select_first_priority_item, {
+    # 1. Get the current value of the 1st Priority
+    p1_val <- input$select_first_priority_item
+    
+    # 2. Define all available choices for the 2nd Priority
+    p2_choices <- c("Payment Date", "Categories", "None")
+    
+    # 3. Identify the item to disable (the one already selected in P1)
+    disabled_choices <- p2_choices[p2_choices == p1_val]
+    
+    # 4. Update the 2nd Priority pickerInput state态
+    updatePickerInput(
+      session = session,
+      inputId = "select_second_priority_item",
+      choices = p2_choices,
+      choicesOpt = list(
+        # Disable the item selected in P1
+        disabled = p2_choices %in% disabled_choices,
+        # Make the disabled option appear gray
+        style = ifelse(p2_choices %in% disabled_choices, 
+                       "color: rgba(0,0,0,0.3); background: #f8f9fa;", "")
+      )
+    )
+    
+    # 5. Safety Check: If P2 was already set to the newly disabled item, reset it to "None"
+    if (input$select_second_priority_item == p1_val) {
+      updatePickerInput(session, "select_second_priority_item", selected = "None")
+    }
+  })
 
   # Dragging feature for categories priority
   observeEvent(input$drag_categories, {
@@ -196,7 +228,7 @@ main_server_logic <- function(input, output, session, values) {
   observeEvent(input$spreadsheet_upload, {
     req(input$spreadsheet_upload)
     path <- input$spreadsheet_upload$datapath
-    
+
     tryCatch({
       data_list <- read_excel_data(path)
       funding_sources_df <- data_list$funding_sources
@@ -209,24 +241,18 @@ main_server_logic <- function(input, output, session, values) {
       showNotification(paste("Upload failed:", e$message), type = "error", duration = 3)
     })
   })
-  
-  
-
-  # ----------------------------
-  # SORTING LOGIC
-  # This section handles sorting of expenses based on user selection:
-  # - Manual sorting (drag-and-drop order from UI)
-  # - Sort by column (user-defined criteria and category order)
-  # The output 'values$expenses_sorted' includes final order column
-  # and will be used as input for the allocation algorithm
-  # ----------------------------
 
 
-  # ----------------------------
-  # New logic for column sorting 0120
-  # ----------------------------
+
+  # --- EVENT: Logic for column sorting ---
   # 1.Dynamically generate the sorting rules list
   current_ordering_rules <- reactive({
+    # Ensure UI is initialized
+    req(input$select_first_priority_item)
+    
+    # Global categories order fallback
+    actual_category_order <- if (is.null(input$drag_categories)) categories else input$drag_categories
+    
     list(
       p1_item        = input$select_first_priority_item,
       p1_date_dir    = input$`payment-date-options`, 
@@ -235,23 +261,22 @@ main_server_logic <- function(input, output, session, values) {
       category_order = input$drag_categories
     )
   })
-
   
 
   observe({
+    
+    # Do not proceed if no data is loaded
+    req(values$expenses)
+    req(nrow(values$expenses) > 0)
     # Get current rules
     rules <- current_ordering_rules()
     
     # Retrieve data
     data_to_sort <- values$expenses
-    
-    # Decide the mode based on the user’s selection
-    target_mode <- if(isTruthy(input$select_priority) && input$select_priority == "Column Priority") "by_rules" else "manual"
-    
+        
     # Execute sorting
-    sorted_result <- main_sorting_expenses(
+    sorted_result <- col_ordering(
       expenses_data = data_to_sort,
-      mode = target_mode,
       ordering_rules = rules
     )
     
@@ -430,15 +455,28 @@ main_server_logic <- function(input, output, session, values) {
     clicked_month(clicked_bar$x)
   })
   
+  circos_month <- reactive({
+    cm <- clicked_month()
+    req(cm)
+    cutoff <- ceiling_date(as.Date(paste0(cm, "-01")), "month")
+    create_circos_plot(month = cutoff)
+  })
+  
+  output$circos_plot <- renderChorddiag({
+    circos_month()
+  })
+  
   output$circos_container <- renderUI({
     cm <- clicked_month()
-    
+
     if (is.null(cm)) {
-      tags$p("click on a month to see circos plot")
+      tags$p("Click on a month to see the chord diagram.")
     } else {
-      plotOutput("circos_plot", height = "400px")
+      chorddiagOutput("circos_plot", height = "100%")
     }
   })
+  
+  
 }
 
 

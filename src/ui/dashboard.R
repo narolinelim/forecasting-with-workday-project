@@ -40,16 +40,21 @@ dashboard_ui <- function(total_balance) {
             card(
               id = "shortfall-graph",
               full_screen = TRUE,
-              height = 600,
               card_header("Shortfall Breakdown"),
-              plotlyOutput("shortfall_plot", height = "100%")
+              card_body_fill(
+                height = 600,
+                plotlyOutput("shortfall_plot", height = "100%") 
+              )
             ),
               
             card(
               id = "expense-graph",
               full_screen = TRUE,
               card_header("Expense Breakdown"),
-              uiOutput("circos_container")
+              card_body_fill(
+                height = 600,
+                uiOutput("circos_container")
+              )
             )
           ),
           

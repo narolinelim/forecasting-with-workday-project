@@ -95,10 +95,12 @@ column_priority_ui <- function() {
             
             div(
               class = "select_priority_dropdown",
-              selectInput(
+              pickerInput( # selectInput
                 "select_first_priority_item",
                 label = NULL,
-                choices = c("Payment Date", "Categories")
+                choices = c("Payment Date", "Categories"),
+                options = list(style = "btn-outline-secondary")
+          
               )
             ),
             uiOutput("first_priority")
@@ -119,10 +121,12 @@ column_priority_ui <- function() {
             div(
               class = "select_priority_dropdown",
               
-              selectInput(
+              pickerInput( # selectInput
                 "select_second_priority_item",
                 label = NULL,
-                choices = c("Categories", "Payment Date", "None")
+                choices = c("Categories", "Payment Date", "None"),
+                # selected = "None",
+                options = list(style = "btn-outline-secondary")
               )
             ),
             uiOutput("second_priority")
@@ -143,6 +147,12 @@ column_priority_ui <- function() {
         DTOutput("sample_expense_table"),
         style = "padding: 16px; font-weight: 400; font-size: 16px;"
       )
+      # ,
+      # div(
+      #   actionButton("save_column_order", "Save order", class = "btn-primary"),
+      #   actionButton("cancel_column_order", "Cancel", class = "btn-default"),
+      #   style = "padding: 0 16px 16px 16px;"
+      # )
     )
   )
 
