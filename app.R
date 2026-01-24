@@ -28,8 +28,9 @@ library(sortable)
 library(ggplot2)
 library(plotly)
 
-# library(gurobi)
+
 # library(Matrix)
+
 
 
 # 3. Load UI
@@ -59,8 +60,7 @@ server <- function(input, output, session) {
       expense_category = character(),
       planned_amount = numeric(),
       latest_payment_date = as.Date(character()),
-      notes = character(),
-      old_index = integer()
+      notes = character()
     ),
     allocation_result = data.frame()
   )

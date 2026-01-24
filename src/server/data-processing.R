@@ -86,9 +86,6 @@ process_expense_data <- function(df) {
       expense_id = as.character(expense_id)
     ) %>%
 
-    # Add index
-    mutate(old_index = row_number()) %>%
-
     # Remove rows with NA in expense_id
     filter(!is.na(expense_id))
     
