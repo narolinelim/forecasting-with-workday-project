@@ -17,7 +17,10 @@ main_server_logic <- function(input, output, session, values) {
 
   # --- Data Validation ---
   observe({
-    data_validation(values)
+    correct_format_data <- data_validation(values)
+    if (correct_format_data == TRUE){
+      showNotification("Data validation passed", type = "message", duration = 3)
+    }
   }) %>%
     bindEvent(
       values$funding_sources,
@@ -98,7 +101,7 @@ main_server_logic <- function(input, output, session, values) {
     if (input$select_first_priority_item == "Payment Date") {
       payment_date_view()
     } else {
-      print(available_categories())
+
       categories_view(categories = available_categories())
     }
   })

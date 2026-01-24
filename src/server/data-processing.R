@@ -131,4 +131,12 @@ data_validation <- function(data) {
   if (nrow(invalid_expense_amounts) > 0) {
     showNotification("Error: Some expenses have negative planned amounts.", type = "error", duration = NULL)
   }
+
+  # if no errors, return TRUE
+  if (nrow(invalid_funding_dates) == 0 && nrow(invalid_funding_amounts) == 0 &&
+      nrow(invalid_expense_categories) == 0 && nrow(invalid_expense_amounts) == 0) {
+    return(TRUE)
+  } else {
+    return(FALSE)
+  }
 }

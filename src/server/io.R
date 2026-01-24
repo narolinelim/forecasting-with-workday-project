@@ -177,7 +177,7 @@ TITLE_SECTION <- 1
 DATE_SECTION <- 3
 MAIN_SECTION_HEADER <- 5
 
-create_allocation_report_wb <- function(values, funding_summary) {
+create_allocation_report_wb <- function(values) {
   style_header_title <- createStyle(fontSize = 16, textDecoration = "bold")
   style_header_border <- createStyle(border = "bottom", borderColour = "black", borderStyle = "medium", textDecoration = "bold")
   style_bold <- createStyle(textDecoration = "bold")
@@ -188,17 +188,7 @@ create_allocation_report_wb <- function(values, funding_summary) {
   allocation_result <- values$allocation_result
   funding_summary <- values$funding_summary
 
-  # test amount formatting
-  allocation_result <- data.frame(
-    expense_id = c("E-1", "E-2", "E-3"),
-    source_id = c("FS-1", "FS-2", "FS-3"),
-    expense_category = c("Category A", "Category B", "Category C"),
-    expense_amount = c(2345.67, 8901.23, 1500.00),
-    allocated_amount = c(1234.50, 6789.01, 500.00),
-    latest_payment_date = as.Date(c(Sys.Date()-10, Sys.Date()-5, Sys.Date()-1)),
-    allocation_status = c("Partial", "Full", "Pending"),
-    stringsAsFactors = FALSE
-  )
+
   wb <- createWorkbook()
   
   # --- Allocation Result Sheet ---
