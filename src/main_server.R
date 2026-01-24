@@ -15,6 +15,17 @@ main_server_logic <- function(input, output, session, values) {
   
   clicked_month <- reactiveVal(NULL)
 
+  # --- Data Validation ---
+  observe({
+    data_validation(values)
+  }) %>%
+    bindEvent(
+      values$funding_sources,
+      values$expenses,
+      ignoreNULL = FALSE
+    )
+  
+
 
   # --- EVENTS: Navigation between tabs ---
   observeEvent(input$dashboard_tab, current_view("dashboard"))
