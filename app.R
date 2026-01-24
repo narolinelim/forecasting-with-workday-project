@@ -41,8 +41,11 @@ ui <- main_ui_layout()
 
 # 4. Load Server
 server <- function(input, output, session) {
-  
-  # Memory (to be filled)
+  # If test.R exists, source it into the server environment so it can set `values`
+  if (file.exists("test.R")) {
+  source("test.R", local = TRUE)
+  } else {
+  # Otherwise, initialize `values` as empty data frames
   values <- reactiveValues(
     funding_sources = data.frame(
       source_id = character(),
@@ -62,8 +65,24 @@ server <- function(input, output, session) {
       latest_payment_date = as.Date(character()),
       notes = character()
     ),
-    allocation_result = data.frame()
+    allocation_result = data.frame(
+      expense_id = character(),
+      source_id = character(),
+      expense_category = character(),
+      expense_amount = numeric(),
+      allocated_amount = numeric(),
+      latest_payment_date = as.Date(character()),
+      allocation_status = logical()
+    ),
+    funding_summary = data.frame(
+      source_id = character(),
+      funding_source = character(),
+      initial_amount = numeric(),
+      used_amount = numeric(),
+      remaining_amount = numeric()
+    )
   )
+  }
   
   main_server_logic(input, output, session, values)
   main_output(input, output, session, values)

@@ -24,7 +24,7 @@ expense_ui <- function() {
         div(
           div(
             class = "delete-expense",
-            actionButton("delete_expense", "Delete Selected Expense", class = "delete-data-btn")
+            actionButton("delete_expense", "Delete Selected Row(s)", class = "delete-data-btn")
           ),
           DTOutput("sample_expense_table")
         ),
@@ -37,7 +37,7 @@ expense_ui <- function() {
   )
 }
 
-upload_expense_modal <- function() {  
+upload_expense_modal <- function(categories) {  
   tagAppendAttributes(
     modalDialog(
       title = div(
@@ -49,6 +49,19 @@ upload_expense_modal <- function() {
     
       div(
         id = "expense-form",
+
+        # Expense Name
+        div(
+          id = "expense-name",
+          class = "elongated-input",
+          div("Expense Name", class = "data-input-headers"),
+          textInput(
+            "expense_name_input",
+            label = NULL,
+            value = "",
+            placeholder = "Enter expense name..."
+          )
+        ),
         
         # Expense Categories
         div(
@@ -60,11 +73,12 @@ upload_expense_modal <- function() {
             selectizeInput(
               "expense_type",
               label = NULL,
-              choices = list("Salary", "Travel"),
+              choices = categories,
               multiple = FALSE,
               options = list(
+                create = TRUE,
                 placeholder = "Select expense type...",
-                onInitialize = I('function() { this.setValue(""); }')
+                openOnFocus = TRUE
               )
             )
           )
@@ -104,7 +118,6 @@ upload_expense_modal <- function() {
           class = "elongated-input",
           
           div("Note", class = "data-input-headers"),
-          
           textInput(
             "expense_note",
             label = NULL,
@@ -116,7 +129,6 @@ upload_expense_modal <- function() {
     class = "add-expense-popup"
   )
 }
-
 
 
 

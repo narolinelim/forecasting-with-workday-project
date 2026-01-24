@@ -24,7 +24,7 @@ funding_ui <- function() {
         div(
           div(
             class = "delete-funding",
-            actionButton("delete_funding", "Delete Selected Funding", class = "delete-data-btn")
+            actionButton("delete_funding", "Delete Selected Row(s)", class = "delete-data-btn")
           ),
           DTOutput("sample_funding_table")
         ),
@@ -37,7 +37,7 @@ funding_ui <- function() {
 }
 
 
-upload_funding_modal <- function() {
+upload_funding_modal <- function(categories) {
   
   tagAppendAttributes(
     modalDialog(
@@ -76,10 +76,12 @@ upload_funding_modal <- function() {
             selectizeInput(
               "add_allowed_categories",
               label = NULL,
-              choices = list("Salary", "Travel"),
+              choices = categories,
               multiple = TRUE,
               options = list(
-                placeholder = "Select allowed categories..."
+                create = TRUE,
+                placeholder = "Select allowed categories...",
+                openOnFocus = TRUE
               )
             )
           )

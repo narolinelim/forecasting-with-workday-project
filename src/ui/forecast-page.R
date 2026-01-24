@@ -197,12 +197,11 @@ payment_date_view <- function() {
 
 
 
-# Predefined Categories
-categories <- list("Salary", "Travel", "Equipment", "Cheese")
+
 
 # Column Priority: Allowed Categories View
 
-categories_view <- function() {  
+categories_view <- function(categories) {  
   div(
     class = "categories-container",
     tagList(

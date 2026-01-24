@@ -91,3 +91,52 @@ process_expense_data <- function(df) {
     
   return(expense_df)
 }
+
+# Data validation functions
+data_validation <- function(data) {
+  # validate for the values dataframe
+  # this will be called at all time to check at any point the data is invalid
+
+  funding_sources <- data$funding_sources
+  expenses <- data$expenses
+
+  # For funding sources
+
+  # valid from should be before valid to
+  invalid_funding_dates <- funding_sources %>%
+    filter(!is.na(valid_from) & !is.na(valid_to) & valid_from > valid_to)
+  if (nrow(invalid_funding_dates) > 0) {
+    showNotification("Error: Some funding sources have invalid date ranges.", type = "error", duration = NULL)
+  }
+
+  # amount should be non-negative
+  invalid_funding_amounts <- funding_sources %>%
+    filter(!is.na(amount) & amount < 0)
+  if (nrow(invalid_funding_amounts) > 0) {
+    showNotification("Error: Some funding sources have negative amounts.", type = "error", duration = NULL)
+  }
+
+  # For expenses
+
+  # valid categories should be non-empty
+  invalid_expense_categories <- expenses %>%
+    filter(is.na(expense_category) | expense_category == "")
+  if (nrow(invalid_expense_categories) > 0) {
+    showNotification("Error: Some expenses have invalid categories.", type = "error", duration = NULL)
+  }
+
+  # planned amount should be non-negative
+  invalid_expense_amounts <- expenses %>%
+    filter(!is.na(planned_amount) & planned_amount < 0)
+  if (nrow(invalid_expense_amounts) > 0) {
+    showNotification("Error: Some expenses have negative planned amounts.", type = "error", duration = NULL)
+  }
+
+  # if no errors, return TRUE
+  if (nrow(invalid_funding_dates) == 0 && nrow(invalid_funding_amounts) == 0 &&
+      nrow(invalid_expense_categories) == 0 && nrow(invalid_expense_amounts) == 0) {
+    return(TRUE)
+  } else {
+    return(FALSE)
+  }
+}

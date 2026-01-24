@@ -15,7 +15,22 @@ main_server_logic <- function(input, output, session, values) {
   current_view <- reactiveVal("dashboard")
   
   clicked_month <- reactiveVal(NULL)
+
+  # --- Data Validation ---
+  observe({
+    correct_format_data <- data_validation(values)
+    if (correct_format_data == TRUE){
+      showNotification("Data validation passed", type = "message", duration = 3)
+    }
+  }) %>%
+    bindEvent(
+      values$funding_sources,
+      values$expenses,
+      ignoreNULL = FALSE
+    )
   
+
+
   # --- EVENTS: Navigation between tabs ---
   observeEvent(input$dashboard_tab, current_view("dashboard"))
   observeEvent(input$forecast_tab, current_view("forecast"))
@@ -87,7 +102,8 @@ main_server_logic <- function(input, output, session, values) {
     if (input$select_first_priority_item == "Payment Date") {
       payment_date_view()
     } else {
-      categories_view()
+
+      categories_view(categories = available_categories())
     }
   })
 
@@ -96,7 +112,7 @@ main_server_logic <- function(input, output, session, values) {
     if (input$select_second_priority_item == "Payment Date") {
       payment_date_view()
     } else if (input$select_second_priority_item == "Categories") {
-      categories_view()
+      categories_view(categories = available_categories())
     } else if (input$select_second_priority_item == "None") {
       div("No second priority.", class = "no-second-priority")
     }
@@ -136,6 +152,40 @@ main_server_logic <- function(input, output, session, values) {
   # Dragging feature for categories priority
   observeEvent(input$drag_categories, {
     input$drag_categories
+  })
+
+  # --- Get available funding categories ---
+  available_categories <- reactive({
+    # expenses categories (safe)
+    exp_cats <- character(0)
+    if (!is.null(values$expenses) && is.data.frame(values$expenses) && "expense_category" %in% names(values$expenses)) {
+      exp_cats_raw <- values$expenses$expense_category
+      if (is.factor(exp_cats_raw)) exp_cats_raw <- as.character(exp_cats_raw)
+      exp_cats <- as.character(exp_cats_raw)
+      exp_cats <- trimws(exp_cats)
+      exp_cats <- exp_cats[!is.na(exp_cats) & nzchar(exp_cats)]
+    }
+
+    # funding allowed categories (list-column or comma-separated)
+    fund_cats <- character(0)
+    if (!is.null(values$funding_sources) && is.data.frame(values$funding_sources) && "allowed_categories" %in% names(values$funding_sources)) {
+      ac <- values$funding_sources$allowed_categories
+
+      if (is.list(ac)) {
+        fund_cats_raw <- unlist(ac, use.names = FALSE)
+      } else {
+        # atomic vector: might contain comma-separated strings
+        fund_cats_raw <- as.character(ac)
+        fund_cats_raw <- unlist(strsplit(fund_cats_raw[!is.na(fund_cats_raw)], ",\\s*"), use.names = FALSE)
+      }
+
+      fund_cats <- trimws(as.character(fund_cats_raw))
+      fund_cats <- fund_cats[!is.na(fund_cats) & nzchar(fund_cats)]
+    }
+
+    # combine, dedupe, sort
+    cats <- unique(c(exp_cats, fund_cats))
+    sort(cats)
   })
 
   # --- EVENT: Manual Row Reordering ---
@@ -250,7 +300,7 @@ main_server_logic <- function(input, output, session, values) {
 
   # Adding new funding form
   observeEvent(input$add_funding, {
-    showModal(upload_funding_modal())
+    showModal(upload_funding_modal(categories = available_categories()))
   })
 
   observeEvent(input$add_funding_confirm, {
@@ -265,11 +315,10 @@ main_server_logic <- function(input, output, session, values) {
     values$funding_sources <- delete_row(values$funding_sources, selected)
   })
   
-
   # --- EVENTS: Add Expense Button ---
   # Adding new expense form
   observeEvent(input$add_expense, {
-    showModal(upload_expense_modal())
+    showModal(upload_expense_modal(categories = available_categories()))
   })
 
   observeEvent(input$add_expense_confirm, {

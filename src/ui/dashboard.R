@@ -98,7 +98,7 @@ dashboard_ui <- function(total_balance) {
         )
       )
     ),
-    actionButton("budget_download", "↓ Download Budget Allocation", class = "budget_download_btn"),
+    downloadButton("budget_download", "Download Budget Allocation", class = "budget_download_btn"),
     actionButton("exit_session", "Exit Session", class = "exit_session_btn")
   )
 }
