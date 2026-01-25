@@ -102,6 +102,14 @@ data_validation <- function(data) {
 
   # For funding sources
 
+  # check for valid ids
+  # funding source ids should be in FS- format
+  invalid_funding_ids <- funding_sources %>%
+    filter(!grepl("^FS-", source_id))
+  if (nrow(invalid_funding_ids) > 0) {
+    showNotification("Error: Some funding sources have invalid IDs.", type = "error", duration = NULL)
+  }
+
   # valid from should be before valid to
   invalid_funding_dates <- funding_sources %>%
     filter(!is.na(valid_from) & !is.na(valid_to) & valid_from > valid_to)
@@ -117,6 +125,13 @@ data_validation <- function(data) {
   }
 
   # For expenses
+  # check for valid ids
+  # expense ids should be in E- format
+  invalid_expense_ids <- expenses %>%
+    filter(!grepl("^E-", expense_id))
+  if (nrow(invalid_expense_ids) > 0) {
+    showNotification("Error: Some expenses have invalid IDs.", type = "error", duration = NULL)
+  }
 
   # valid categories should be non-empty
   invalid_expense_categories <- expenses %>%
