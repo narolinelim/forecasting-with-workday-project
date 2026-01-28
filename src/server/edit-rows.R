@@ -2,7 +2,7 @@ add_funding_button <- function(input, values) {
   new_row <- data.frame(
     source_id = paste0("FS-", nrow(values$funding_sources) + 1),
     funding_source = if (is.null(input$source_name_input)) NA else input$source_name_input,
-    allowed_categories = if (is.null(input$add_allowed_categories)) NA else input$add_allowed_categories,
+    allowed_categories = if (is.null(input$add_allowed_categories)) NA else paste(as.character(input$add_allowed_categories), collapse = ","),
     valid_from = if (is.null(input$valid_from_date)) NA else as.Date(input$valid_from_date),
     valid_to = if (is.null(input$valid_to_date)) NA else as.Date(input$valid_to_date),
     amount = if (is.null(input$funding_amount)) NA else as.numeric(input$funding_amount),
