@@ -52,8 +52,8 @@ input_excel_download <- function(values) {
   wb <- createWorkbook()
 
   # Create worksheets
-  addWorksheet(wb, "Expenses")
   addWorksheet(wb, "Funding")
+  addWorksheet(wb, "Expense")
 
   # Temp dataframes for export
   export_expenses <- values$expenses
@@ -66,7 +66,7 @@ input_excel_download <- function(values) {
     expense_name = "Expense Name",
     expense_category = "Expense Category",
     planned_amount = "Planned Amount",
-    latest_payment_date = "Latest Payment Date",
+    latest_payment_date = "Payment Date",
     notes = "Notes"
   )
   for (old_name in names(expense_name_map)) {
@@ -74,9 +74,9 @@ input_excel_download <- function(values) {
       names(export_expenses)[names(export_expenses) == old_name] <- expense_name_map[[old_name]]
     }
   }
-  writeData(wb, "Expenses", export_expenses, withFilter = TRUE)
+  writeData(wb, "Expense", export_expenses, withFilter = TRUE)
   if (ncol(export_expenses) > 0) {
-    setColWidths(wb, "Expenses", cols = seq_len(ncol(export_expenses)), widths = "auto")
+    setColWidths(wb, "Expense", cols = seq_len(ncol(export_expenses)), widths = "auto")
   }
 
   funding_name_map <- c(
@@ -104,20 +104,6 @@ input_excel_download <- function(values) {
 # --- Function: Create Excel template workbook ---
 create_budget_template_wb <- function() {
   wb <- createWorkbook()
-  addWorksheet(wb, "Expenses")
-  writeData(
-    wb,
-    "Expenses",
-    data.frame(
-      `Priority`= integer(),
-      `Item ID` = character(),
-      `Expense Category` = character(),
-      `Planned Amount` = numeric(),
-      `Latest Payment Date` = character(),
-      `Notes` = character(),
-      check.names = FALSE
-    )
-  )
   addWorksheet(wb, "Funding")
   writeData(
     wb,
@@ -125,10 +111,25 @@ create_budget_template_wb <- function() {
     data.frame(
       `Source ID` = character(),
       `Funding Source` = character(),
-      `Allowed categories` = character(),
+      `Allowed Categories` = character(),
       `Valid From` = character(),
       `Valid To` = character(),
       `Amount` = numeric(),
+      `Notes` = character(),
+      check.names = FALSE
+    )
+  )
+  addWorksheet(wb, "Expense")
+  writeData(
+    wb,
+    "Expense",
+    data.frame(
+      `Priority`= integer(),
+      `Expense ID` = character(),
+      `Expense Name` = character(),
+      `Expense Category` = character(),
+      `Planned Amount` = numeric(),
+      `Latest Payment Date` = character(),
       `Notes` = character(),
       check.names = FALSE
     )
@@ -193,13 +194,10 @@ create_allocation_report_wb <- function(values) {
   
   # --- Allocation Result Sheet ---
   allocation_name_map <- c(
-    expense_id = "Expense ID",
-    source_id = "Source ID",
-    expense_category = "Expense Category",
-    expense_amount = "Expense Amount",
-    allocated_amount = "Allocated Amount",
-    latest_payment_date = "Latest Payment Date",
-    allocation_status = "Allocation Status"
+    SourceID = "Source ID",
+    ExpenseID = "Expense ID",
+    ExpenseCategory = "Expense Category",
+    AllocatedAmount = "Allocated Amount"
   )
   
   addWorksheet(wb, "Allocation Result")

@@ -5,7 +5,7 @@ library(ggplot2)
 library(dplyr)
 
 # Funding Source
-funding <- data.frame(
+fundings <- data.frame(
   ID = c("FS001", "FS002", "FS003", "FS004", "FS005", "FS006", "FS007"),
   Category = c(
     "Salary",
@@ -91,7 +91,7 @@ expenses <- data.frame(
 )
 
 # Funding order (top to bottom)
-funding_plot <- funding %>%
+funding_plot <- fundings %>%
   arrange(ValidFrom, desc(Amount)) %>%
   mutate(ID = factor(ID, levels = rev(unique(ID))))
 

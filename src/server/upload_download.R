@@ -7,7 +7,7 @@ TEMPLATE_PATH <- file.path("templates", "budget_template.xlsx")
 create_budget_template_wb <- function() {
   wb <- createWorkbook()
   addWorksheet(wb, "Expenses")
-  writeData(wb, "Expenses", data.frame(
+  writeData(wb, "Expense", data.frame(
     `Item ID`=character(), `Allowed categories`=character(), `Amount`=numeric(),
     `Latest Payment Date`=character(), `Notes`=character(), check.names = FALSE
   ))

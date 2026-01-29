@@ -9,148 +9,192 @@ library(circlize)
 library(chorddiag)
 
 
-# Funding Source
-funding <- data.frame(
-  ID = c("FS001", "FS002", "FS003", "FS004", "FS005", "FS006", "FS007", "FS008", "FS009", "FS010"),
-  Categories = I(list(
-    c("Salary"), c("Equipment"), c("Travel"), c("Salary", "Travel"), 
-    c("Equipment", "Travel"), c("Salary"), c("Equipment"), c("Travel"), 
-    c("Salary", "Equipment"), c("Salary", "Equipment", "Travel")
-  )),
-  ValidFrom = c("01/02/2025", "01/02/2025", "01/03/2025", "01/02/2025", "01/04/2025", 
-                "01/06/2025", "01/01/2025", "01/05/2025", "01/07/2025", "01/02/2025"),
-  ValidTo = c("30/06/2025", "31/08/2025", "30/09/2025", "31/12/2025", "31/10/2025", 
-              "31/12/2025", "31/12/2025", "30/11/2025", "31/12/2025", "31/12/2025"),
-  Amount = c(15000, 12000, 8000, 20000, 10000, 18000, 36000, 5000, 14000, 10000)
-)
-
-# Expense Data Frame
-expenses <- data.frame(
-  ID = c("E009", "E014", "E015", "E013", "E001", "E002", "E003", "E004", "E005", 
-         "E006", "E007", "E008", "E010", "E011", "E012"),
-  Category = c("Travel", "Equipment", "Travel", "Salary", "Salary", "Equipment", 
-               "Travel", "Salary", "Equipment", "Travel", "Salary", "Equipment", 
-               "Salary", "Equipment", "Travel"),
-  Amount = c(6000, 20000, 15000, 10000, 5000, 8000, 3000, 12000, 15000, 4000, 
-             8000, 10000, 15000, 12000, 5000),
-  Date = c("10/08/2025", "20/12/2025", "25/12/2025", "01/01/2025", "15/02/2025", 
-           "20/02/2025", "10/03/2025", "15/04/2025", "20/05/2025", "10/06/2025", 
-           "15/07/2025", "20/07/2025", "15/09/2025", "20/10/2025", "10/11/2025")
-)
-
-expense_ordered <- expenses[order(expenses$ID),]
-
-
-
-# Allocation Result Data Frame
-ordered_allocation <- data.frame(
-  ExpenseID = c("E013", "E003", "E006", "E009",
-                "E012", "E001", "E004", "E007",
-                "E010", "E002", "E005", "E008",
-                "E011", "E014", "E015"),
-  Category = c("Salary", "Travel", "Travel", "Travel",
-               "Travel", "Salary", "Salary", "Salary",
-               "Salary", "Equipment", "Equipment", "Equipment",
-               "Equipment", "Equipment", "Travel"),
-  Amount = c(10000, 3000, 4000, 6000, 
-             5000, 5000, 12000, 8000, 
-             15000, 8000, 15000, 10000,
-             12000, 20000, 15000),
-  Allocated = c(0, 3000, 4000, 6000, 
-                5000, 5000, 12000, 8000,
-                10000, 8000, 15000, 10000,
-                12000, 20000, 15000),
-  Date = as.Date(c("2025-01-01","2025-03-10","2025-06-10","2025-08-10",
-           "2025-10-11","2025-02-15","2025-04-15","2025-07-15",
-           "2025-09-15","2025-02-20","2025-05-20","2025-07-20",
-           "2025-10-20","2025-12-20","2025-12-25")),
-  isFilled = c("FALSE", "TRUE", "TRUE", "TRUE",
-               "TRUE", "TRUE", "TRUE", "TRUE",
-               "FALSE", "TRUE", "TRUE", "TRUE",
-               "TRUE", "TRUE", "TRUE")
-)
-
-total_balance <- sum(funding$Amount)
-
 
 # SHORTFALL PLOT
 
-# Three potential plots:
-# - bar chart
-# - step line graph
-# - stacked bar chart
-
-
-# Mock dataframe
-
-"
-Y axis: total shortfall amount
-X axis: timeline in weeks or months
-
-"
-
-create_shortfall_bar <- function() {
+create_shortfall_bar <- function(values) {
   
-  date_ordered_allocation <- ordered_allocation[order(ordered_allocation$Date),]
+  # This works if we ignore overdue payment
+  #
+  # date_ordered_allocation <- ordered_allocation[order(ordered_allocation$Date),]
+  # 
+  # date_ordered_allocation$shortfall <- date_ordered_allocation$Allocated - date_ordered_allocation$Amount
+  # 
+  # expense_shortfall <- date_ordered_allocation %>%
+  #   filter(shortfall < 0) %>%
+  #   mutate(StartMonth = floor_date(Date, "month"))
+  # 
+  # months <- seq(
+  #   from = floor_date(min(date_ordered_allocation$Date), "month"),
+  #   to = floor_date(max(date_ordered_allocation$Date), "month"),
+  #   by = "1 month"
+  # )
+  # 
+  # monthly_shortfall <- expense_shortfall %>%
+  #   rowwise() %>%
+  #   mutate(Month = list(months[months >= StartMonth])) %>%
+  #   unnest(Month) %>%
+  #   ungroup() %>%
+  #   group_by(Month) %>%
+  #   summarise(
+  #     TotalShortfall = sum(shortfall),
+  #     NumberOfShortfalls = n(),
+  #     .groups = "drop"
+  #   )
+  # 
+  # total_shortfalls <- tail(monthly_shortfall$NumberOfShortfalls, n = 1)
+  # 
   
-  date_ordered_allocation$shortfall <- date_ordered_allocation$Allocated - date_ordered_allocation$Amount
+  df_allocations <- values$allocation_result
+  funding <- values$funding_sources
+  df_expenses_status <- values$expense_status
+  print(df_allocations)
   
-  expense_shortfall <- date_ordered_allocation %>%
-    filter(shortfall < 0) %>%
-    mutate(StartMonth = floor_date(Date, "month"))
   
+  allocation_with_funding_df <- df_allocations %>%
+    left_join(
+      funding %>%
+        select(
+          source_id,
+          valid_from,
+          valid_to
+        ), by = "source_id"
+    )
+  
+  
+  full_allocation_df <- allocation_with_funding_df %>%
+    left_join(
+      df_expenses_status %>%
+        select(
+          expense_id,
+          expense_amount = planned_amount,
+          expense_date = latest_payment_date
+        ), by = "expense_id"
+    )
+  
+  # Prepping dataframe by setting all monthly baseline
+  df <- full_allocation_df %>%
+    mutate(
+      expense_date_month = floor_date(expense_date, "month"),
+      valid_from_month = floor_date(valid_from, "month"),
+      valid_to_month = floor_date(valid_to, "month"),
+      overdue = case_when(
+        expense_date >= valid_from & expense_date <= valid_to ~ "In Time",
+        TRUE ~ "Overdue"
+      )
+    )
+  
+  
+  # Dataframe including range of months involved in the allocation and prepping
+  # for final shortfall dataframe
   months <- seq(
-    from = floor_date(min(date_ordered_allocation$Date), "month"),
-    to = floor_date(max(date_ordered_allocation$Date), "month"),
+    from = min(df$expense_date_month),
+    to = max(df$valid_to_month),
     by = "1 month"
   )
+  months_df <- tibble(Month = months)
   
-  monthly_shortfall <- expense_shortfall %>%
+
+  # Extracting distinct expenses 
+  distinct_expenses <- df %>% 
+    distinct(expense_id, expense_amount, expense_date_month)
+
+  
+  # Cumulative allocation for each expense for each month
+  funding_by_month <- df %>%
     rowwise() %>%
-    mutate(Month = list(months[months >= StartMonth])) %>%
+    mutate(Month = list(months[months >= valid_from_month])) %>%
     unnest(Month) %>%
-    ungroup() %>%
-    group_by(Month) %>%
+    group_by(expense_id, Month) %>%
     summarise(
-      TotalShortfall = sum(shortfall),
-      NumberOfShortfalls = n(),
+      cumulative_allocated = sum(allocated_amount, na.rm = TRUE),
       .groups = "drop"
     )
   
-  total_shortfalls <- tail(monthly_shortfall$NumberOfShortfalls, n = 1)
+  
+  # Combining dataframe and recording shortfall timeline after
+  # each expense latest payment date
+  expense_month_grid <- distinct_expenses %>%
+    crossing(months_df) %>%
+    filter(Month >= expense_date_month)
+  
+
+  
+  # Dataframe showing cumulative shortfalls for each expense across all months
+  expenses_month_status <- expense_month_grid %>%
+    left_join(funding_by_month, by = c("expense_id", "Month")) %>%
+    mutate(
+      cumulative_allocated = replace_na(cumulative_allocated, 0),
+      shortfall = cumulative_allocated - expense_amount,
+      is_short = shortfall < 0,
+      is_overdue = is_short & (Month > expense_date_month)
+    )
+  
+  print(expenses_month_status, n = 64)
+  
+
+  # Final monthly shortfall dataframe 
+  monthly_shortfall <- expenses_month_status %>%
+    group_by(Month) %>%
+    summarise(
+      total_shortfall = sum(if_else(is_short, shortfall, 0), na.rm = TRUE),
+      number_of_shortfalls = n_distinct(expense_id[is_short]),
+      overdue_shortfall = sum(if_else(is_overdue, shortfall, 0), na.rm = TRUE),
+      number_overdue = n_distinct(expense_id[is_overdue]),
+      .groups = "drop"
+    ) %>%
+    right_join(months_df, by = "Month") %>%
+    mutate(
+      total_shortfall = replace_na(total_shortfall, 0),
+      number_of_shortfalls = replace_na(number_of_shortfalls, 0L),
+      overdue_shortfall = replace_na(overdue_shortfall, 0),
+      number_overdue = replace_na(number_overdue, 0L)
+    ) %>%
+    arrange(Month)
+  
+  print(monthly_shortfall)
+  print("expense stats")
+  print(expenses_month_status, n = 85)
+  
+  shortfall_num <- expenses_month_status %>%
+    filter(is_short == TRUE)
+  
+  total_shortfalls <- length(unique(shortfall_num$expense_id))
+  
+  total_balance <- sum(funding$amount)
   
   
+  # Number of shortfalls bar graph (by month)
   shortfall_number_bar <- plot_ly(
     data = monthly_shortfall,
     x = ~Month,
-    y = ~NumberOfShortfalls,
+    y = ~number_of_shortfalls,
     type = "bar",
-    name = "Number of Shortfalls",
+    showlegend = FALSE,
     hovertemplate = paste(
       "Month: %{x|%b %Y}<br>",
       "Number of Shortfalls: %{y}<extra></extra>"
     )
   ) %>%
     layout(
-      yaxis = list(title = "Number of Shortfalls"),
       xaxis = list(showticklabels = FALSE)
     )
   
   
+  # Total shortfall amount bar graph (by month)
   shortfall_amount_bar <- plot_ly(
     data = monthly_shortfall,
     x = ~Month,
-    y = ~TotalShortfall,
+    y = ~total_shortfall,
     type = "bar",
-    name = "Total Shortfall Amount",
+    showlegend = FALSE,
     hovertemplate = paste(
       "Month: %{x|%b %Y}<br>",
       "Total Shortfall Amount: %{y}<extra></extra>"
     )
   ) %>%
     layout(
-      yaxis = list(title = "Total Shortfall Amount"),
-      xaxis = list(tickformat = "%b %Y", title = "Month")
+      xaxis = list(tickformat = "%b %Y")
     )
   
   
@@ -159,180 +203,142 @@ create_shortfall_bar <- function() {
     shortfall_amount_bar,
     nrows = 2,
     shareX = TRUE,
-    titleX = TRUE
+    heights = c(0.5, 0.5)
   ) %>%
     layout(
       xaxis = list(
+        title = "",
         tickformat = "%b %Y",
         tickmode = "linear",
         dtick = "M1",
         showticklabels = TRUE
       ),
-      margin = list(t = 80, b = 40),
-      grid = list(rows = 2, columns = 1, pattern = "independent"),
-      legend = list(
-        orientation = "h",
-        x = 0.5,
-        xanchor = "center",
-        y = -0.2,
-        yanchor = "top"
+      yaxis = list(domain = c(0.5, 1)),
+      yaxis2 = list(domain = c(0, 0.5)),
+      margin = list(t = 80, b = 60),
+      annotations = list(
+        list(
+          text = "Number of Shortfalls",
+          x = 0.5,
+          y = 1.1,
+          xref = "paper",
+          yref = "paper",
+          xanchor = "center",
+          yanchor = "bottom",
+          showarrow = FALSE,
+          font = list(size = 15)
+        ),
+        list(
+          text = "Total Shortfall Amount",
+          x = 0.5,
+          y = -0.07,
+          xref = "paper",
+          yref = "paper",
+          xanchor = "center",
+          yanchor = "top",
+          showarrow = FALSE,
+          font = list(size = 15)
+        )
       )
     ) 
+
   
   p$x$source <- "A"
   p <- event_register(p, "plotly_click")
   
   list(
+    total_balance = total_balance,
     shortfall_plot = p,
     total_shortfalls = total_shortfalls
   )
-
+  
 }
 
 
 # CIRCOS PLOT
 
-"
-  Two sides: funding and expenses,
+create_circos_plot <- function(values, month) {
+  #allocation should be done within the month of the latest payment date
+  # if funding has a big interval.
   
-  feature activation: when user clicks on a bar in the bar graph,
-  app should show the circos plot of allocation at that point in time
-
-"
-
-# Allocation Summary Data Frame
-df_allocations <- data.frame(
-  SourceID = c(
-    "FS003","FS007","FS009","FS004","FS001",
-    "FS004","FS007","FS003","FS010","FS001",
-    "FS002","FS005","FS007","FS010","FS004",
-    "FS006","FS002","FS006","FS009","FS007",
-    "FS010"
-  ),
-  ExpenseID = c(
-    "E009","E014","E014","E015","E001",
-    "E001","E002","E003","E003","E004",
-    "E005","E005","E005","E006","E007",
-    "E007","E008","E010","E010","E011",
-    "E012"
-  ),
-  ExpenseCategory = c(
-    "Travel","Equipment","Equipment","Travel","Salary",
-    "Salary","Equipment","Travel","Travel","Salary",
-    "Equipment","Equipment","Equipment","Travel","Salary",
-    "Salary","Equipment","Salary","Salary","Equipment",
-    "Travel"
-  ),
-  AllocatedAmount = c(
-    6000,13000,7000,15000,3000,
-    2000,8000,2000,1000,12000,
-    2000,10000,3000,4000,3000,
-    5000,10000,13000,2000,12000,
-    5000
-  )
-)
-
-# Funding Summary Data Frame
-after_allocation_funding <- data.frame(
-  SourceID = c(
-    "FS001","FS002","FS003","FS004","FS005",
-    "FS006","FS007","FS008","FS009","FS010"
-  ),
-  InitialAmount = c(
-    15000, 12000, 8000, 20000, 10000,
-    18000, 36000, 5000, 14000, 10000
-  ),
-  UsedAmount = c(
-    15000, 12000, 8000, 20000, 10000,
-    18000, 36000, 0, 9000, 10000
-  ),
-  RemainingAmount = c(
-    0, 0, 0, 0, 0,
-    0, 0, 5000, 5000, 0
-  )
-)
-
-allocation_df <- data.frame(
-  ExpenseID = c(
-    "E001","E001","E002","E003","E003","E004",
-    "E005","E005","E005","E006","E007","E007",
-    "E008","E009","E010","E010","E012","E011",
-    "E014","E014","E015"
-  ),
-  ExpenseCategory = c(
-    "Salary","Salary","Equipment","Travel","Travel","Salary",
-    "Equipment","Equipment","Equipment","Travel","Salary","Salary",
-    "Equipment","Travel","Salary","Salary","Travel","Equipment",
-    "Equipment","Equipment","Travel"
-  ),
-  ExpenseAmount = c(
-    5000,5000,8000,3000,3000,12000,
-    15000,15000,15000,4000,8000,8000,
-    10000,6000,15000,15000,5000,12000,
-    20000,20000,15000
-  ),
-  AllocatedAmount = c(
-    3000,2000,8000,2000,1000,12000,
-    2000,10000,3000,4000,3000,5000,
-    10000,6000,13000,2000,5000,12000,
-    13000,7000,15000
-  ),
-  LatestPaymentDate = as.Date(c(
-    "2025-02-15","2025-02-15","2025-02-20","2025-03-10","2025-03-10","2025-04-15",
-    "2025-05-20","2025-05-20","2025-05-20","2025-06-10","2025-07-15","2025-07-15",
-    "2025-07-20","2025-08-10","2025-09-15","2025-09-15","2025-10-11","2025-10-20",
-    "2025-12-20","2025-12-20","2025-12-25"
-  )),
-  SourceID = c(
-    "FS001","FS004","FS007","FS003","FS010","FS001",
-    "FS002","FS005","FS007","FS010","FS004","FS006",
-    "FS002","FS003","FS006","FS009","FS010","FS007",
-    "FS007","FS009","FS004"
-  ),
-  SourceValidFrom = as.Date(c(
-    "2025-02-01","2025-02-01","2025-01-01","2025-03-01","2025-02-01","2025-02-01",
-    "2025-02-01","2025-04-01","2025-01-01","2025-02-01","2025-02-01","2025-06-01",
-    "2025-02-01","2025-03-01","2025-06-01","2025-07-01","2025-02-01","2025-01-01",
-    "2025-01-01","2025-07-01","2025-02-01"
-  )),
-  SourceValidTo = as.Date(c(
-    "2025-06-30","2025-12-31","2025-12-31","2025-09-30","2025-12-31","2025-06-30",
-    "2025-08-31","2025-10-31","2025-12-31","2025-12-31","2025-12-31","2025-12-31",
-    "2025-08-31","2025-09-30","2025-12-31","2025-12-31","2025-12-31","2025-12-31",
-    "2025-12-31","2025-12-31","2025-12-31"
-  )),
-  stringsAsFactors = FALSE
-)
-
-
-create_circos_plot <- function(month) {
-  print(month)
+  #print(month)
   
-  sources_ids <- unique(funding$ID)
-  expenses_ids <- unique(expense_ordered$ID)
+  df_allocations <- values$allocation_result
+  funding <- values$funding_sources
+  df_expenses_status <- values$expense_status
+  expenses <- values$expenses
+  
+  allocation_with_funding_df <- df_allocations %>%
+    left_join(
+      funding %>%
+        select(
+          source_id,
+          valid_from,
+          valid_to
+        ), by = "source_id"
+    )
+  
+  
+  full_allocation_df <- allocation_with_funding_df %>%
+    left_join(
+      df_expenses_status %>%
+        select(
+          expense_id,
+          expense_amount = planned_amount,
+          expense_date = latest_payment_date
+        ), by = "expense_id"
+    )
+  
+  ordered_expenses <- expenses[order(expenses$expense_id),]
+  #print(funding)
+  
+  sources_ids <- unique(funding$source_id)
+  expenses_ids <- unique(ordered_expenses$expense_id)
   sectors <- c(sources_ids, expenses_ids)
+  #print(sectors)
   
-  rows_until_month <- allocation_df %>%
-    filter(LatestPaymentDate < month)
-  print(rows_until_month)
   
-  if (nrow(rows_until_month) == 0) {
-    return (htmltools::tags$div("No allocation this month."))
-  }
+  rows_until_month <- full_allocation_df %>%
+    filter(valid_from < month)
+  #print(rows_until_month)
   
   mat <- matrix(0, nrow = length(sectors), ncol = length(sectors))
   rownames(mat) <- sectors
   colnames(mat) <- sectors
   
-  # allocating to expenses
+  # Allocating to expenses
   for (i in 1:nrow(rows_until_month)) {
-    mat[rows_until_month$SourceID[i], rows_until_month$ExpenseID[i]] <- rows_until_month$AllocatedAmount[i]
+    mat[rows_until_month$source_id[i], rows_until_month$expense_id[i]] <- rows_until_month$allocated_amount[i]
+    mat[rows_until_month$expense_id[i], rows_until_month$source_id[i]] <- rows_until_month$allocated_amount[i]
+  }
+
+  # Leftover expenses self-links at the current time (current month)
+  cumulative_expense <- rows_until_month %>%
+    group_by(expense_id) %>%
+    summarise(
+      expense_amount = first(expense_amount),
+      cumulative_allocation = sum(allocated_amount),
+      leftover_expense = expense_amount - cumulative_allocation,
+      .groups = "drop"
+    )
+  
+  
+  for (i in 1:nrow(cumulative_expense)) {
+    mat[cumulative_expense$expense_id[i], cumulative_expense$expense_id[i]] <- cumulative_expense$leftover_expense[i]
   }
   
-  # leftover funding self-links
-  for (i in 1:nrow(after_allocation_funding)) {
-    mat[after_allocation_funding$SourceID[i], after_allocation_funding$SourceID[i]] <- after_allocation_funding$RemainingAmount[i]
+  # Funding that hasn't been allocated  or isn't available yet
+  unallocated_funding <- funding %>%
+    anti_join(rows_until_month, by = "source_id")
+  
+  
+  # Leftover funding self-links
+  if (nrow(unallocated_funding) > 0) {
+    for (i in 1:nrow(unallocated_funding)) {
+      mat[unallocated_funding$source_id[i], unallocated_funding$source_id[i]] <- unallocated_funding$amount[i]
+    }
   }
+  #print(mat)
   
   
   funding_length <- length(sources_ids)
@@ -347,25 +353,14 @@ create_circos_plot <- function(month) {
             groupColors = sector_colors,
             groupNames = sectors,
             groupThickness = 0.1,
+            groupPadding = 5,
+            groupnamePadding = 40,
             showTicks = TRUE,
-            margin = 100,
+            margin = 80,
             tooltipNames = sectors,
             tooltipUnit = "$",
             tooltipGroupConnector = " → ",
             chordedgeColor = "#B3B6B7")
   
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
