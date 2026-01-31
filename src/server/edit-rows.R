@@ -51,11 +51,7 @@ add_expense_button <- function(input, values) {
   for (col in must_have) {
     val <- new_row[[col]]
     if (any(is.na(val))) {
-      showNotification(
-        "Missing required field",
-        type = "error",
-        duration = 5
-      )
+      showNotification("Missing required field", type = "error", duration = 5)
       return(NULL)
     }
   }
@@ -76,10 +72,7 @@ delete_row <- function(df, selected_rows) {
       df$priority <- seq_len(nrow(df))
     }
 
-    showNotification(
-      paste("Deleted", length(selected_rows), "row(s)."),
-      type = "message"
-    )
+    showNotification(paste("Deleted", length(selected_rows), "row(s)."), type = "message")
   } else {
     showNotification("No rows selected or invalid selection.", type = "error")
   }
