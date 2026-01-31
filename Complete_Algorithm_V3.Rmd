@@ -75,7 +75,7 @@ sources <- data.frame(
     c("Travel"),
     c("Equipment")
   )),
-  ValidFrom = c("01/01/2025", "01/02/2025", "01/04/2025", "01/05/2025", "01/07/2025", "01/01/2025", "01/10/2025"),
+  ValidFrom = c("01/01/2025", "01/02/2025", "01/04/2025", "01/01/2025", "01/07/2025", "01/01/2025", "01/10/2025"),
   ValidTo   = c("31/03/2025", "30/06/2025", "30/09/2025", "31/12/2025", "31/12/2025", "31/12/2025", "31/12/2025"),
   Amount = c(12000, 18000, 10000, 30000, 15000, 8000, 9000)
 )
@@ -127,6 +127,7 @@ for (i in 1:n_sources) {
     # LOGIC: The payment date must be INSIDE the funding window (Inclusive)
     # ValidFrom <= PaymentDate <= ValidTo
     time_match <- (e_date >= s_from & e_date <= s_to)
+    time_match_modified <- (e_date >= s_from)
     
     # Combine Checks
     if (cat_match && time_match) {
@@ -135,7 +136,7 @@ for (i in 1:n_sources) {
       compatibility[i, j] <- 0
     }
     
-    if (cat_match) {
+    if (cat_match && time_match_modified) {
       compatibility_again[i, j] <- 1
     } else {
       compatibility_again[i, j] <- 0
