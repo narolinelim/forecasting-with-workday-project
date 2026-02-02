@@ -56,16 +56,6 @@ main_server_logic <- function(input, output, session, values) {
     )
   })
 
-  # --- OUTPUT: Generating Forecast Notification ---
-  observe({
-    showNotification(
-      "Allocation Finished. Go to Dashboard for result.",
-      type = "message",
-      duration = 3
-    )
-  }) |>
-    bindEvent(input$generate_forecast)
-
   # --- EVENTS: Exit Session Popup ---
   observeEvent(input$exit_session, {
     showModal(
@@ -457,15 +447,31 @@ main_server_logic <- function(input, output, session, values) {
   })
   
   # --- EVENT: Activating Forecasting Button ---
-  # NEEDS VALIDATION
   observeEvent(input$generate_forecast, {
-    req(values$funding_sources)
-    req(values$expenses)
-    allocation_data <- activate_allocation_algorithm(values$funding_sources, values$expenses)
-    values$allocation_result <- allocation_data$allocations
-    values$funding_summary <- allocation_data$funds
-    values$expense_status <- allocation_data$expenses
-    values$full_budget_allocation_df <- allocation_data$full_allocation_data
+    
+    tryCatch({
+      req(values$funding_sources)
+      req(values$expenses)
+      allocation_data <- activate_allocation_algorithm(values$funding_sources, values$expenses)
+      values$allocation_result <- allocation_data$allocations
+      values$funding_summary <- allocation_data$funds
+      values$expense_status <- allocation_data$expenses
+      values$full_budget_allocation_df <- allocation_data$full_allocation_data
+
+      showNotification(
+        "Allocation Finished. Go to Dashboard for result.",
+        type = "message",
+        duration = 3
+      )
+      
+    }, error = function(e) {
+      showNotification(
+        "Error: No funding and expense data.",
+        type = "error",
+        duration = 3
+      )
+    })
+    
   })
   
 
