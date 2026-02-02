@@ -127,7 +127,7 @@ for (i in 1:n_sources) {
     # LOGIC: The payment date must be INSIDE the funding window (Inclusive)
     # ValidFrom <= PaymentDate <= ValidTo
     time_match <- (e_date >= s_from & e_date <= s_to)
-    time_match_modified <- (e_date >= s_from)
+    time_match_modified <- (e_date < s_from)
     
     # Combine Checks
     if (cat_match && time_match) {
