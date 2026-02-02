@@ -6,29 +6,24 @@ library(rlang)
 
 col_ordering <- function(expenses_data, ordering_rules) {
   # This function sorts the expenses data based on column priorities and dynamic category order.
-  #
-  # Arguments:
-  # expenses_data: Data frame containing expenses data
-  # ordering_rules: List representing user's sorting rules
-  #
-  # Returns:
-  # expenses_sorted: Sorted expenses data frame
-  
-  # A. Reflect the order of category blocks dragged by the user on the page
-  # Convert `expense_category` to a factor; the order of `levels` represents the user's desired sequence
-  expenses_data <- expenses_data %>%
-    mutate(expense_category = factor(
-      expense_category, 
-      levels = ordering_rules$category_order
-    ))
-  
+#
+# Arguments:
+# expenses_data: Data frame containing expenses data
+# ordering_rules: List representing user's sorting rules
+#
+# Returns:
+# expenses_sorted: Sorted expenses data frame
+
+# A. Reflect the order of category blocks dragged by the user on the page
+expenses_data <- expenses_data %>%
+  mutate(category_rank = match(expense_category, ordering_rules$category_order))
   # B. Define a mapping function: determine the sorting expression based on the project type
   get_sort_expression <- function(p_item, p_date_dir) {
     if (is.null(p_item) || p_item == "None") return(NULL)
     
     if (p_item == "Categories") {
       # Sort directly according to the factor order set by mutate
-      return(expr(expense_category))
+      return(expr(category_rank))
     } 
     
     if (p_item == "Payment Date") {
@@ -61,7 +56,8 @@ col_ordering <- function(expenses_data, ordering_rules) {
   # Use !!! to unquote the expressions in the list for the arrange function
   expenses_sorted <- expenses_data %>%
     arrange(!!!sort_list) %>%
-    mutate(priority = row_number())
+    mutate(priority = row_number()) %>%
+    select(-category_rank)
   return(expenses_sorted)
 }
 

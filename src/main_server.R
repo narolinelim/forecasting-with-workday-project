@@ -22,12 +22,12 @@ main_server_logic <- function(input, output, session, values) {
     req(values$funding_sources)
     req(values$expenses)
     validation_errors <- c()
-    
+
     funding_errors <- data_validation(values$funding_sources, type = "funding")
     expense_errors <- data_validation(values$expenses, type = "expense")
-    
+
     validation_errors <- c(funding_errors, expense_errors)
-    
+
     errors(validation_errors)
   })
 
@@ -251,6 +251,7 @@ main_server_logic <- function(input, output, session, values) {
 
       values$funding_sources <- funding_sources_df
       values$expenses <- expense_df
+      
       showNotification("Data saved successfully", type = "message", duration = 3)
     }, error = function(e) {
       showNotification(paste("Upload failed:", e$message), type = "error", duration = 3)
@@ -399,6 +400,7 @@ main_server_logic <- function(input, output, session, values) {
     req(values$expenses)
     df <- values$expenses
     colnames(df) <- display_expense_names[names(df)]
+    
     datatable(
       df,
       options = list(
