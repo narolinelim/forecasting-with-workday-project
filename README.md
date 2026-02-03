@@ -186,4 +186,14 @@ The function should explicity return a value using the `return()` statement, rat
 
 - [**Admin Manual**](https://wehieduau.sharepoint.com/:w:/r/sites/StudentInternGroupatWEHI/_layouts/15/Doc2.aspx?action=editNew&sourcedoc=%7B518bb466-6083-474b-8832-eb06cbc1d9f4%7D&wdOrigin=TEAMS-MAGLEV.teamsSdk_ns.rwc&wdExp=TEAMS-TREATMENT&wdhostclicktime=1770083024171&web=1)
 
+#### 6.2 Project Background
+
+- [**Project Folder**](https://wehieduau.sharepoint.com/:f:/r/sites/StudentInternGroupatWEHI/Shared%20Documents/Forecasting%20Budget/Summer%202025-2026?csf=1&web=1&e=1UrsrQ)
+
+- [**Wireframe**](https://www.figma.com/design/3MiVeEfBgM1ZnFrgMnojyG/Draft_UI-UX?node-id=47-752)
+
+- [**Technical Diaries**](https://wehieduau.sharepoint.com/:f:/r/sites/StudentInternGroupatWEHI/Shared%20Documents/Forecasting%20Budget/Summer%202025-2026/TECHNICAL%20DIARY?csf=1&web=1&e=lY055g)
+
+- [**Individual Learning Plans**](https://wehieduau.sharepoint.com/:f:/r/sites/StudentInternGroupatWEHI/Shared%20Documents/Forecasting%20Budget/Summer%202025-2026/ILP?csf=1&web=1&e=bSyhLj)
+  
 ---
