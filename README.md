@@ -14,7 +14,7 @@
 
 [5. Project Evolution](#5-project-evolution)
 
-[6. Handbooks](#6-handbooks)
+[6. Handbooks](#6-resources-&-documentation)
 
 ---
 
