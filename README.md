@@ -182,9 +182,9 @@ The function should explicity return a value using the `return()` statement, rat
 
 ### 6.1 Handbooks
 
-- [**User Manual**](https://wehieduau.sharepoint.com/:w:/r/sites/StudentInternGroupatWEHI/Shared%20Documents/Forecasting%20Budget/Summer%202025-2026/PRESENTATION%20AND%20FORMAL%20REPORTS/User%20Manual.docx?d=w7c8aa2a0ff304e09bc794a126d1b848f&csf=1&web=1&e=wTcszP)
+- [**User Manual (Web App Workflow)**](https://wehieduau.sharepoint.com/:w:/r/sites/StudentInternGroupatWEHI/Shared%20Documents/Forecasting%20Budget/Summer%202025-2026/PRESENTATION%20AND%20FORMAL%20REPORTS/User%20Manual.docx?d=w7c8aa2a0ff304e09bc794a126d1b848f&csf=1&web=1&e=wTcszP)
 
-- [**Admin Manual**](https://wehieduau.sharepoint.com/:w:/r/sites/StudentInternGroupatWEHI/_layouts/15/Doc2.aspx?action=editNew&sourcedoc=%7B518bb466-6083-474b-8832-eb06cbc1d9f4%7D&wdOrigin=TEAMS-MAGLEV.teamsSdk_ns.rwc&wdExp=TEAMS-TREATMENT&wdhostclicktime=1770083024171&web=1)
+- [**Admin Manual (Local Setup)**](https://wehieduau.sharepoint.com/:w:/r/sites/StudentInternGroupatWEHI/_layouts/15/Doc2.aspx?action=editNew&sourcedoc=%7B518bb466-6083-474b-8832-eb06cbc1d9f4%7D&wdOrigin=TEAMS-MAGLEV.teamsSdk_ns.rwc&wdExp=TEAMS-TREATMENT&wdhostclicktime=1770083024171&web=1)
 
 ### 6.2 Project Background
 
