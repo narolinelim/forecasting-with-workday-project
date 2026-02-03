@@ -5,7 +5,7 @@ read_excel_data <- function(file_path, sheet_name) {
   #' @param sheet_name: name of the sheet to read
   #'
   #' @return: A list containing the funding sources and expense data frames
-  #'
+
   funding_sources_df <- read_excel(file_path, sheet = "Funding") %>%
     process_funding_data()
 

@@ -1,42 +1,14 @@
-# SHORTFALL PLOT
-
 create_shortfall_bar <- function(values) {
-  
-  # This works if we ignore overdue payment
-  #
-  # date_ordered_allocation <- ordered_allocation[order(ordered_allocation$Date),]
-  # 
-  # date_ordered_allocation$shortfall <- date_ordered_allocation$Allocated - date_ordered_allocation$Amount
-  # 
-  # expense_shortfall <- date_ordered_allocation %>%
-  #   filter(shortfall < 0) %>%
-  #   mutate(StartMonth = floor_date(Date, "month"))
-  # 
-  # months <- seq(
-  #   from = floor_date(min(date_ordered_allocation$Date), "month"),
-  #   to = floor_date(max(date_ordered_allocation$Date), "month"),
-  #   by = "1 month"
-  # )
-  # 
-  # monthly_shortfall <- expense_shortfall %>%
-  #   rowwise() %>%
-  #   mutate(Month = list(months[months >= StartMonth])) %>%
-  #   unnest(Month) %>%
-  #   ungroup() %>%
-  #   group_by(Month) %>%
-  #   summarise(
-  #     TotalShortfall = sum(shortfall),
-  #     NumberOfShortfalls = n(),
-  #     .groups = "drop"
-  #   )
-  # 
-  # total_shortfalls <- tail(monthly_shortfall$NumberOfShortfalls, n = 1)
-  # 
-  
+  #' Create shortfall bar plot
+  #' 
+  #' @param values: reactiveValues containing funding_sources, and expenses
+  #' 
+  #' @return list of total_balance, shortfall plots, and total shortfall
+
   df_allocations <- values$allocation_result
   funding <- values$funding_sources
   df_expenses_status <- values$expense_status
-  print(df_allocations)
+  expenses <- values$expenses
   
   
   allocation_with_funding_df <- df_allocations %>%
@@ -72,20 +44,55 @@ create_shortfall_bar <- function(values) {
       )
     )
   
+  # print("ordered full_df")
+  
+  ordered_df <- df %>% arrange(expense_date)
+  # print(ordered_df)
+  
   
   # Dataframe including range of months involved in the allocation and prepping
   # for final shortfall dataframe
   months <- seq(
-    from = min(df$expense_date_month),
+    from = min(floor_date(expenses$latest_payment_date, "month")),
     to = max(df$valid_to_month),
     by = "1 month"
   )
   months_df <- tibble(Month = months)
+  # print(months_df)
+  
+  # ---------------------- EXTRACTING DISTINCT EXPENSES ------------------------
+  
+  # 1. Extracting unallocated distinct expenses
+  unallocated_distinct_expense <- expenses %>%
+    anti_join(df, by = "expense_id") %>%
+    mutate(
+      expense_id = expense_id,
+      expense_amount = planned_amount,
+      expense_date_month = floor_date(latest_payment_date, "month")
+    ) %>%
+    select(
+      expense_id,
+      expense_amount,
+      expense_date_month
+    )
+  
+  
+  # print("unallocated_distinct_expense")
+  # print(unallocated_distinct_expense)
   
 
-  # Extracting distinct expenses 
+  # 2. Extracting allocated distinct expenses (and partial allocation)
   distinct_expenses <- df %>% 
     distinct(expense_id, expense_amount, expense_date_month)
+  # print("distinct_expenses")
+  # print(distinct_expenses)
+  
+  all_distinct_expenses <- bind_rows(distinct_expenses, unallocated_distinct_expense)
+  # print("all_distinct_expenses")
+  # print(all_distinct_expenses)
+  
+  
+  # ----------------------------------------------------------------------------
 
   
   # Cumulative allocation for each expense for each month
@@ -98,14 +105,18 @@ create_shortfall_bar <- function(values) {
       cumulative_allocated = sum(allocated_amount, na.rm = TRUE),
       .groups = "drop"
     )
+  # print("funding_by_month")
+  # print(funding_by_month, n = 82)
   
   
   # Combining dataframe and recording shortfall timeline after
   # each expense latest payment date
-  expense_month_grid <- distinct_expenses %>%
+  expense_month_grid <- all_distinct_expenses %>%
+    mutate(expense_date_month = floor_date(expense_date_month, "month")) %>%
     crossing(months_df) %>%
     filter(Month >= expense_date_month)
-  
+  # print("expense_month_grid")
+  # print(expense_month_grid)
 
   
   # Dataframe showing cumulative shortfalls for each expense across all months
@@ -117,8 +128,14 @@ create_shortfall_bar <- function(values) {
       is_short = shortfall < 0,
       is_overdue = is_short & (Month > expense_date_month)
     )
+  # print("expenses_month_status")
+  # print(expenses_month_status, n = Inf)
   
-  print(expenses_month_status, n = 64)
+  filter_shortfall_df <- expenses_month_status %>%
+    filter(shortfall < 0)
+  
+  # print("filter_shortfall")
+  # print(filter_shortfall_df, n = Inf)
   
 
   # Final monthly shortfall dataframe 
@@ -140,9 +157,8 @@ create_shortfall_bar <- function(values) {
     ) %>%
     arrange(Month)
   
-  print(monthly_shortfall)
-  print("expense stats")
-  print(expenses_month_status, n = 85)
+  # print("monthly_shortfall")
+  # print(monthly_shortfall)
   
   shortfall_num <- expenses_month_status %>%
     filter(is_short == TRUE)
@@ -151,6 +167,9 @@ create_shortfall_bar <- function(values) {
   
   total_balance <- sum(funding$amount)
   
+  
+  
+  # -------------------------- SHORTFALL BAR PLOT ------------------------------
   
   # Number of shortfalls bar graph (by month)
   shortfall_number_bar <- plot_ly(
@@ -219,7 +238,7 @@ create_shortfall_bar <- function(values) {
         list(
           text = "Total Shortfall Amount",
           x = 0.5,
-          y = -0.07,
+          y = -0.12,
           xref = "paper",
           yref = "paper",
           xanchor = "center",
@@ -230,26 +249,24 @@ create_shortfall_bar <- function(values) {
       )
     ) 
 
+  # ----------------------------------------------------------------------------
   
   p$x$source <- "A"
   p <- event_register(p, "plotly_click")
   
-  list(
-    total_balance = total_balance,
-    shortfall_plot = p,
-    total_shortfalls = total_shortfalls
-  )
+  return(list(total_balance = total_balance, shortfall_plot = p, total_shortfalls = total_shortfalls))
   
 }
 
-
-# CIRCOS PLOT
-
 create_circos_plot <- function(values, month) {
-  #allocation should be done within the month of the latest payment date
-  # if funding has a big interval.
+  #' Create a circos plot showing allocations up to a specified month
+  #' 
+  #' @param values: reactiveValues containing funding_sources, expenses
+  #' @param month: Date object specifying the month up to which allocations are considered
+  #' 
+  #' @return: chorddiag object representing the circos plot
   
-  #print(month)
+  print(month)
   
   df_allocations <- values$allocation_result
   funding <- values$funding_sources
@@ -286,9 +303,23 @@ create_circos_plot <- function(values, month) {
   #print(sectors)
   
   
+  # rows_until_month <- full_allocation_df %>%
+  #   filter(valid_from < month)
+  # print(rows_until_month)
+  print(full_allocation_df)
+  
   rows_until_month <- full_allocation_df %>%
-    filter(valid_from < month)
-  #print(rows_until_month)
+    mutate(
+      allocation_date = if_else(
+        expense_date >= valid_from & expense_date <= valid_to,
+        expense_date,
+        valid_from
+      )
+    ) %>%
+    filter(allocation_date < month)
+    
+  
+  print(rows_until_month)
   
   mat <- matrix(0, nrow = length(sectors), ncol = length(sectors))
   rownames(mat) <- sectors
@@ -337,18 +368,19 @@ create_circos_plot <- function(values, month) {
   expense_colors <- heat.colors(expense_length)
   sector_colors <- c(funding_colors, expense_colors)
   
-  chorddiag(mat,
-            groupColors = sector_colors,
-            groupNames = sectors,
-            groupThickness = 0.1,
-            groupPadding = 5,
-            groupnamePadding = 40,
-            showTicks = TRUE,
-            margin = 80,
-            tooltipNames = sectors,
-            tooltipUnit = "$",
-            tooltipGroupConnector = " → ",
-            chordedgeColor = "#B3B6B7")
-  
+  return(
+    chorddiag(mat,
+              groupColors = sector_colors,
+              groupNames = sectors,
+              groupThickness = 0.1,
+              groupPadding = 5,
+              groupnamePadding = 40,
+              showTicks = TRUE,
+              margin = 80,
+              tooltipNames = sectors,
+              tooltipUnit = "$",
+              tooltipGroupConnector = " → ",
+              chordedgeColor = "#B3B6B7")
+  )
 }
 
