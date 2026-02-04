@@ -7,7 +7,7 @@ add_funding_button <- function(input, values) {
   new_row <- data.frame(
     source_id = sprintf("FS%03d", nrow(values$funding_sources) + 1),
     funding_source = if (is.null(input$source_name_input)) NA else input$source_name_input,
-    allowed_categories = if (is.null(input$add_allowed_categories)) NA else paste(as.character(input$add_allowed_categories), collapse = ","),
+    allowed_categories = if (is.null(input$add_allowed_categories)) NA else tolower(paste(as.character(input$add_allowed_categories), collapse = ",")),
     valid_from = if (is.null(input$valid_from_date)) NA else as.Date(input$valid_from_date),
     valid_to = if (is.null(input$valid_to_date)) NA else as.Date(input$valid_to_date),
     amount = if (is.null(input$funding_amount)) NA else as.numeric(input$funding_amount),
@@ -41,7 +41,7 @@ add_expense_button <- function(input, values) {
     priority = nrow(values$expenses) + 1,
     expense_id = sprintf("E%03d", nrow(values$expenses) + 1),
     expense_name = if (is.null(input$expense_name_input)) NA else input$expense_name_input,
-    expense_category = if (is.null(input$expense_type)) NA else input$expense_type,
+    expense_category = if (is.null(input$expense_type)) NA else tolower(input$expense_type),
     planned_amount = if (is.null(input$expense_amount)) NA else as.numeric(input$expense_amount),
     latest_payment_date = if (is.null(input$latest_payment_date)) NA else as.Date(input$latest_payment_date),
     notes = if (is.null(input$expense_note)) NA else input$expense_note

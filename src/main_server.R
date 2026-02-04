@@ -361,6 +361,7 @@ main_server_logic <- function(input, output, session, values) {
   output$sample_funding_table <- renderDT({
     req(values$funding_sources)
     df <- values$funding_sources
+    df$allowed_categories <- sapply(df$allowed_categories, function(x) {paste(x, collapse = ", ")})
     colnames(df) <- display_funding_names[names(df)]
 
     datatable(

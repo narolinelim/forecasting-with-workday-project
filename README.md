@@ -20,9 +20,9 @@
 
 ## 1. Quick Links
 
-- Live Demo: [link]
+- Live Demo: [link]()
 - Fast Track report [link](https://wehieduau.sharepoint.com/:w:/r/sites/StudentInternGroupatWEHI/Shared%20Documents/Forecasting%20Budget/2025%20Summer/Presentation%20and%20Formal%20Reports/Fast-track%20Report.docx?d=we00883216ea24fa7aa48c4a65b73be05&csf=1&web=1&e=cKiZhd)
-- Final Report powerpoint [link]
+- Final Report powerpoint [link]()
 
 
 ---
@@ -165,15 +165,7 @@ The function should explicity return a value using the `return()` statement, rat
     - Column priorities: Sort the expenses based on user-defined columns.
     - Manual priorities: User can manually reorder expenses to set their priorities.
 4.  **Forecast Generation** - The app generates the forecast based on the processed data and selected priority level.
-5.  **Results Output** - The user can download the forecasted results in Excel format
-
-### Possible Future Improvements
-
-- Better high level understanding through interacting with the intended users to gather feedback and improve usability.
-- Editing capabilities for funding sources and expenses directly within the app.
-- PDF report generation for forecast summaries.
-- Improvement on the adding and deleting of funding sources and expenses to make it more intuitive.
-- Deployment of the app on a cloud platform for testing.
+5.  **Results Output** - The user can download the forecasted results in Excel format.
 
 ---
 
