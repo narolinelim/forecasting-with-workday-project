@@ -19,11 +19,7 @@ add_funding_button <- function(input, values) {
   for (col in must_have) {
     val <- new_row[[col]]
     if (any(is.na(val))) {
-      showNotification(
-        "Missing required field",
-        type = "error",
-        duration = 5
-      )
+      showNotification("Missing required field", type = "error", duration = 5)
       return(NULL)
     }
   }
@@ -69,9 +65,9 @@ delete_row <- function(df, selected_rows) {
 
   if (length(selected_rows) > 0 && all(selected_rows %in% seq_len(nrow(df)))) {
     df <- df[-selected_rows, ]
-    if ("priority" %in% names(df)) {
-      df$priority <- seq_len(nrow(df))
-    }
+
+    df$priority <- seq_len(nrow(df))
+    
 
     showNotification(paste("Deleted", length(selected_rows), "row(s)."), type = "message")
   } else {
