@@ -5,7 +5,7 @@ REQUIRED_PACKAGES <- c("shiny", "bslib", "DT", "dplyr", "readxl",
                        "openxlsx", "tidyr", "rmarkdown", "shinyjs", 
                        "tinytex", "RColorBrewer", "palmerpenguins", 
                        "shinyWidgets", "sortable", "ggplot2", "plotly", 
-                       "lubridate", "circlize")
+                       "lubridate", "circlize", "htmlwidgets")
 
 run_setup <- function() {
   # Identify which packages are not yet installed on the system

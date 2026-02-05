@@ -32,7 +32,7 @@ main_ui_layout <- function() {
       style = "font-size: 25px; font-weight: 600; color: #575756;"
     ),
     theme = custom_theme,
-    useShinyjs(),
+    #useShinyjs(),
     
     sidebar = sidebar(
       width = 270,

@@ -31,64 +31,6 @@ date_to_int <- function(date_str, base_date) {
 }
 
 
-## ------------------------------------------------
-# Source Data Frame, assume in the order of preference, first will have the highest allocation priority
-# sources <- data.frame(
-#   ID = c("FS001", "FS002", "FS003", "FS004", "FS005", "FS006", "FS007", "FS008", "FS009", "FS010"),
-#   # Here we have use I(list(...)) is because we want to store multiple categories (with different number of categories per funding source, i.e. Salary for F1, Equipement AND Salary for F2)
-#   Categories = I(list(
-#     c("Salary"), c("Equipment"), c("Travel"), c("Salary", "Travel"),
-#     c("Equipment", "Travel"), c("Salary"), c("Equipment"), c("Travel"),
-#     c("Salary", "Equipment"), c("Salary", "Equipment", "Travel")
-#   )),
-#   ValidFrom = c("01/02/2025", "01/02/2025", "01/02/2025", "01/02/2025", "01/04/2025",
-#                 "01/01/2025", "01/01/2025", "01/05/2025", "01/07/2025", "01/02/2025"),
-#   ValidTo = c("30/06/2025", "31/08/2025", "30/12/2025", "31/12/2025", "31/10/2025",
-#               "31/12/2025", "31/12/2025", "30/11/2025", "31/12/2025", "31/12/2025"),
-#   Amount = c(15000, 12000, 10000, 20000, 10000, 18000, 36000, 5000, 14000, 10000)
-# )
-
-
-# Expense Data Frame
-# expenses <- data.frame(
-#   ID = c("E009", "E014", "E015", "E013", "E001", "E002", "E003", "E004", "E005",
-#          "E006", "E007", "E008", "E010", "E011", "E012"),
-#   Category = c("Travel", "Equipment", "Travel", "Salary", "Salary", "Equipment",
-#                "Travel", "Salary", "Equipment", "Travel", "Salary", "Equipment",
-#                "Salary", "Equipment", "Travel"),
-#   Amount = c(6000, 20000, 20000, 20000, 5000, 8000, 3000, 12000, 15000, 4000,
-#              8000, 10000, 15000, 12000, 10000),
-#   Date = c("10/08/2025", "20/12/2025", "25/12/2025", "01/05/2025", "15/02/2025",
-#            "20/02/2025", "10/03/2025", "15/04/2025", "20/05/2025", "10/06/2025",
-#            "15/07/2025", "20/07/2025", "15/09/2025", "20/10/2025", "10/11/2025")
-# )
-
-# # Funding Source
-# sources <- data.frame(
-#   ID = c("FS001", "FS002", "FS003", "FS004", "FS005", "FS006", "FS007"),
-#   Categories = I(list(
-#     c("Salary"),
-#     c("Equipment"),
-#     c("Travel"),
-#     c("Salary"),
-#     c("Equipment"),
-#     c("Travel"),
-#     c("Equipment")
-#   )),
-#   ValidFrom = c("01/01/2025", "01/02/2025", "01/04/2025", "01/05/2025", "01/07/2025", "01/01/2025", "01/10/2025"),
-#   ValidTo   = c("31/03/2025", "30/06/2025", "30/09/2025", "31/12/2025", "31/12/2025", "31/12/2025", "31/12/2025"),
-#   Amount = c(12000, 18000, 10000, 30000, 15000, 8000, 9000)
-# )
-# 
-# # Expense
-# expenses <- data.frame(
-#   ID = c("E001","E002","E003","E004","E005","E006","E007","E008","E009","E010"),
-#   Category = c("Salary","Equipment","Salary","Travel","Equipment","Salary","Travel","Equipment","Salary","Travel"),
-#   Amount = c(9000, 40000, 8000, 6000, 15000, 20000, 7000, 9000, 12000, 5000),
-#   Date = c("15/01/2025","20/02/2025","10/03/2025","05/04/2025","15/05/2025",
-#            "10/06/2025","20/07/2025","30/08/2025","01/10/2025","15/11/2025")
-# )
-
 
 
 build_compatibility_matrix <- function(sources, expenses) {
@@ -109,6 +51,7 @@ build_compatibility_matrix <- function(sources, expenses) {
   # This is a matrix with size n_sources x n_expenses (row is each funding sources, and column is each expenses sources), such that if the payment date of the expense fall within the valid from and valid to of the funding AND categories of the expense match with the allowed category of the source, then it will be marked as 1, otherwise 0
   # We build a Compatibility Matrix (Valid = 1, Invalid = 0)
   compatibility <- matrix(0, nrow = n_sources, ncol = n_expenses)
+  compatibility_again <- matrix(0, nrow = n_sources, ncol = n_expenses)
   
   for (i in 1:n_sources) {
     for (j in 1:n_expenses) {
@@ -125,6 +68,7 @@ build_compatibility_matrix <- function(sources, expenses) {
       # LOGIC: The payment date must be INSIDE the funding window (Inclusive)
       # ValidFrom <= PaymentDate <= ValidTo
       time_match <- (e_date >= s_from & e_date <= s_to)
+      time_match_modified <- (e_date < s_to)
       
       # Combine Checks
       if (cat_match && time_match) {
@@ -132,15 +76,24 @@ build_compatibility_matrix <- function(sources, expenses) {
       } else {
         compatibility[i, j] <- 0
       }
+      
+      if (cat_match && time_match_modified) {
+        compatibility_again[i, j] <- 1
+      } else {
+        compatibility_again[i, j] <- 0
+      }
     }
   }
   
-  return (compatibility)
+  return (list(
+    first_compatibility = compatibility, 
+    second_compatibility = compatibility_again
+    ))
   
 }
 
 
-solve_constraint_model <- function(sources, expenses, compatibility) {
+solve_constraint_model <- function(sources, expenses, compatibilities) {
   
   n_sources <- nrow(sources)
   n_expenses <- nrow(expenses)
@@ -177,7 +130,7 @@ solve_constraint_model <- function(sources, expenses, compatibility) {
     
     # 3. Compatibility Constraint
     # If compatibility[i, j] == 0, then x[i, j] must be 0
-    add_constraint(x[i, j] == 0, i = 1:n_sources, j = 1:n_expenses, compatibility[i, j] == 0)
+    add_constraint(x[i, j] == 0, i = 1:n_sources, j = 1:n_expenses, compatibilities$first_compatibility[i, j] == 0)
   
   
   
@@ -190,7 +143,7 @@ solve_constraint_model <- function(sources, expenses, compatibility) {
 
 
 ## ------------------------------------------------
-apply_greedy_fill <- function(result, sources, expenses, compatibility) {
+apply_greedy_fill <- function(result, sources, expenses, compatibilities) {
   
   n_sources <- nrow(sources)
   n_expenses <- nrow(expenses)
@@ -222,7 +175,7 @@ apply_greedy_fill <- function(result, sources, expenses, compatibility) {
       if (amount_needed < 1e-6) break 
       
       # Check compatibility AND available funds
-      if (source_remaining[i] > 1e-6) {
+      if (compatibilities$second_compatibility[i, j] == 1 && source_remaining[i] > 1e-6) {
         take_amount <- min(amount_needed, source_remaining[i])
         
         # Update Matrix & Balances
@@ -362,6 +315,8 @@ create_financial_dfs <- function(mat_x, sources, expenses) {
   # Clean up negative zeros
   df_funds_summary$remaining_amount[df_funds_summary$remaining_amount < 0] <- 0
   
+  
+  # --- 4. Full Allocation DataFrame (for output display) ---
   df_full_allocation <- df_allocations %>%
     left_join(
       df_expenses_status %>%
@@ -372,8 +327,9 @@ create_financial_dfs <- function(mat_x, sources, expenses) {
           latest_payment_date,
           status
         ), by = c("expense_id", "expense_category"))
+
   
-  # Return all 3 as a named list
+  # Return all 4 as a named list
   return(list(
     allocations = df_allocations,
     expenses = df_expenses_status,
@@ -383,17 +339,19 @@ create_financial_dfs <- function(mat_x, sources, expenses) {
 }
 
 
+
 activate_allocation_algorithm <- function(sources, expenses) {
   ## ------------------------------------------------
   
-  compatibility <- build_compatibility_matrix(sources, expenses)
+  compatibilities <- build_compatibility_matrix(sources, expenses)
   
-  result <- solve_constraint_model(sources, expenses, compatibility)
+  result <- solve_constraint_model(sources, expenses, compatibilities)
   
   if (result$status == "optimal" || result$status == "success") {
+    print("something wrong here")
     
     # Partial fill
-    final_matrix <- apply_greedy_fill(result, sources, expenses, compatibility)
+    final_matrix <- apply_greedy_fill(result, sources, expenses, compatibilities)
     
     # Print report in R
     print_financial_report(final_matrix, sources, expenses)

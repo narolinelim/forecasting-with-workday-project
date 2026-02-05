@@ -10,9 +10,12 @@ source("src/server/graph.R")
 source("src/server/edit-rows.R")
 source("src/server/testing.R")
 
+library(htmlwidgets)
+library(chorddiag)
+
 main_server_logic <- function(input, output, session, values) {
   
-  # Current page
+  ## ----- Current page ---
   current_view <- reactiveVal("dashboard")
   
   clicked_month <- reactiveVal(NULL)
@@ -35,7 +38,11 @@ main_server_logic <- function(input, output, session, values) {
 
   observe({
     for (error in errors()) {
-      showNotification(error, type = "error", duration = NULL)
+      if (grepl("Warning", error)) {
+        showNotification(error, type = "warning", duration = NULL)
+      } else {
+        showNotification(error, type = "error", duration = NULL)
+      }
     }
   }) %>% bindEvent(errors(), ignoreInit = TRUE)
 
@@ -74,20 +81,20 @@ main_server_logic <- function(input, output, session, values) {
     )
   })
 
-  # --- EVENT: End Session ---
+  # ---- EVENT: End Session ----
   observeEvent(input$end_session, {
     showNotification("Session Ended. All data cleared.", type = "message", duration = 3)
     removeModal()
     session$reload()
   })
 
-  # --- EVENT: Return to session ---
+  # ---- EVENT: Return to session ----
   observeEvent(input$return_to_session, {
     removeModal()
     current_view("dashboard")
   })
 
-  # Render priority mode
+  # ----- Render priority mode -----
   output$priority_card <- renderUI({
     if (isTruthy(input$select_priority) && input$select_priority == "Manual Priority") {
       manual_priority_ui()
@@ -117,9 +124,9 @@ main_server_logic <- function(input, output, session, values) {
     }
   })
   
-  # --- EVENT: Mutual Exclusion for Priority Dropdowns ---
+  # ---- EVENT: Mutual Exclusion for Priority Dropdowns ----
   observeEvent(input$select_first_priority_item, {
-    # 1. Get the current value of the 1st Priority
+    # 1. Get the current value of the 1st Priority ----
     p1_val <- input$select_first_priority_item
     
     # 2. Define all available choices for the 2nd Priority
@@ -453,6 +460,7 @@ main_server_logic <- function(input, output, session, values) {
       req(values$funding_sources)
       req(values$expenses)
       allocation_data <- activate_allocation_algorithm(values$funding_sources, values$expenses)
+      print(allocation_data$full_allocation_data)
       values$allocation_result <- allocation_data$allocations
       values$funding_summary <- allocation_data$funds
       values$expense_status <- allocation_data$expenses
@@ -529,11 +537,28 @@ main_server_logic <- function(input, output, session, values) {
     cm <- clicked_month()
     req(cm)
     cutoff <- ceiling_date(as.Date(paste0(cm, "-01")), "month")
-    create_circos_plot(values, month = cutoff)
+    c <- create_circos_plot(values, month = cutoff)
+    c 
   })
   
+  
   output$circos_plot <- renderChorddiag({
-    circos_month()
+    c <- circos_month()
+    
+    # Activating zooming on the circos plot using d3.js 
+    onRender(c, "
+      function(el, x) {
+        var svg = d3.select(el).select('svg');
+        var g = svg.select('g');
+        var zoom = d3.zoom()
+          .on('zoom', function() {
+            g.attr('transform', d3.event.transform);
+          })
+          
+        svg.call(zoom);
+        
+      }
+    ")
   })
   
   output$circos_container <- renderUI({
@@ -548,7 +573,7 @@ main_server_logic <- function(input, output, session, values) {
       tagList(
         tags$p(paste("Allocation Month: ", format(as.Date(cm), "%b %Y")),
                style = "font-size: 16px; font-weight: 600;"),
-        chorddiagOutput("circos_plot", height = "600px", width = "100%") 
+        chorddiagOutput("circos_plot", height = "800px", width = "100%") 
       )
     }
   })

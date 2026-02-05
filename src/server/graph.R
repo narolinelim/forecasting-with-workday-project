@@ -10,16 +10,18 @@ library(chorddiag)
 
 
 
-# SHORTFALL PLOT
+# ---- SECTION 1: SHORTFALL BAR GRAPH ----
 
 create_shortfall_bar <- function(values) {
-
+  
+  # Extracting reactive values
   df_allocations <- values$allocation_result
   funding <- values$funding_sources
   df_expenses_status <- values$expense_status
   expenses <- values$expenses
   
   
+  ## ---- Step 1: Setting Up Full Allocation Data Frame ----
   allocation_with_funding_df <- df_allocations %>%
     left_join(
       funding %>%
@@ -59,8 +61,7 @@ create_shortfall_bar <- function(values) {
   # print(ordered_df)
   
   
-  # Dataframe including range of months involved in the allocation and prepping
-  # for final shortfall dataframe
+  ## ---- Step 2: Create An Empty Monthly Baseline Data Frame ----
   months <- seq(
     from = min(floor_date(expenses$latest_payment_date, "month")),
     to = max(df$valid_to_month),
@@ -69,41 +70,19 @@ create_shortfall_bar <- function(values) {
   months_df <- tibble(Month = months)
   # print(months_df)
   
-  # ---------------------- EXTRACTING DISTINCT EXPENSES ------------------------
   
-  # 1. Extracting unallocated distinct expenses
-  unallocated_distinct_expense <- expenses %>%
-    anti_join(df, by = "expense_id") %>%
-    mutate(
-      expense_id = expense_id,
+  ## ----- Step 3: Extracting All Distinct Expenses ----
+  all_expense <- expenses %>%
+    summarise(
+      expense_id,
       expense_amount = planned_amount,
       expense_date_month = floor_date(latest_payment_date, "month")
-    ) %>%
-    select(
-      expense_id,
-      expense_amount,
-      expense_date_month
-    )
-  
-  
-  # print("unallocated_distinct_expense")
-  # print(unallocated_distinct_expense)
+    ) 
+  print("all expense")
+  print(all_expense)
   
 
-  # 2. Extracting allocated distinct expenses (and partial allocation)
-  distinct_expenses <- df %>% 
-    distinct(expense_id, expense_amount, expense_date_month)
-  # print("distinct_expenses")
-  # print(distinct_expenses)
-  
-  all_distinct_expenses <- bind_rows(distinct_expenses, unallocated_distinct_expense)
-  # print("all_distinct_expenses")
-  # print(all_distinct_expenses)
-  
-  
-  # ----------------------------------------------------------------------------
-
-  
+  ## ---- Step 4: Cumulative Allocation Data Frame F
   # Cumulative allocation for each expense for each month
   funding_by_month <- df %>%
     rowwise() %>%
@@ -120,7 +99,7 @@ create_shortfall_bar <- function(values) {
   
   # Combining dataframe and recording shortfall timeline after
   # each expense latest payment date
-  expense_month_grid <- all_distinct_expenses %>%
+  expense_month_grid <- all_expense %>%
     mutate(expense_date_month = floor_date(expense_date_month, "month")) %>%
     crossing(months_df) %>%
     filter(Month >= expense_date_month)
@@ -166,8 +145,8 @@ create_shortfall_bar <- function(values) {
     ) %>%
     arrange(Month)
   
-  # print("monthly_shortfall")
-  # print(monthly_shortfall)
+  print("monthly_shortfall")
+  print(monthly_shortfall)
   
   shortfall_num <- expenses_month_status %>%
     filter(is_short == TRUE)
@@ -178,7 +157,7 @@ create_shortfall_bar <- function(values) {
   
   
   
-  # -------------------------- SHORTFALL BAR PLOT ------------------------------
+  ## ---- SHORTFALL BAR GRAPH ----
   
   # Number of shortfalls bar graph (by month)
   shortfall_number_bar <- plot_ly(
@@ -257,8 +236,6 @@ create_shortfall_bar <- function(values) {
         )
       )
     ) 
-
-  # ----------------------------------------------------------------------------
   
   p$x$source <- "A"
   p <- event_register(p, "plotly_click")
@@ -272,11 +249,9 @@ create_shortfall_bar <- function(values) {
 }
 
 
-# CIRCOS PLOT
+# ---- SECTION 2: ALLOCATION PLOT (CHORD DIAGRAM) ---- 
 
 create_circos_plot <- function(values, month) {
-  #allocation should be done within the month of the latest payment date
-  # if funding has a big interval.
   
   print(month)
   
@@ -285,11 +260,13 @@ create_circos_plot <- function(values, month) {
   df_expenses_status <- values$expense_status
   expenses <- values$expenses
   
+  ## ---- Step 1: Stage Full Allocation Data Frame ----
   allocation_with_funding_df <- df_allocations %>%
     left_join(
       funding %>%
         select(
           source_id,
+          amount,
           valid_from,
           valid_to
         ), by = "source_id"
@@ -315,11 +292,6 @@ create_circos_plot <- function(values, month) {
   #print(sectors)
   
   
-  # rows_until_month <- full_allocation_df %>%
-  #   filter(valid_from < month)
-  # print(rows_until_month)
-  print(full_allocation_df)
-  
   rows_until_month <- full_allocation_df %>%
     mutate(
       allocation_date = if_else(
@@ -329,22 +301,25 @@ create_circos_plot <- function(values, month) {
       )
     ) %>%
     filter(allocation_date < month)
-    
-  
+  print("row until month")
   print(rows_until_month)
+    
   
   mat <- matrix(0, nrow = length(sectors), ncol = length(sectors))
   rownames(mat) <- sectors
   colnames(mat) <- sectors
   
-  # Allocating to expenses
+  
+  ## ---- Step 2: Expense Allocation Cases For Allocation Plot ---- 
+  
+  ### ---- Case 1: Direct expense allocations from funding ----
   for (i in 1:nrow(rows_until_month)) {
     mat[rows_until_month$source_id[i], rows_until_month$expense_id[i]] <- rows_until_month$allocated_amount[i]
     mat[rows_until_month$expense_id[i], rows_until_month$source_id[i]] <- rows_until_month$allocated_amount[i]
   }
 
-  # Leftover expenses self-links at the current time (current month)
-  cumulative_expense <- rows_until_month %>%
+  ### ---- Case 2: Leftover expenses self-links at the current time ----
+  leftover_expenses <- rows_until_month %>%
     group_by(expense_id) %>%
     summarise(
       expense_amount = first(expense_amount),
@@ -353,23 +328,68 @@ create_circos_plot <- function(values, month) {
       .groups = "drop"
     )
   
+  ### ---- Case 3: Expenses not fully allocated ----
+  fully_unallocated_expense <- expenses %>%
+    anti_join(leftover_expenses, by = "expense_id") %>%
+    group_by(expense_id) %>%
+    summarise(
+      expense_amount = planned_amount,
+      cumulative_allocation = 0,
+      leftover_expense = planned_amount,
+      .groups = "drop"
+    )
   
-  for (i in 1:nrow(cumulative_expense)) {
-    mat[cumulative_expense$expense_id[i], cumulative_expense$expense_id[i]] <- cumulative_expense$leftover_expense[i]
+  all_expenses_allocations <- bind_rows(leftover_expenses, fully_unallocated_expense)
+  
+  ### ---- All remaining cases for expense allocations (Case 2 & 3) ----
+  for (i in 1:nrow(all_expenses_allocations)) {
+    mat[all_expenses_allocations$expense_id[i], all_expenses_allocations$expense_id[i]] <- all_expenses_allocations$leftover_expense[i]
   }
   
-  # Funding that hasn't been allocated  or isn't available yet
-  unallocated_funding <- funding %>%
-    anti_join(rows_until_month, by = "source_id")
   
+  ## ---- Step 3: Funding Allocation Cases For Allocation Plot ----
+  
+  # can be improved by only showing the funding when it becomes available
+  
+  # Funding that hasn't been allocated or isn't available yet
+  unallocated_funding <- funding %>%
+    anti_join(rows_until_month, by = "source_id") %>%
+    summarise(
+      source_id,
+      remaining_amount = amount
+    )
+  print("unallocated_funding")
+  print(unallocated_funding)
+  
+  # need to look at the case of leftover funding (similar to leftover expenses)
+  # need source id, intial amount, cumulative allocation, leftover funding (these are up until the clicked month)
+  leftover_funding <- rows_until_month %>%
+    group_by(source_id) %>%
+    summarise(
+      funding_amount = first(amount),
+      cumulative_allocation = sum(allocated_amount),
+      remaining_amount = amount - cumulative_allocation,
+      .groups = "drop"
+    )
+  print("leftover funding")
+  print(leftover_funding)
+  
+  all_funding_allocations <- bind_rows(unallocated_funding, leftover_funding)
+  all_funding_allocations <- all_funding_allocations %>%
+    summarise(
+      source_id,
+      remaining_amount
+    )
+  print("all funding allocations")
+  print(all_funding_allocations)
   
   # Leftover funding self-links
-  if (nrow(unallocated_funding) > 0) {
-    for (i in 1:nrow(unallocated_funding)) {
-      mat[unallocated_funding$source_id[i], unallocated_funding$source_id[i]] <- unallocated_funding$amount[i]
+  if (nrow(all_funding_allocations) > 0) {
+    for (i in 1:nrow(all_funding_allocations)) {
+      mat[all_funding_allocations$source_id[i], all_funding_allocations$source_id[i]] <- all_funding_allocations$remaining_amount[i]
     }
   }
-  #print(mat)
+  print(mat)
   
   
   funding_length <- length(sources_ids)
@@ -380,18 +400,19 @@ create_circos_plot <- function(values, month) {
   expense_colors <- heat.colors(expense_length)
   sector_colors <- c(funding_colors, expense_colors)
   
-  chorddiag(mat,
+  c <- chorddiag(mat,
             groupColors = sector_colors,
             groupNames = sectors,
             groupThickness = 0.1,
             groupPadding = 5,
-            groupnamePadding = 40,
-            showTicks = TRUE,
+            groupnamePadding = 20,
+            showTicks = FALSE,
             margin = 80,
             tooltipNames = sectors,
             tooltipUnit = "$",
             tooltipGroupConnector = " → ",
             chordedgeColor = "#B3B6B7")
   
+  return (c)
 }
 

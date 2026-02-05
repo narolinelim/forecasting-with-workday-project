@@ -4,33 +4,30 @@ source("src/main_server.R")
 source("requirements/packages.R")
 
 
-# 1. Installing packages
+# 1. Installing packages from requirements/packages.R
 
-options(shiny.launch.browser = TRUE)
 run_setup()
 
 
 # 2. Load packages
-library(circlize)
-library(shiny)
-library(bslib)
-library(DT)
-library(dplyr)
-library(readxl)
-library(openxlsx)
-library(tidyr)
-library(rmarkdown)
-library(shinyjs)
-library(tinytex)
-library(RColorBrewer)
-library(palmerpenguins)
-library(shinyWidgets)
-library(sortable)
-library(ggplot2)
-library(plotly)
-
-
-# library(Matrix)
+    
+library(shiny)              # Main framework for the web app            
+library(bslib)              # For modern UI components (cards, value boxes...)
+library(DT)                 # For displaying data tables
+library(dplyr)              # For manipulating data
+library(readxl)             # For reading Excel spreadsheets
+library(openxlsx)           # For creating and writing Excel spreadsheets
+library(tidyr)              # For tidying up data
+library(rmarkdown)          # For creating reports or documents (used for modelling output for allocation algorithm)
+library(shinyWidgets)       # For input controls (pickerInput)
+library(sortable)           # For sorting feature (dragging categories)
+library(plotly)             # For plotting interactive graphs (shortfall graph)
+library(htmlwidgets)        # For activating JS in graphical visualizations 
+library(ompr)
+library(ompr.roi)
+library(ROI)
+library(ROI.plugin.highs)
+library(magrittr)
 
 
 
@@ -41,7 +38,10 @@ ui <- main_ui_layout()
 
 
 # 4. Load Server
+
 server <- function(input, output, session) {
+  
+  # --- Main Reactive Values ----
   values <- reactiveValues(
     funding_sources = data.frame(
       source_id = character(),
