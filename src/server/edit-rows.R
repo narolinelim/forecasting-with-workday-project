@@ -15,15 +15,14 @@ add_funding_button <- function(input, values) {
     stringsAsFactors = FALSE
   )
   
-  print(new_row)
-  # must_have <- c("source_id", "allowed_categories", "valid_from", "valid_to", "amount")
-  # for (col in must_have) {
-  #   val <- new_row[[col]]
-  #   if (any(is.na(val))) {
-  #     showNotification("Missing required field", type = "error", duration = 5)
-  #     return(NULL)
-  #   }
-  # }
+  must_have <- c("source_id", "allowed_categories", "valid_from", "valid_to", "amount")
+  for (col in must_have) {
+    val <- new_row[[col]]
+    if (any(is.na(val))) {
+      showNotification("Missing required field", type = "error", duration = 5)
+      return(NULL)
+    }
+  }
 
   values$funding_sources <- rbind(values$funding_sources, new_row)
 }
