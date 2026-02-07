@@ -484,7 +484,13 @@ main_server_logic <- function(input, output, session, values) {
       df <- values$expenses
     }
 
+    # Format date for display
+    df <- df %>%
+      mutate(
+        latest_payment_date = format(as.Date(latest_payment_date), "%d-%m-%Y")
+      )
     colnames(df) <- display_expense_names[names(df)]
+
     datatable(
       df,
       extensions = 'RowReorder',
@@ -567,9 +573,17 @@ main_server_logic <- function(input, output, session, values) {
     {
       req(values$funding_sources)
       df <- values$funding_sources
+
+      # Format date and allowed_categories for display
+      df <- df %>%
+        mutate(
+          valid_from = format(as.Date(valid_from), "%d-%m-%Y"),
+          valid_to = format(as.Date(valid_to), "%d-%m-%Y")
+        )
       df$allowed_categories <- sapply(df$allowed_categories, function(x) {
         paste(x, collapse = ", ")
       })
+
       colnames(df) <- display_funding_names[names(df)]
 
       datatable(
@@ -629,6 +643,12 @@ main_server_logic <- function(input, output, session, values) {
     {
       req(values$expenses)
       df <- values$expenses
+      
+      # Format date for display
+      df <- df %>%
+        mutate(
+          latest_payment_date = format(as.Date(latest_payment_date), "%d-%m-%Y")
+        )
       colnames(df) <- display_expense_names[names(df)]
 
       datatable(
