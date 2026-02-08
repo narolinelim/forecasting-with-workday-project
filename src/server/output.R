@@ -224,6 +224,10 @@ create_allocation_report_wb <- function(values) {
   style_grand_total <- createStyle(fontSize = 12, textDecoration = "bold")
 
   allocation_result <- values$full_budget_allocation_df
+  allocation_result <- allocation_result %>%
+    mutate(
+      latest_payment_date = format(as.Date(latest_payment_date), "%d-%m-%Y")
+    )
   funding_summary <- values$funding_summary
 
 
@@ -257,13 +261,13 @@ create_allocation_report_wb <- function(values) {
   }
   addStyle(wb, "Allocation Result", style = style_currency, 
            rows = (MAIN_SECTION_HEADER + 2):(MAIN_SECTION_HEADER + 1 + nrow(allocation_result)), 
-           cols = c(EXPENSE_AMOUNT_COL, ALLOCATED_AMOUNT_COL), gridExpand = TRUE)
+           cols = c(EXPENSE_AMOUNT_COL, ALLOCATED_AMOUNT_COL))
   writeData(wb, "Allocation Result", allocation_result, withFilter = TRUE, startRow = MAIN_SECTION_HEADER + 1, startCol = ITEM_LABEL_COL,
             headerStyle = style_header_border)
   
   if (ncol(allocation_result) > 0) {
     last_col <- ITEM_LABEL_COL + ncol(allocation_result) - 1
-    setColWidths(wb, "Allocation Result", cols = ITEM_LABEL_COL:last_col, widths = "auto")
+    setColWidths(wb, "Allocation Result", cols = ITEM_LABEL_COL + 1:last_col, widths = "auto")
   }
 
   
