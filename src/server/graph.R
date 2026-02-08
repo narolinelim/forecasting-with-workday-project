@@ -8,7 +8,7 @@ create_shortfall_bar <- function(values) {
   #'
   #' @return list of total_balance, shortfall plots, and total shortfall
   
-
+  
   
   # Extracting allocation result from the reactive values
   df_allocations <- values$allocation_result
@@ -48,7 +48,7 @@ create_shortfall_bar <- function(values) {
         TRUE ~ "Overdue"
       )
     )
-
+  
   
   ## ---- Step 2: Create An Empty Monthly Baseline Data Frame ----
   months <- seq(
@@ -69,7 +69,7 @@ create_shortfall_bar <- function(values) {
   # print("all expense")
   # print(all_expense)
   
-
+  
   ## ---- Step 4: Cumulative Allocation Data Frame For Each Expense Each Month ----
   funding_by_month <- df %>%
     rowwise() %>%
@@ -80,14 +80,14 @@ create_shortfall_bar <- function(values) {
       cumulative_allocated = sum(allocated_amount, na.rm = TRUE),
       .groups = "drop"
     )
-
+  
   
   ## ---- Step 5: Creating The Cartesian Product To Check Shortfall Every Month ---- 
   expense_month_grid <- all_expense %>%
     mutate(expense_date_month = floor_date(expense_date_month, "month")) %>%
     crossing(months_df) %>%
     filter(Month >= expense_date_month)
-
+  
   
   ## ---- Step 6: Cumulative Shortfalls For Each Expense Across All Months ----
   expenses_month_status <- expense_month_grid %>%
@@ -108,7 +108,7 @@ create_shortfall_bar <- function(values) {
   
   ### ---- 2. Total Funding Balance ----
   total_balance <- sum(funding$amount)
-
+  
   
   ## ---- Step 7: Final Monthly Shortfall Data Frame ----
   monthly_shortfall <- expenses_month_status %>%
@@ -281,13 +281,13 @@ create_circos_plot <- function(values, month) {
     filter(allocation_date < month)
   # print("row until month")
   # print(rows_until_month)
-    
+  
   
   mat <- matrix(0, nrow = length(sectors), ncol = length(sectors))
   rownames(mat) <- sectors
   colnames(mat) <- sectors
   
-
+  
   ## ---- Step 2: Direct Expense And Funding Allocations ----
   for (i in 1:nrow(rows_until_month)) {
     mat[rows_until_month$source_id[i], rows_until_month$expense_id[i]] <- rows_until_month$allocated_amount[i]
@@ -295,7 +295,7 @@ create_circos_plot <- function(values, month) {
   }
   
   ## ---- Step 3: Allocation Cases For Chord Diagram ----
-
+  
   ### ---- Case 1: Partial leftover expenses at the current time ----
   leftover_expenses <- rows_until_month %>%
     group_by(expense_id) %>%
@@ -336,7 +336,7 @@ create_circos_plot <- function(values, month) {
       source_id,
       remaining_amount = amount
     )
-
+  
   
   ### ---- Case 2: Partial leftover funding at the current time ----
   leftover_funding <- rows_until_month %>%
@@ -347,7 +347,7 @@ create_circos_plot <- function(values, month) {
       remaining_amount = amount - cumulative_allocation,
       .groups = "drop"
     )
-
+  
   all_funding_allocations <- bind_rows(unallocated_funding, leftover_funding)
   all_funding_allocations <- all_funding_allocations %>%
     summarise(
@@ -374,20 +374,22 @@ create_circos_plot <- function(values, month) {
   
   ## ---- Step 4: Allocation Chord Diagram ----
   c <- chorddiag(mat,
-            groupColors = sector_colors,
-            groupNames = sectors,
-            groupThickness = 0.1,
-            groupPadding = 5,
-            groupnamePadding = 20,
-            showTicks = FALSE,
-            width = NULL,
-            height = 800,
-            margin = 80,
-            tooltipNames = sectors,
-            tooltipUnit = "$",
-            tooltipGroupConnector = " → ",
-            chordedgeColor = "#B3B6B7")
+                 groupColors = sector_colors,
+                 groupNames = sectors,
+                 groupThickness = 0.1,
+                 groupPadding = 5,
+                 groupnamePadding = 20,
+                 showTicks = FALSE,
+                 width = NULL,
+                 height = 800,
+                 margin = 80,
+                 tooltipNames = sectors,
+                 tooltipUnit = "$",
+                 tooltipGroupConnector = " → ",
+                 chordedgeColor = "#B3B6B7")
   
   return (c)
 }
+
+
 

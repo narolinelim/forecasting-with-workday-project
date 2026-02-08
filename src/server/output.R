@@ -1,12 +1,8 @@
-
-
-# Handles input and output
-# Uploads, downloads and output schema (excel and reports)
-
-
+# ----Main output ----
 main_output <- function(input, output, session, values) {
+  #' Function for downloading excel files
 
-  # --- HANDLER: Download Excel Template ---
+  # ---- HANDLER: Download Excel Template ----
   output$download_template <- downloadHandler(
     filename = function() "budget_template.xlsx",
     content = function(file) {
@@ -14,41 +10,74 @@ main_output <- function(input, output, session, values) {
     }
   )
 
-  # --- HANDLER: Download the Excel file with current data ---
+  # ---- HANDLER: Download the Excel file with current data ----
   output$initial_download <- downloadHandler(
     filename = function() "budget_data.xlsx",
     content = function(file) {
       # Check if data is available
       if (!nrow(values$expenses) == 0 && !nrow(values$funding_sources) == 0) {
-        showNotification("Preparing download...", type = "message", duration = 2) 
+        showNotification(
+          "Preparing download...",
+          type = "message",
+          duration = 2
+        )
         saveWorkbook(input_excel_download(values), file, overwrite = TRUE)
       } else {
-        showNotification("No data available to download.", type = "error", duration = 5)
+        showNotification(
+          "No data available to download.",
+          type = "error",
+          duration = 5
+        )
         saveWorkbook(create_budget_template_wb(), file, overwrite = TRUE)
       }
     }
   )
 
-  # --- HANDLER: Download Allocation Report ---
+  # ---- HANDLER: Download Allocation Report ----
   output$budget_download <- downloadHandler(
     filename = function() "allocation_report.xlsx",
     content = function(file) {
       # Check if allocation results are available
-      if (!nrow(values$allocation_result) == 0 && !nrow(values$funding_summary) == 0) {
-        showNotification("Preparing allocation report...", type = "message", duration = 2) 
-        saveWorkbook(create_allocation_report_wb(values), file, overwrite = TRUE)
+      if (
+        !nrow(values$allocation_result) == 0 &&
+          !nrow(values$funding_summary) == 0
+      ) {
+        showNotification(
+          "Preparing allocation report...",
+          type = "message",
+          duration = 2
+        )
+        saveWorkbook(
+          create_allocation_report_wb(values),
+          file,
+          overwrite = TRUE
+        )
       } else {
-        showNotification("No allocation results available to download.", type = "error", duration = 5)
-        saveWorkbook(create_allocation_report_wb(values), file, overwrite = TRUE)
+        showNotification(
+          "No allocation results available to download.",
+          type = "error",
+          duration = 5
+        )
+        saveWorkbook(
+          create_allocation_report_wb(values),
+          file,
+          overwrite = TRUE
+        )
       }
     }
   )
 }
 
-# Helper functions:
 
-# --- Function: Download current data as Excel file ---
+# ---- Helper functions: ----
+
 input_excel_download <- function(values) {
+  #' Download current data as Excel file
+  #'
+  #' @param values: reactiveValues containing current data
+  #' 
+  #' @return: wb: Excel workbook object 
+
   wb <- createWorkbook()
 
   # Create worksheets
@@ -98,11 +127,14 @@ input_excel_download <- function(values) {
     setColWidths(wb, "Funding", cols = seq_len(ncol(export_funding)), widths = "auto")
   }
 
-  wb
+  return(wb)
 }
 
-# --- Function: Create Excel template workbook ---
 create_budget_template_wb <- function() {
+  #' Create Excel template workbook
+  #' 
+  #' @return: wb: Excel workbook object with template structure
+  
   wb <- createWorkbook()
   addWorksheet(wb, "Funding")
   writeData(
@@ -134,22 +166,21 @@ create_budget_template_wb <- function() {
       check.names = FALSE
     )
   )
-  wb
+  return(wb)
 }
 
 write_data_to_excel <- function(wb_object, target_sheet, text, start_row, start_col, end_col = NULL, text_style = NULL, text_style2 = NULL) {
-  # Function that writes and styles output for Excel file.
-  #
-  # Arguments: 
-  # wb_object(Workbook) - Workbook object containing a worksheet
-  # target_sheet(string) - The name of the worksheet to write to 
-  # text(string) - The text to be written into the worksheet
-  # start_row(integer) - The row for text to be written into
-  # start_col(integer) - The first column for text to be written into
-  # end_col(integer) - The last column for text style to be applied to (Optional)
-  # text_style(style) - The 1st style of text to be applied (Optional)
-  # text_style2(style) - The 2nd style of text to be applied (Optional)
-  
+  #' Function that writes and styles output for Excel file.
+  #' 
+  #' @param wb_object(Workbook) - Workbook object containing a worksheet
+  #' @param target_sheet(string) - The name of the worksheet to write to 
+  #' @param text(string) - The text to be written into the worksheet
+  #' @param start_row(integer) - The row for text to be written into
+  #' @param start_col(integer) - The first column for text to be written into
+  #' @param end_col(integer) - The last column for text style to be applied to (Optional)
+  #' @param text_style(style) - The 1st style of text to be applied (Optional)
+  #' @param text_style2(style) - The 2nd style of text to be applied (Optional)
+
   writeData(wb = wb_object, sheet = target_sheet, x = text, startRow = start_row, startCol = start_col)
   
   # Check for end column argument
@@ -179,6 +210,12 @@ DATE_SECTION <- 3
 MAIN_SECTION_HEADER <- 5
 
 create_allocation_report_wb <- function(values) {
+  #' Create Excel workbook for allocation report
+  #' 
+  #' @param values: reactiveValues containing allocation results and funding summary
+  #' 
+  #' @return: wb: Excel workbook object with allocation report structure
+
   style_header_title <- createStyle(fontSize = 16, textDecoration = "bold")
   style_header_border <- createStyle(border = "bottom", borderColour = "black", borderStyle = "medium", textDecoration = "bold")
   style_bold <- createStyle(textDecoration = "bold")
@@ -230,7 +267,7 @@ create_allocation_report_wb <- function(values) {
   }
 
   
-  # Funding Summary Sheet
+  # --- Funding Summary Sheet ---
   funding_name_map <- c(
     source_id = "Source ID",
     funding_source = "Funding Source",
@@ -265,5 +302,5 @@ create_allocation_report_wb <- function(values) {
     setColWidths(wb, "Funding Summary", cols = ITEM_LABEL_COL:last_col, widths = "auto")
   }
 
-  wb
+  return(wb)
 }

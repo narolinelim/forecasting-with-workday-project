@@ -1,4 +1,5 @@
 
+
 source("requirements/packages.R")
 source("src/main_ui.R")
 source("src/main_server.R")
@@ -30,14 +31,11 @@ library(ROI.plugin.highs)   # High performance software (highs) for linear optim
 library(magrittr)           # Forward-pipe operator (%>%) to construct functions
 
 
-
 # ---- 3. Load UI ----
-
 ui <- main_ui_layout()
 
 
 # ---- 4. Load Server ----
-
 server <- function(input, output, session) {
   
   # --- Main Reactive Values ----
@@ -45,7 +43,7 @@ server <- function(input, output, session) {
     funding_sources = data.frame(
       source_id = character(),
       funding_source = character(),
-      allowed_categories = character(),
+      allowed_categories = I(list()),
       valid_from = as.Date(character()),
       valid_to = as.Date(character()),
       amount = numeric(),
@@ -95,8 +93,8 @@ server <- function(input, output, session) {
   
   main_server_logic(input, output, session, values)
   main_output(input, output, session, values)
-  
 }
+
 
 # ---- 5. Run Shiny App ----
 shinyApp(ui, server)

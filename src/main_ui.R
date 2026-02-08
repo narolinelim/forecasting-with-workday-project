@@ -46,12 +46,7 @@ main_ui_layout <- function() {
     
     uiOutput("tab_content"),
     tags$body(tags$link(rel = "stylesheet", href = "style.css"))
-    
-    
   )
-    
-  
-  return (main_platform)
-  
 
+  return (main_platform)
 }

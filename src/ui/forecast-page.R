@@ -56,7 +56,8 @@ forecast_ui <- function() {
               selectInput(
                 "select_priority",
                 label = NULL,
-                choices = c("Column Priority", "Manual Priority")
+                choices = c("Column Priority", "Manual Priority", "None"),
+                selected = "None"
               )
             ),
             uiOutput("priority_card")
@@ -82,7 +83,6 @@ manual_priority_ui <- function() {
 }
 
 
-# Column Priority View
 column_priority_ui <- function() {
   # ---- Column Expense Priority Section ----
   
@@ -233,6 +233,17 @@ categories_view <- function(categories) {
         )
       )
     )
+  )
+}
+
+
+none_priority_ui <- function() {
+  # ---- Column Priority: No Priority Selected ----
+  
+  div(
+    p("No priority selected. Expenses' priority will be listed in this order.", 
+      style = "padding: 16px; font-weight: 400; font-size: 16px;"),
+    DTOutput("sample_expense_table")
   )
 }
 
