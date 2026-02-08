@@ -29,7 +29,7 @@ funding_ui <- function() {
             class = "delete-funding",
             actionButton("delete_funding", "Delete Selected Row(s)", class = "delete-data-btn")
           ),
-          DTOutput("sample_funding_table")
+          DTOutput("funding_table")
         ),
         full_screen = TRUE,
         class = "info-containers",

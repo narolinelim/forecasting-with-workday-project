@@ -153,7 +153,7 @@ column_priority_ui <- function() {
       p("Result Table", class = "card-title"),
       
       div(
-        DTOutput("sample_expense_table"),
+        DTOutput("expense_table"),
         style = "padding: 16px; font-weight: 400; font-size: 16px;"
       )
       # ,
@@ -243,7 +243,7 @@ none_priority_ui <- function() {
   div(
     p("No priority selected. Expenses' priority will be listed in this order.", 
       style = "padding: 16px; font-weight: 400; font-size: 16px;"),
-    DTOutput("sample_expense_table")
+    DTOutput("expense_table")
   )
 }
 

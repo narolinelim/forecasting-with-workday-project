@@ -375,7 +375,6 @@ activate_allocation_algorithm <- function(sources, expenses) {
   result <- solve_constraint_model(sources, expenses, compatibilities)
   
   if (result$status == "optimal" || result$status == "success") {
-    print("something wrong here")
     
     # Partial fill
     final_matrix <- apply_greedy_fill(result, sources, expenses, compatibilities)

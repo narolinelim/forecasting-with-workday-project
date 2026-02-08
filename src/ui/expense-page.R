@@ -29,7 +29,7 @@ expense_ui <- function() {
             class = "delete-expense",
             actionButton("delete_expense", "Delete Selected Row(s)", class = "delete-data-btn")
           ),
-          DTOutput("sample_expense_table")
+          DTOutput("expense_table")
         ),
         full_screen = TRUE,
         class = "info-containers",

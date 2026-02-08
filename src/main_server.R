@@ -14,8 +14,6 @@ main_server_logic <- function(input, output, session, values) {
   ## ---- Current page ----
   current_view <- reactiveVal("funding")
 
-  clicked_month <- reactiveVal(NULL)
-
   ## ---- Data Validation ----
   errors <- reactiveVal(NULL)
   observe({
@@ -62,177 +60,7 @@ main_server_logic <- function(input, output, session, values) {
     )
   })
 
-  # ---- 2. DASHBOARD PAGE SERVER LOGIC ----
-
-  ## ---- OUTPUT: Dashboard Graphs ----
-  all_shortfall <- reactive(
-    nrow(values$allocation_result) > 0 &&
-      nrow(values$funding_summary) > 0 &&
-      nrow(values$expense_status) > 0
-  )
-
-  shortfall_data <- reactive({
-    req(all_shortfall)
-    create_shortfall_bar(values)
-  })
-
-  output$shortfall_plot <- renderUI({
-    if (!all_shortfall()) {
-      tags$p(
-        "No data available.",
-        style = "font-size: 16px; text-align: center;"
-      )
-    } else {
-      plotlyOutput("shortfall_bar_plot", height = "100%")
-    }
-  })
-
-  output$shortfall_bar_plot <- renderPlotly({
-    shortfall_data()$shortfall_plot
-  })
-
-  output$shortfall_number <- renderUI({
-    if (!all_shortfall()) {
-      tags$p("No data available", style = "font-size: 20px; color: red;")
-    } else {
-      shortfall_data()$total_shortfalls
-    }
-  })
-
-  output$total_balance <- renderUI({
-    if (!all_shortfall()) {
-      tags$p("No data available", style = "font-size: 20px; color: red;")
-    } else {
-      shortfall_data()$total_balance
-    }
-  })
-
-  observeEvent(event_data("plotly_click"), {
-    clicked_bar <- event_data("plotly_click")
-    req(clicked_bar)
-    clicked_month(clicked_bar$x)
-  })
-
-  circos_month <- reactive({
-    cm <- clicked_month()
-    req(cm)
-    cutoff <- ceiling_date(as.Date(paste0(cm, "-01")), "month")
-    create_circos_plot(values, month = cutoff)
-  })
-
-  output$circos_plot <- renderChorddiag({
-    circos_month()
-  })
-
-  output$circos_container <- renderUI({
-    cm <- clicked_month()
-
-    if (is.null(cm) && all_shortfall()) {
-      tags$p(
-        "Click on a month to see the allocation plot.",
-        style = "font-size: 16px; text-align: center;"
-      )
-    } else if (!all_shortfall()) {
-      tags$p(
-        "No data available.",
-        style = "font-size: 16px; text-align: center;"
-      )
-    } else {
-      tagList(
-        tags$p(
-          paste("Allocation Month: ", format(as.Date(cm), "%b %Y")),
-          style = "font-size: 16px; font-weight: 600;"
-        ),
-        chorddiagOutput("circos_plot", height = "600px", width = "100%")
-      )
-    }
-  })
-
-  ## ---- OUTPUT: Dashboard Result Tables ----
-  display_budget_allocation_names <- c(
-    source_id = "Source ID",
-    expense_id = "Expense ID",
-    expense_category = "Expense Category",
-    allocated_amount = "Allocated Amount",
-    planned_amount = "Expense Amount",
-    latest_payment_date = "Payment Date",
-    status = "Allocation Status"
-  )
-
-  display_unallocated_funding_names <- c(
-    source_id = "Source ID",
-    funding_source = "Funding Source",
-    initial_amount = "Initial Amount",
-    used_amount = "Used Amount",
-    remaining_amount = "Remaining Amount"
-  )
-
-  output$budget_allocation_table <- renderDT({
-    req(values$full_budget_allocation_df)
-    df <- values$full_budget_allocation_df
-
-    colnames(df) <- display_budget_allocation_names[names(df)]
-
-    datatable(df)
-  })
-
-  output$unallocated_funding_table <- renderDT({
-    funding_df <- values$funding_sources
-    funding_summary_df <- values$funding_summary
-
-    df <- funding_summary_df %>%
-      left_join(
-        funding_df %>%
-          select(
-            source_id,
-            funding_source
-          ),
-        by = "source_id"
-      ) %>%
-      relocate(funding_source, .before = initial_amount)
-
-    colnames(df) <- display_unallocated_funding_names[names(df)]
-
-    datatable(df)
-  })
-
-  ## ---- EVENT: Exit Session Popup ----
-  observeEvent(input$exit_session, {
-    showModal(
-      tagAppendAttributes(
-        modalDialog(
-          title = "Exiting Session",
-          "All data from this session will be deleted",
-          easyClose = TRUE,
-          footer = tagList(
-            actionButton("return_to_session", "Return", class = "session-btn"),
-            actionButton("end_session", "Exit Session", class = "session-btn")
-          )
-        ),
-        class = "exit-session-popup"
-      )
-    )
-  })
-
-
-  ## ---- EVENT: End Session ----
-  observeEvent(input$end_session, {
-    showNotification(
-      "Session Ended. All data cleared.",
-      type = "message",
-      duration = 3
-    )
-    removeModal()
-    session$reload()
-  })
-
-  ## ---- EVENT: Return to session ----
-  observeEvent(input$return_to_session, {
-    removeModal()
-    current_view("dashboard")
-  })
-
-  # ---- 3. FORECAST PAGE SERVER LOGIC ----
+  # ---- 2. FORECAST PAGE SERVER LOGIC ----
 
   ## ---- OUTPUT: Render priority mode ----
   output$priority_card <- renderUI({
@@ -359,7 +187,7 @@ main_server_logic <- function(input, output, session, values) {
       fund_cats <- fund_cats[!is.na(fund_cats) & nzchar(fund_cats)]
     }
 
-    ### ---- combine, dedupe, sort ----
+    #### ---- combine, dedupe, sort ----
     cats <- sort(unique(c(exp_cats, fund_cats)))
 
     dr <- drag_order()
@@ -581,134 +409,30 @@ main_server_logic <- function(input, output, session, values) {
       }
     )
   })
-
-
-  ## ---- OUTPUT: Dashboard Graphs ----
-  all_shortfall <- reactive(
-    nrow(values$allocation_result) > 0 &&
-    nrow(values$funding_summary) > 0 &&
-    nrow(values$expense_status) > 0
-  )
-  
-  shortfall_data <- reactive({
-    req(all_shortfall)
-    create_shortfall_bar(values)
-  })
-  
-  output$shortfall_plot <- renderUI({
-    
-    if (!all_shortfall()) {
-      tags$p("No data available.", style = "font-size: 16px; text-align: center;")
-    } else {
-      plotlyOutput("shortfall_bar_plot", height = "100%")
-    }
-  })
-  
-  output$shortfall_bar_plot <- renderPlotly({
-    shortfall_data()$shortfall_plot
-  })
-  
-  output$shortfall_number <- renderUI({
-    
-    if (!all_shortfall()) {
-      tags$p("No data available", style = "font-size: 20px; color: red;")
-    } else {
-      shortfall_data()$total_shortfalls
-    }
-  })
-  
-  output$total_balance <- renderUI({
-    
-    if (!all_shortfall()) {
-      tags$p("No data available", style = "font-size: 20px; color: red;")
-    } else {
-      shortfall_data()$total_balance
-    }
-  })
-  
-  
-  observeEvent(event_data("plotly_click"), {
-    clicked_bar <- event_data("plotly_click")
-    req(clicked_bar)
-    clicked_month(clicked_bar$x)
-  })
-  
-  
-  output$circos_container <- renderUI({
-    cm <- clicked_month()
-
-    if (is.null(cm) && all_shortfall()) {
-      
-      # Default circos plot using the last month of the allocation period
-      expense_df <- values$expenses
-      funding_df <- values$funding_sources
-      default_month <- max(floor_date(c(expense_df$latest_payment_date, funding_df$valid_to), "month"))
-      cm <- default_month
-      
-    } 
-    
-    if (!all_shortfall()) {
-      
-      return (tags$p("No data available.", style = "font-size: 16px; text-align: center;"))
-    
-    }
-    
-    circos_plot_id <- paste0("circos_", gsub("-", "_", as.character(cm)))
-    
-    # Re-rendering new circos plot every time user clicks on a month
-    output[[circos_plot_id]] <- renderChorddiag({
-      
-      cutoff <- ceiling_date(as.Date(paste0(cm, "-01")), "month")
-      c <- create_circos_plot(values, month = cutoff)
-      
-      # Activating zooming feature for circos plot
-      onRender(c, "
-          function(el, x) {
-            var svg = d3.select(el).select('svg');
-            var g = svg.select('g');
-    
-            var zoom = d3.zoom()
-              .on('zoom', function() {
-                g.attr('transform', d3.event.transform);
-              })
-    
-            svg.call(zoom);
-          }
-      ")
-      
-    })
-  })
-
-      
-    tagList(
-      tags$p(paste("Allocation Month: ", format(as.Date(cm), "%b %Y")),
-             style = "font-size: 16px; font-weight: 600;"),
-      chorddiagOutput(circos_plot_id, height = "800px", width = "100%")
-    )
-        
     
 
-  # ---- 4. FUNDING PAGE SERVER LOGIC ----
+  # ---- 3. FUNDING PAGE SERVER LOGIC ----
 
-  ## ---- EVENT: Add Funding Button ----
-  # Adding new funding form
+  ## ---- EVENT: Add Funding Button Form ----
   observeEvent(input$add_funding, {
     showModal(upload_funding_modal(categories = available_categories()))
   })
 
+  ## ---- EVENT: Add Funding To Storage ----
   observeEvent(input$add_funding_confirm, {
     add_funding_button(input, values)
     removeModal()
   })
 
   ## ---- EVENT: Delete Funding Button ----
-  # Deleting selected funding
   observeEvent(input$delete_funding, {
     selected <- input$sample_funding_table_rows_selected
     values$funding_sources <- delete_row(values$funding_sources, selected)
   })
 
-  ## ---- OUTPUT: Data Table ----
+  ## ---- OUTPUT: Funding Data Table ----
+  
+  ### --- Displaying funding data table headers ----
   display_funding_names <- c(
     priority = "Priority",
     source_id = "Source ID",
@@ -720,17 +444,8 @@ main_server_logic <- function(input, output, session, values) {
     notes = "Notes"
   )
   
-  output$budget_allocation_table <- renderDT({
-    req(values$full_budget_allocation_df)
-    df <- values$full_budget_allocation_df
-    
-    colnames(df) <- display_budget_allocation_names[names(df)]
-    
-    datatable(df)
-    
-  })
-
-  output$sample_funding_table <- renderDT(
+  ### --- Render funding data table ----
+  output$funding_table <- renderDT(
     {
       req(values$funding_sources)
       df <- values$funding_sources
@@ -769,27 +484,28 @@ main_server_logic <- function(input, output, session, values) {
     server = FALSE
   )
 
-  # ---- 5. EXPENSE PAGE SERVER LOGIC ----
+  # ---- 4. EXPENSE PAGE SERVER LOGIC ----
 
-  ## ---- EVENT: Add Expense Button ----
-  # Adding new expense form
+  ## ---- EVENT: Add Expense Button Form ----
   observeEvent(input$add_expense, {
     showModal(upload_expense_modal(categories = available_categories()))
   })
 
+  ## ---- EVENT: Add Expense To Storage ----
   observeEvent(input$add_expense_confirm, {
     add_expense_button(input, values)
     removeModal()
   })
 
   ## ---- EVENT: Delete Expense Button ----
-  # Deleting selected expense
   observeEvent(input$delete_expense, {
     selected <- input$sample_expense_table_rows_selected
     values$expenses <- delete_row(values$expenses, selected)
   })
 
-  ## ---- OUTPUT: Data Table ----
+  ## ---- OUTPUT: Expense Data Table ----
+  
+  ### ---- Displaying expense data table headers ----
   display_expense_names <- c(
     priority = "Priority",
     expense_id = "Expense ID",
@@ -800,7 +516,8 @@ main_server_logic <- function(input, output, session, values) {
     notes = "Notes"
   )
 
-  output$sample_expense_table <- renderDT(
+  ### ---- Render expense data table ----
+  output$expense_table <- renderDT(
     {
       req(values$expenses)
       df <- values$expenses
@@ -833,4 +550,217 @@ main_server_logic <- function(input, output, session, values) {
     },
     server = FALSE
   )
+  
+  
+  # ---- 5. DASHBOARD PAGE SERVER LOGIC ----
+  
+  ## ---- OUTPUT: Dashboard Information and Graphical Section ----
+  
+  ### ---- Data validation for dashboard output ----
+  all_shortfall <- reactive(
+    nrow(values$allocation_result) > 0 &&
+      nrow(values$funding_summary) > 0 &&
+      nrow(values$expense_status) > 0
+  )
+  
+  ### ---- SECTION 1: SHORTFALL ----
+  
+  #### ---- Activating and creating shortfall data ----
+  shortfall_data <- reactive({
+    req(all_shortfall)
+    c <- create_shortfall_bar(values)
+  })
+
+  #### ---- 1. Shortfall Bar Graph ----
+  output$shortfall_plot <- renderUI({
+    if (!all_shortfall()) {
+      tags$p("No data available.", style = "font-size: 16px; text-align: center;")
+    } else {
+      plotlyOutput("shortfall_bar_plot", height = "100%")
+    }
+  })
+  
+  output$shortfall_bar_plot <- renderPlotly({
+    shortfall_data()$shortfall_plot
+  })
+  
+  #### ---- 2. Total Number of Shortfalls ----
+  output$shortfall_number <- renderUI({
+    if (!all_shortfall()) {
+      tags$p("No data available", style = "font-size: 20px; color: red;")
+    } else {
+      shortfall_data()$total_shortfalls
+    }
+  })
+  
+  #### ---- 3. Total Funding Balance ----
+  output$total_balance <- renderUI({
+    if (!all_shortfall()) {
+      tags$p("No data available", style = "font-size: 20px; color: red;")
+    } else {
+      shortfall_data()$total_balance
+    }
+  })
+  
+  ### ---- SECTION 2: ALLOCATION ----
+  
+  #### ---- Keep tracks of which bar in the bar graph is clicked ----
+  clicked_month <- reactiveVal(NULL)
+  
+  #### ---- EVENT: Change Clicked Month State ----
+  observeEvent(event_data("plotly_click"), {
+    clicked_bar <- event_data("plotly_click")
+    req(clicked_bar)
+    clicked_month(clicked_bar$x)
+  })
+  
+  
+  #### ---- Allocation Chord Diagram ----
+  output$circos_container <- renderUI({
+    cm <- clicked_month()
+    
+    if (is.null(cm) && all_shortfall()) {
+      
+      # Default circos plot using the last month of the allocation period
+      expense_df <- values$expenses
+      funding_df <- values$funding_sources
+      default_month <- max(floor_date(c(expense_df$latest_payment_date, funding_df$valid_to), "month"))
+      cm <- default_month
+      
+    } 
+    
+    if (!all_shortfall()) {
+      
+      return (tags$p("No data available.", style = "font-size: 16px; text-align: center;"))
+      
+    }
+    
+    circos_plot_id <- paste0("circos_", gsub("-", "_", as.character(cm)))
+    
+    # Re-rendering new circos plot every time user clicks on a month
+    output[[circos_plot_id]] <- renderChorddiag({
+      
+      cutoff <- ceiling_date(as.Date(paste0(cm, "-01")), "month")
+      c <- create_circos_plot(values, month = cutoff)
+      
+      # Activating zooming feature for circos plot
+      onRender(c, "
+        function(el, x) {
+          var svg = d3.select(el).select('svg');
+          var g = svg.select('g');
+  
+          var zoom = d3.zoom()
+            .on('zoom', function() {
+              g.attr('transform', d3.event.transform);
+            })
+  
+          svg.call(zoom);
+        }
+    ")
+      
+    })
+    
+    tagList(
+      tags$p(paste("Allocation Month: ", format(as.Date(cm), "%b %Y")),
+             style = "font-size: 16px; font-weight: 600;"),
+      chorddiagOutput(circos_plot_id, height = "800px", width = "100%")
+    )
+  })
+  
+  ## ---- OUTPUT: Dashboard Result Tables ----
+  
+  ### ---- 1. Budget Allocation Section ----
+  
+  #### ---- Display budget allocation data table headers ----
+  display_budget_allocation_names <- c(
+    source_id = "Source ID",
+    expense_id = "Expense ID",
+    expense_category = "Expense Category",
+    allocated_amount = "Allocated Amount",
+    planned_amount = "Expense Amount",
+    latest_payment_date = "Payment Date",
+    status = "Allocation Status"
+  )
+  
+  #### ---- Render budget allocation data table ----
+  output$budget_allocation_table <- renderDT({
+    req(values$full_budget_allocation_df)
+    df <- values$full_budget_allocation_df
+    
+    colnames(df) <- display_budget_allocation_names[names(df)]
+    
+    datatable(df)
+  })
+  
+  ### ---- 2. Unallocated Funding Section ----
+  
+  #### ---- Display unallocated funding data table headers ----
+  display_unallocated_funding_names <- c(
+    source_id = "Source ID",
+    funding_source = "Funding Source",
+    initial_amount = "Initial Amount",
+    used_amount = "Used Amount",
+    remaining_amount = "Remaining Amount"
+  )
+  
+  #### ---- Render unallocated funding data table ----
+  output$unallocated_funding_table <- renderDT({
+    funding_df <- values$funding_sources
+    funding_summary_df <- values$funding_summary
+    
+    df <- funding_summary_df %>%
+      left_join(
+        funding_df %>%
+          select(
+            source_id,
+            funding_source
+          ),
+        by = "source_id"
+      ) %>%
+      relocate(funding_source, .before = initial_amount)
+    
+    colnames(df) <- display_unallocated_funding_names[names(df)]
+    
+    datatable(df)
+  })
+  
+  ## ---- EVENT: Exit Session Popup ----
+  observeEvent(input$exit_session, {
+    showModal(
+      tagAppendAttributes(
+        modalDialog(
+          title = "Exiting Session",
+          "All data from this session will be deleted",
+          easyClose = TRUE,
+          footer = tagList(
+            actionButton("return_to_session", "Return", class = "session-btn"),
+            actionButton("end_session", "Exit Session", class = "session-btn")
+          )
+        ),
+        class = "exit-session-popup"
+      )
+    )
+  })
+  
+  
+  ## ---- EVENT: End Session ----
+  observeEvent(input$end_session, {
+    showNotification(
+      "Session Ended. All data cleared.",
+      type = "message",
+      duration = 3
+    )
+    removeModal()
+    session$reload()
+  })
+  
+  ## ---- EVENT: Return to session ----
+  observeEvent(input$return_to_session, {
+    removeModal()
+    current_view("dashboard")
+  })
+  
 }
+
+
+

@@ -61,13 +61,11 @@ create_shortfall_bar <- function(values) {
   
   ## ----- Step 3: Extracting All Distinct Expenses ----
   all_expense <- expenses %>%
-    summarise(
+    reframe(
       expense_id,
       expense_amount = planned_amount,
       expense_date_month = floor_date(latest_payment_date, "month")
     ) 
-  # print("all expense")
-  # print(all_expense)
   
   
   ## ---- Step 4: Cumulative Allocation Data Frame For Each Expense Each Month ----
@@ -231,8 +229,6 @@ create_circos_plot <- function(values, month) {
   #'
   #' @return: chorddiag object representing the circos plot
   
-  print(month)
-  
   df_allocations <- values$allocation_result
   funding <- values$funding_sources
   df_expenses_status <- values$expense_status
@@ -332,7 +328,7 @@ create_circos_plot <- function(values, month) {
   ### ---- Case 1: Funding not fully allocated ----
   unallocated_funding <- funding %>%
     anti_join(rows_until_month, by = "source_id") %>%
-    summarise(
+    reframe(
       source_id,
       remaining_amount = amount
     )
@@ -341,7 +337,7 @@ create_circos_plot <- function(values, month) {
   ### ---- Case 2: Partial leftover funding at the current time ----
   leftover_funding <- rows_until_month %>%
     group_by(source_id) %>%
-    summarise(
+    reframe(
       funding_amount = first(amount),
       cumulative_allocation = sum(allocated_amount),
       remaining_amount = amount - cumulative_allocation,
@@ -350,7 +346,7 @@ create_circos_plot <- function(values, month) {
   
   all_funding_allocations <- bind_rows(unallocated_funding, leftover_funding)
   all_funding_allocations <- all_funding_allocations %>%
-    summarise(
+    reframe(
       source_id,
       remaining_amount
     )
