@@ -377,6 +377,7 @@ main_server_logic <- function(input, output, session, values) {
 
   ### ---- Save manual order ----
   observeEvent(input$save_manual_order, {
+    req(pending_order())
     values$expenses <- row_reorder(
       input$newOrder,
       values$expenses,
