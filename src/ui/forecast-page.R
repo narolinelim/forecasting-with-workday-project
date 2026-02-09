@@ -52,7 +52,8 @@ forecast_ui <- function() {
               selectInput(
                 "select_priority",
                 label = NULL,
-                choices = c("Column Priority", "Manual Priority")
+                choices = c("Column Priority", "Manual Priority", "None"),
+                selected = "None"
               )
             ),
             uiOutput("priority_card")
@@ -62,6 +63,14 @@ forecast_ui <- function() {
       ),
       actionButton("generate_forecast", "Generate Forecast", class = "generate_forecast_btn")
     )
+  )
+}
+
+none_priority_ui <- function() {
+  div(
+    p("No priority selected. Expenses' priority will be listed in this order.", 
+      style = "padding: 16px; font-weight: 400; font-size: 16px;"),
+    DTOutput("sample_expense_table")
   )
 }
 

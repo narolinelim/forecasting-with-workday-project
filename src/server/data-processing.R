@@ -38,7 +38,7 @@ process_funding_data <- function(df) {
 
     # Convert data types
     mutate(
-      allowed_categories = strsplit(as.character(allowed_categories), ",\\s*"),
+      allowed_categories = strsplit(tolower(as.character(allowed_categories)), ",\\s*"),
       valid_from = as.Date(valid_from),
       valid_to = as.Date(valid_to),
       amount = as.numeric(amount),
@@ -71,33 +71,15 @@ process_expense_data <- function(df) {
   #' - notes: Character
 
   expense_df <- df %>%
-    select(
-      `Priority`,
-      `Expense ID`,
-      `Expense Name`,
-      `Expense Category`,
-      `Planned Amount`,
-      `Latest Payment Date`,
-      `Notes`
-    ) %>%
-    setNames(
-      nm = c(
-        "priority",
-        "expense_id",
-        "expense_name",
-        "expense_category",
-        "planned_amount",
-        "latest_payment_date",
-        "notes"
-      )
-    ) %>%
+    select(`Priority`, `Expense ID`, `Expense Name`, `Expense Category`, `Planned Amount`, `Latest Payment Date`, `Notes`) %>%
+    setNames(nm = c("priority", "expense_id", "expense_name", "expense_category", "planned_amount", "latest_payment_date", "notes")) %>%
 
     # Convert data types
     mutate(
       priority = as.integer(priority),
       expense_id = as.character(expense_id),
       expense_name = as.character(expense_name),
-      expense_category = as.character(expense_category),
+      expense_category = tolower(as.character(expense_category)),
       planned_amount = as.numeric(planned_amount),
       latest_payment_date = as.Date(latest_payment_date),
       notes = as.character(notes)

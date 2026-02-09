@@ -46,7 +46,7 @@ server <- function(input, output, session) {
     funding_sources = data.frame(
       source_id = character(),
       funding_source = character(),
-      allowed_categories = character(),
+      allowed_categories = I(list()),
       valid_from = as.Date(character()),
       valid_to = as.Date(character()),
       amount = numeric(),

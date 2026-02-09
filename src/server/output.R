@@ -1,7 +1,8 @@
+# ----Main output ----
 main_output <- function(input, output, session, values) {
   #' Function for downloading excel files
-  
-  # --- HANDLER: Download Excel Template ---
+
+  # ---- HANDLER: Download Excel Template ----
   output$download_template <- downloadHandler(
     filename = function() "budget_template.xlsx",
     content = function(file) {
@@ -9,39 +10,66 @@ main_output <- function(input, output, session, values) {
     }
   )
 
-  # --- HANDLER: Download the Excel file with current data ---
+  # ---- HANDLER: Download the Excel file with current data ----
   output$initial_download <- downloadHandler(
     filename = function() "budget_data.xlsx",
     content = function(file) {
       # Check if data is available
       if (!nrow(values$expenses) == 0 && !nrow(values$funding_sources) == 0) {
-        showNotification("Preparing download...", type = "message", duration = 2) 
+        showNotification(
+          "Preparing download...",
+          type = "message",
+          duration = 2
+        )
         saveWorkbook(input_excel_download(values), file, overwrite = TRUE)
       } else {
-        showNotification("No data available to download.", type = "error", duration = 5)
+        showNotification(
+          "No data available to download.",
+          type = "error",
+          duration = 5
+        )
         saveWorkbook(create_budget_template_wb(), file, overwrite = TRUE)
       }
     }
   )
 
-  # --- HANDLER: Download Allocation Report ---
+  # ---- HANDLER: Download Allocation Report ----
   output$budget_download <- downloadHandler(
     filename = function() "allocation_report.xlsx",
     content = function(file) {
       # Check if allocation results are available
-      if (!nrow(values$allocation_result) == 0 && !nrow(values$funding_summary) == 0) {
-        showNotification("Preparing allocation report...", type = "message", duration = 2) 
-        saveWorkbook(create_allocation_report_wb(values), file, overwrite = TRUE)
+      if (
+        !nrow(values$allocation_result) == 0 &&
+          !nrow(values$funding_summary) == 0
+      ) {
+        showNotification(
+          "Preparing allocation report...",
+          type = "message",
+          duration = 2
+        )
+        saveWorkbook(
+          create_allocation_report_wb(values),
+          file,
+          overwrite = TRUE
+        )
       } else {
-        showNotification("No allocation results available to download.", type = "error", duration = 5)
-        saveWorkbook(create_allocation_report_wb(values), file, overwrite = TRUE)
+        showNotification(
+          "No allocation results available to download.",
+          type = "error",
+          duration = 5
+        )
+        saveWorkbook(
+          create_allocation_report_wb(values),
+          file,
+          overwrite = TRUE
+        )
       }
     }
   )
 }
 
 
-# Helper functions:
+# ---- Helper functions: ----
 
 input_excel_download <- function(values) {
   #' Download current data as Excel file
@@ -196,6 +224,10 @@ create_allocation_report_wb <- function(values) {
   style_grand_total <- createStyle(fontSize = 12, textDecoration = "bold")
 
   allocation_result <- values$full_budget_allocation_df
+  allocation_result <- allocation_result %>%
+    mutate(
+      latest_payment_date = format(as.Date(latest_payment_date), "%d-%m-%Y")
+    )
   funding_summary <- values$funding_summary
 
 
@@ -229,13 +261,13 @@ create_allocation_report_wb <- function(values) {
   }
   addStyle(wb, "Allocation Result", style = style_currency, 
            rows = (MAIN_SECTION_HEADER + 2):(MAIN_SECTION_HEADER + 1 + nrow(allocation_result)), 
-           cols = c(EXPENSE_AMOUNT_COL, ALLOCATED_AMOUNT_COL), gridExpand = TRUE)
+           cols = c(EXPENSE_AMOUNT_COL, ALLOCATED_AMOUNT_COL))
   writeData(wb, "Allocation Result", allocation_result, withFilter = TRUE, startRow = MAIN_SECTION_HEADER + 1, startCol = ITEM_LABEL_COL,
             headerStyle = style_header_border)
   
   if (ncol(allocation_result) > 0) {
     last_col <- ITEM_LABEL_COL + ncol(allocation_result) - 1
-    setColWidths(wb, "Allocation Result", cols = ITEM_LABEL_COL:last_col, widths = "auto")
+    setColWidths(wb, "Allocation Result", cols = ITEM_LABEL_COL + 1:last_col, widths = "auto")
   }
 
   
