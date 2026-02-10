@@ -11,8 +11,8 @@ main_output <- function(input, output, session, values) {
   )
 
   # ---- HANDLER: Download the Excel file with current data ----
-  output$initial_download <- downloadHandler(
-    filename = function() "budget_data.xlsx",
+  output$download_excel <- downloadHandler(
+    filename = function() "current_budget_data.xlsx",
     content = function(file) {
       # Check if data is available
       if (!nrow(values$expenses) == 0 && !nrow(values$funding_sources) == 0) {
@@ -30,13 +30,6 @@ main_output <- function(input, output, session, values) {
         )
         saveWorkbook(create_budget_template_wb(), file, overwrite = TRUE)
       }
-    }
-  )
-  
-  output$download_excel <- downloadHandler(
-    filename = function() "current_budget_data.xlsx",
-    content = function(file) {
-      saveWorkbook(input_excel_download(values), file, overwrite = TRUE)
     }
   )
 

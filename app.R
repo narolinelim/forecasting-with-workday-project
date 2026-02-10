@@ -24,12 +24,12 @@ library(lubridate)          # For manipulating dates and times
 library(plotly)             # For plotting interactive graphs (shortfall graph)
 library(chorddiag)          # For constructing interactive chord diagrams (allocation plot)
 library(htmlwidgets)        # For activating JS in graphical visualizations 
-library(ompr)               # For modelling and solving mized integer linear programs
+library(ompr)               # For modelling and solving mixed integer linear programs
 library(ompr.roi)           # A solver for ompr that uses R Optimisation Infrastructure (ROI)
 library(ROI)                # R Optimization Infrastructure (solver interface)
 library(ROI.plugin.highs)   # High performance software (highs) for linear optimisation
 library(magrittr)           # Forward-pipe operator (%>%) to construct functions
-library(shinyjs)
+library(shinyjs)            # Useful JS operations for Shiny
 
 
 # ---- 3. Load UI ----

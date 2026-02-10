@@ -115,17 +115,6 @@ hr {
 }
 
 
-/* Initial Excel Download Button (Expense Page) */
-
-.initial-excel-download {
-  border: none;
-  border-radius: var(--button-border-radius);
-  background-color: var(--download-green);
-  color: black;
-  float: right;
-}
-
-
 /* Upload Excel File Button (Forecast Page) */
 
 .btn.btn-default.btn-file {
