@@ -33,8 +33,8 @@ process_funding_data <- function(df) {
   #' - notes: Character
 
   funding_sources_df <- df %>%
-    select(`Source ID`, `Funding Source`, `Allowed Categories`, `Valid From`, `Valid To`, `Amount`, `Notes`) %>%
-    setNames(nm = c("source_id", "funding_source", "allowed_categories", "valid_from", "valid_to", "amount", "notes")) %>%
+    select(`Funding Source`, `Allowed Categories`, `Valid From`, `Valid To`, `Amount`, `Notes`) %>%
+    setNames(nm = c("funding_source", "allowed_categories", "valid_from", "valid_to", "amount", "notes")) %>%
 
     # Convert data types
     mutate(
@@ -42,16 +42,13 @@ process_funding_data <- function(df) {
       valid_from = as.Date(valid_from),
       valid_to = as.Date(valid_to),
       amount = as.numeric(amount),
-      source_id = as.character(source_id),
-      notes = as.character(notes)
+      notes = as.character(notes),
+
+    # Add source_id as a unique identifier for each funding source (using row number)
+      source_id = paste0("FS-", row_number())
     ) %>%
-
-    rowwise() %>%
-    ungroup() %>% # Ungroup after rowwise operation
-    
-    # Remove rows with NA in source_id
-    filter(!is.na(source_id))
-
+     select(source_id, everything())  # Move source_id to the first column
+  
   return(funding_sources_df)
 }
 
@@ -71,22 +68,27 @@ process_expense_data <- function(df) {
   #' - notes: Character
 
   expense_df <- df %>%
-    select(`Priority`, `Expense ID`, `Expense Name`, `Expense Category`, `Planned Amount`, `Latest Payment Date`, `Notes`) %>%
-    setNames(nm = c("priority", "expense_id", "expense_name", "expense_category", "planned_amount", "latest_payment_date", "notes")) %>%
+    select(`Priority`, `Expense Name`, `Expense Category`, `Planned Amount`, `Latest Payment Date`, `Notes`) %>%
+    setNames(nm = c("priority", "expense_name", "expense_category", "planned_amount", "latest_payment_date", "notes")) %>%
 
     # Convert data types
     mutate(
       priority = as.integer(priority),
-      expense_id = as.character(expense_id),
       expense_name = as.character(expense_name),
       expense_category = tolower(as.character(expense_category)),
       planned_amount = as.numeric(planned_amount),
       latest_payment_date = as.Date(latest_payment_date),
-      notes = as.character(notes)
-    ) %>%
+      notes = as.character(notes),
 
-    # Remove rows with NA in expense_id
-    filter(!is.na(expense_id))
+    # Add expense_id as a unique identifier for each expense (using row number)
+      expense_id = paste0("E-", row_number())
+    ) %>%
+    
+    # Sort by priority (ascending)
+    arrange(priority) %>%
+    
+    # Move expense_id to the 2nd column after priority
+    select(priority, expense_id, everything())
 
   return(expense_df)
 }
@@ -111,7 +113,7 @@ data_validation <- function(df, type) {
       errors <- c(errors, "Error: Some funding sources have 'valid_from' date later than 'valid_to' date.")
     }
 
-    required_funding_columns <- c("source_id", "funding_source", "allowed_categories", "amount", "valid_from", "valid_to")
+    required_funding_columns <- c("funding_source", "allowed_categories", "amount", "valid_from", "valid_to")
     for (column in required_funding_columns) {
       if (any(is.na(funding_sources[[column]]))) {
         errors <- c(errors, paste("Error: Funding column", column, "contains missing values."))
@@ -138,7 +140,7 @@ data_validation <- function(df, type) {
   else if (type == "expense") {
     expenses <- df
     
-    required_expense_columns <- c("expense_id", "expense_category", "planned_amount", "latest_payment_date", "priority")
+    required_expense_columns <- c("expense_category", "planned_amount", "latest_payment_date", "priority")
 
     for (column in required_expense_columns) {
       if (any(is.na(expenses[[column]]))) {
@@ -152,16 +154,7 @@ data_validation <- function(df, type) {
         errors <- c(errors, paste("Warning: Expense column", column, "contains missing values."))
       }
     }
-
-    # Check for duplicate expense IDs
-    duplicate_expense_ids <- expenses %>%
-      group_by(expense_id) %>%
-      filter(n() > 1) %>%
-      distinct(expense_id)
-    if (nrow(duplicate_expense_ids) > 0) {
-      errors <- c(errors, "Error: Duplicate expense IDs found.")
-    }
-
+    
     # Check for negative amounts in expenses
     if (any(expenses$planned_amount < 0, na.rm = TRUE)) {
       errors <- c(errors, "Error: Negative planned amounts found in expenses.")

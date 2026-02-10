@@ -5,7 +5,7 @@ add_funding_button <- function(input, values) {
   #' @param values: reactiveValues containing funding_sources dataframe
 
   new_row <- data.frame(
-    source_id = sprintf("FS%03d", nrow(values$funding_sources) + 1),
+    source_id = NA,  # Placeholder, will be assigned after adding the row
     funding_source = if (is.null(input$source_name_input)) NA else input$source_name_input,
     allowed_categories = if (is.null(input$add_allowed_categories)) NA else I(list(tolower(as.character(input$add_allowed_categories)))),
     valid_from = if (is.null(input$valid_from_date)) NA else as.Date(input$valid_from_date),
@@ -14,8 +14,8 @@ add_funding_button <- function(input, values) {
     notes = if (is.null(input$funding_note)) NA else input$funding_note,
     stringsAsFactors = FALSE
   )
-  
-  must_have <- c("source_id", "allowed_categories", "valid_from", "valid_to", "amount")
+
+  must_have <- c("funding_source", "allowed_categories", "valid_from", "valid_to", "amount")
   for (col in must_have) {
     val <- new_row[[col]]
     if (any(is.na(val))) {
@@ -25,6 +25,7 @@ add_funding_button <- function(input, values) {
   }
 
   values$funding_sources <- rbind(values$funding_sources, new_row)
+  values$funding_sources$source_id <- paste0("FS-", seq_len(nrow(values$funding_sources)))
 }
 
 add_expense_button <- function(input, values) {
@@ -35,7 +36,7 @@ add_expense_button <- function(input, values) {
 
   new_row <- data.frame(
     priority = nrow(values$expenses) + 1,
-    expense_id = sprintf("E%03d", nrow(values$expenses) + 1),
+    expense_id = NA,  # Placeholder, will be assigned after adding the row
     expense_name = if (is.null(input$expense_name_input)) NA else input$expense_name_input,
     expense_category = if (is.null(input$expense_type)) NA else tolower(input$expense_type),
     planned_amount = if (is.null(input$expense_amount)) NA else as.numeric(input$expense_amount),
@@ -53,6 +54,7 @@ add_expense_button <- function(input, values) {
   }
 
   values$expenses <- rbind(values$expenses, new_row)
+  values$expenses$expense_id <- paste0("E-", seq_len(nrow(values$expenses)))
 }
 
 delete_row <- function(df, selected_rows) {

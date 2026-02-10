@@ -16,18 +16,10 @@ main_output <- function(input, output, session, values) {
     content = function(file) {
       # Check if data is available
       if (!nrow(values$expenses) == 0 && !nrow(values$funding_sources) == 0) {
-        showNotification(
-          "Preparing download...",
-          type = "message",
-          duration = 2
-        )
+        showNotification("Preparing download...", type = "message", duration = 2)
         saveWorkbook(input_excel_download(values), file, overwrite = TRUE)
       } else {
-        showNotification(
-          "No data available to download.",
-          type = "error",
-          duration = 5
-        )
+        showNotification("No data available to download.", type = "error", duration = 5)
         saveWorkbook(create_budget_template_wb(), file, overwrite = TRUE)
       }
     }
@@ -45,31 +37,12 @@ main_output <- function(input, output, session, values) {
     filename = function() "allocation_report.xlsx",
     content = function(file) {
       # Check if allocation results are available
-      if (
-        !nrow(values$allocation_result) == 0 &&
-          !nrow(values$funding_summary) == 0
-      ) {
-        showNotification(
-          "Preparing allocation report...",
-          type = "message",
-          duration = 2
-        )
-        saveWorkbook(
-          create_allocation_report_wb(values),
-          file,
-          overwrite = TRUE
-        )
+      if (!nrow(values$allocation_result) == 0 && !nrow(values$funding_summary) == 0) {
+        showNotification("Preparing allocation report...", type = "message", duration = 2)
+        saveWorkbook(create_allocation_report_wb(values), file, overwrite = TRUE)
       } else {
-        showNotification(
-          "No allocation results available to download.",
-          type = "error",
-          duration = 5
-        )
-        saveWorkbook(
-          create_allocation_report_wb(values),
-          file,
-          overwrite = TRUE
-        )
+        showNotification("No allocation results available to download.", type = "error", duration = 5)
+        saveWorkbook(create_allocation_report_wb(values), file, overwrite = TRUE)
       }
     }
   )
@@ -98,7 +71,6 @@ input_excel_download <- function(values) {
   # Rename columns and output data
   expense_name_map <- c(
     priority = "Priority",
-    expense_id = "Expense ID",
     expense_name = "Expense Name",
     expense_category = "Expense Category",
     planned_amount = "Planned Amount",
@@ -116,7 +88,6 @@ input_excel_download <- function(values) {
   }
 
   funding_name_map <- c(
-    source_id = "Source ID",
     funding_source = "Funding Source",
     allowed_categories = "Allowed Categories",
     valid_from = "Valid From",
@@ -148,7 +119,6 @@ create_budget_template_wb <- function() {
     wb,
     "Funding",
     data.frame(
-      `Source ID` = character(),
       `Funding Source` = character(),
       `Allowed Categories` = character(),
       `Valid From` = character(),
@@ -164,7 +134,6 @@ create_budget_template_wb <- function() {
     "Expense",
     data.frame(
       `Priority`= integer(),
-      `Expense ID` = character(),
       `Expense Name` = character(),
       `Expense Category` = character(),
       `Planned Amount` = numeric(),
@@ -206,7 +175,6 @@ write_data_to_excel <- function(wb_object, target_sheet, text, start_row, start_
   }
 }
 
-# --- Function: Create Allocation Report Workbook ---
 # Column Indices
 ITEM_LABEL_COL <- 1
 EXPENSE_AMOUNT_COL <- 4
@@ -223,20 +191,23 @@ create_allocation_report_wb <- function(values) {
   #' 
   #' @return: wb: Excel workbook object with allocation report structure
 
+  # ---- Quick Styles ----
   style_header_title <- createStyle(fontSize = 16, textDecoration = "bold")
   style_header_border <- createStyle(border = "bottom", borderColour = "black", borderStyle = "medium", textDecoration = "bold")
   style_bold <- createStyle(textDecoration = "bold")
   style_italic <- createStyle(textDecoration = "italic")
   style_currency <- createStyle(numFmt = "$#,##0.00")
   style_grand_total <- createStyle(fontSize = 12, textDecoration = "bold")
-
+  
+  # ---- Data from values ----
   allocation_result <- values$full_budget_allocation_df
   funding_summary <- values$funding_summary
-
+  funding_sources <- values$funding_sources
+  expenses <- values$expenses
 
   wb <- createWorkbook()
-  
-  # --- Allocation Result Sheet ---
+
+  # ---- Allocation Result Sheet ----
   allocation_name_map <- c(
     source_id = "Source ID",
     expense_id = "Expense ID",
@@ -250,18 +221,20 @@ create_allocation_report_wb <- function(values) {
   addWorksheet(wb, "Allocation Result")
   showGridLines(wb, "Allocation Result", showGridLines = FALSE)
 
-  # Title
+  ## ---- Title ----
   write_data_to_excel(wb, "Allocation Result", "Allocation Result Summary", start_row = TITLE_SECTION, start_col = ITEM_LABEL_COL,
                       text_style = style_header_title)
   write_data_to_excel(wb, "Allocation Result", paste("Date: ", Sys.Date()), start_row = DATE_SECTION, start_col = ITEM_LABEL_COL,
                       text_style = style_bold)
-  
-  # Rename columns and output data
+
+  ## ---- Rename columns and output data ----
   for (old_name in names(allocation_name_map)) {
     if (old_name %in% names(allocation_result)) {
       names(allocation_result)[names(allocation_result) == old_name] <- allocation_name_map[[old_name]]
     }
   }
+
+  ## ---- Data Output ----
   addStyle(wb, "Allocation Result", style = style_currency, 
            rows = (MAIN_SECTION_HEADER + 2):(MAIN_SECTION_HEADER + 1 + nrow(allocation_result)), 
            cols = c(EXPENSE_AMOUNT_COL, ALLOCATED_AMOUNT_COL), gridExpand = TRUE)
@@ -273,8 +246,8 @@ create_allocation_report_wb <- function(values) {
     setColWidths(wb, "Allocation Result", cols = ITEM_LABEL_COL:last_col, widths = "auto")
   }
 
-  
-  # --- Funding Summary Sheet ---
+
+  # ---- Funding Summary Sheet ----
   funding_name_map <- c(
     source_id = "Source ID",
     funding_source = "Funding Source",
@@ -286,18 +259,20 @@ create_allocation_report_wb <- function(values) {
   addWorksheet(wb, "Funding Summary")
   showGridLines(wb, "Funding Summary", showGridLines = FALSE)
 
-  # Rename columns and output data
+  ## ---- Rename columns and output data ----
   for (old_name in names(funding_name_map)) {
     if (old_name %in% names(funding_summary)) {
       names(funding_summary)[names(funding_summary) == old_name] <- funding_name_map[[old_name]]
     }
   }
 
-  # Title
+  ## ---- Title ----
   write_data_to_excel(wb, "Funding Summary", "Funding Summary", start_row = TITLE_SECTION, start_col = ITEM_LABEL_COL,
                       text_style = style_header_title)
   write_data_to_excel(wb, "Funding Summary", paste("Date: ", Sys.Date()), start_row = DATE_SECTION, start_col = ITEM_LABEL_COL,
                       text_style = style_bold)
+  
+  ## ---- Data Output ----
   addStyle(wb, "Funding Summary", style = style_currency, 
            rows = (MAIN_SECTION_HEADER + 2):(MAIN_SECTION_HEADER + 1 + nrow(funding_summary)), 
            cols = c(3,4,5), gridExpand = TRUE)
@@ -307,6 +282,79 @@ create_allocation_report_wb <- function(values) {
   if (ncol(funding_summary) > 0) {
     last_col <- ITEM_LABEL_COL + ncol(funding_summary) - 1
     setColWidths(wb, "Funding Summary", cols = ITEM_LABEL_COL:last_col, widths = "auto")
+  }
+
+  # ---- Funding Input Sheet ----
+  display_funding_names <- c(
+    source_id = "Source ID",
+    funding_source = "Funding Source",
+    allowed_categories = "Allowed Categories",
+    valid_from = "Valid From",
+    valid_to = "Valid To",
+    amount = "Amount",
+    notes = "Notes"
+  )
+
+  addWorksheet(wb, "Funding")
+  showGridLines(wb, "Funding", showGridLines = FALSE)
+
+  ## ---- Title ----
+  write_data_to_excel(wb, "Funding", "Funding Sources", start_row = TITLE_SECTION, start_col = ITEM_LABEL_COL,
+                      text_style = style_header_title)
+  
+  ## ---- Rename columns and output data ----
+  for (old_name in names(display_funding_names)) {
+    if (old_name %in% names(funding_sources)) {
+      names(funding_sources)[names(funding_sources) == old_name] <- display_funding_names[[old_name]]
+    }
+  }
+  
+  ## ---- Data Output ----
+  addStyle(wb, "Funding", style = style_currency, 
+           rows = (MAIN_SECTION_HEADER + 2):(MAIN_SECTION_HEADER + 1 + nrow(funding_sources)), 
+           cols = c(5), gridExpand = TRUE)
+  writeData(wb, "Funding", funding_sources, withFilter = TRUE, startRow = MAIN_SECTION_HEADER + 1, startCol = ITEM_LABEL_COL,
+            headerStyle = style_header_border)
+  if (ncol(funding_sources) > 0) {
+    last_col <- ITEM_LABEL_COL + ncol(funding_sources) - 1
+    setColWidths(wb, "Funding", cols = ITEM_LABEL_COL:last_col, widths = "auto")
+  }
+
+  # ---- Expenses Sheet ----
+  display_expense_names <- c(
+    priority = "Priority",
+    expense_id = "Expense ID",
+    expense_name = "Expense Name",
+    expense_category = "Expense Category",
+    planned_amount = "Planned Amount",
+    latest_payment_date = "Latest Payment Date",
+    notes = "Notes"
+  )
+
+  addWorksheet(wb, "Expenses")
+  showGridLines(wb, "Expenses", showGridLines = FALSE)
+
+  ## ---- Title ----
+  write_data_to_excel(wb, "Expenses", "Expenses", start_row = TITLE_SECTION, start_col = ITEM_LABEL_COL,
+                      text_style = style_header_title)
+
+
+  ## ---- Rename columns and output data ----
+  for (old_name in names(display_expense_names)) {
+    if (old_name %in% names(expenses)) {
+      names(expenses)[names(expenses) == old_name] <- display_expense_names[[old_name]]
+    }
+  }
+
+  ## ---- Data Output ----
+  addStyle(wb, "Expenses", style = style_currency,
+           rows = (MAIN_SECTION_HEADER + 2):(MAIN_SECTION_HEADER + 1 + nrow(expenses)),
+           cols = c(5), gridExpand = TRUE)
+  writeData(wb, "Expenses", expenses, withFilter = TRUE, startRow = MAIN_SECTION_HEADER + 1, startCol = ITEM_LABEL_COL,
+            headerStyle = style_header_border)
+  if (ncol(expenses) > 0) {
+    last_col <- ITEM_LABEL_COL + ncol(expenses) - 1
+    setColWidths(wb, "Expenses", cols = ITEM_LABEL_COL:last_col, widths = "auto")
   }
 
   return(wb)

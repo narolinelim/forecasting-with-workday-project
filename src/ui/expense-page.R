@@ -34,10 +34,8 @@ expense_ui <- function() {
         class = "info-containers",
         style = "padding: 16px;"
       )
-    ),
-    downloadButton("initial_download", "Download Excel file", class = "initial-excel-download") 
-  
-    )
+    ),  
+  )
 }
 
 
