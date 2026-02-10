@@ -1,10 +1,30 @@
 
+
+/*=================================================
+        GLOBAL VARIABLES & GENERAL COMPONENTS
+  =================================================*/
+
+:root {
+  --primary-bg-color: #F5F5F5;
+  --title-font-size: 30px;
+  --title-font-weight: bold;
+  --official-blue: #007BC2;
+  --download-green: #D1FFE4;
+  --red-button-shade: #FFDCDC;
+  --priority-text-color: #0B2D4F;
+  --table-border-color: #8D959E;
+  --button-border-radius: 15px;
+}
+
+/* Horizontal Line Above Result Table (Forecast Page) */
 hr {
   margin: 15px 0 !important;
 }
 
 
-/* TABS */
+/*==============================
+            SIDEBAR
+  ==============================*/
         
 .tab-buttons {
   border: none;
@@ -12,122 +32,106 @@ hr {
   background-color: #D8F1FF;
 }
 
-/* DASHBOARD */
 
-.main.bslib-gap-spacing.html-fill-container {
-  background-color: #F5F5F5 !important;
-  margin: 0 !important;
-  padding: 0 !important;
-}
+/*==============================
+            BUTTONS
+  ==============================*/
 
-.result-container {
-  margin: 30px 100px;
-  padding-bottom: 50px;
-}
+/* Downloading Budget Allocation Button */
 
-.content-title {
-  font-size: 30px;
-  font-weight: bold;
-}
-
-.dashboard-box {
-  margin-bottom: 40px;
-}
-
-.info-containers {
-  margin-top: 20px;
-}
-
-
-.budget_download_btn {
-  background-color: #D1FFE4;
+.budget-download-btn {
+  background-color: var(--download-green);
   color: black;
   float: right;
   border: none;
-  border-radius: 15px;
+  border-radius: var(--button-border-radius);
   margin-bottom: 50px;
 }
 
-.exit_session_btn {
+
+/* Excel Download Button (Forecast Page) */
+
+.excel-download-btn {
+  border: none;
+  border-radius: var(--button-border-radius);
+  background-color: #F0F0F0;
+}
+
+
+/* Generate Forecast Button (Forecast Page) */
+
+.generate-forecast-btn {
   width: 100%;
-  background-color: #FFDCDC;
+  background-color: var(--download-green);
   color: black;
   border: none;
-  border-radius: 15px;
+  border-radius: var(--button-border-radius);
 }
 
 
-.exit-session-popup .modal-header {
-  justify-content: center;
-  position: relative;
-  padding: 20px 20px 0 20px;
-}
+/* Add Funding and Expense Buttons (Funding and Expense Page) */
 
-.exit-session-popup .modal-title {
-  font-weight: bold;
-}
-
-.exit-session-popup .modal-body {
-  padding: 20px;
-  text-align: center;
-}
-
-.exit-session-popup .modal-footer {
-  padding-top: 0;
-  justify-content: center;
-}
-
-.session-btn {
+.add-data-btn {
   border: none;
-  border-radius: 15px;
-  background-color: #FFDCDC;
+  border-radius: var(--button-border-radius);
+  background-color: #CACACA;
 }
 
 
+/* Add Funding and Expense Buttons (Funding and Expense Modal Popup) */
 
-/* FORECAST PAGE */
-
-.card-title {
-  font-size: 20px;
-  margin-bottom: 0;
-  font-weight: 600;
+.add-funding-confirm,
+.add-expense-confirm {
+  width: 100%;
+  background-color: black;
+  color: white;
+  border: none;
+  border-radius: var(--button-border-radius);
 }
 
-#upload-container {
+
+/* Delete Data Button (Funding and Expense Page) */
+
+.delete-data-btn {
+  background-color: var(--red-button-shade);
+  border: none;
+  border-radius: var(--button-border-radius);
+  position: absolute;
+  z-index: 10;
+  padding: 10px 15px;
+  font-size: 14px;
+}
+
+.delete-data-btn:hover {
+  background-color: #1D1F21;
+  color: white;
+}
+
+.delete-expense, .delete-funding {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 15px;
-  gap: 15px;
-}
-
-#left-upload {
-  align-items: center;
-  gap: 20px;
+  justify-content: flex-end;
   width: 100%;
+  position: relative;
 }
 
-#left-upload .shiny-input-container {
-  width: 800px;
+
+/* Initial Excel Download Button (Expense Page) */
+
+.initial-excel-download {
+  border: none;
+  border-radius: var(--button-border-radius);
+  background-color: var(--download-green);
+  color: black;
+  float: right;
 }
 
-#left-upload .input-group {
-  align-items: center;
-  width: 100%;
-}
 
-#left-upload .input-group-btn.input-group-prepend {
-  flex: 0 0 auto;
-}
-
-#left-upload .progress-bar {
-  width: 800px !important;
-}
+/* Upload Excel File Button (Forecast Page) */
 
 .btn.btn-default.btn-file {
   border: none;
-  border-radius: 15px !important;
-  background-color: #0080FF;
+  border-radius: var(--button-border-radius) !important;
+  background-color: var(--official-blue);
   color: white;
   overflow: hidden;
 }
@@ -136,94 +140,285 @@ hr {
   background-color: #404040;
 }
 
-#left-upload input[type='text'] {
-  flex: 1;
-  min-width: 120px;
-  margin-left: 12px;
-  border-radius: 10px;
-  max-width: 40ch;
-  margin-top: 5px;
+
+/* Empty Template Download Button (Forecast Page) */
+
+.template-download-btn {
+  border: none;
+  border-radius: var(--button-border-radius);
+  background-color: var(--download-green);
+  color: black;
+  float: right;
 }
 
+
+/* Buttons for Manual Priority View (Forecast Page) */
+
+.manual-buttons {
+  margin-top: 15px;
+  display: flex;
+  gap: 10px;
+}
+
+.manual-buttons .btn {
+  border: none;
+  border-radius: var(--button-border-radius) !important;
+}
+
+
+/* Manual Priority View: Save Manual Priority Order Button (Forecast Page) */
+
+.save-manual-btn {
+  color: white;
+  background-color: var(--official-blue);
+}
+
+
+/* Manual Priority View: Cancel Manual Priority Order Button (Forecast Page) */
+
+.cancel-manual-btn {
+  background-color: #F0F0F0;
+}
+
+
+/* Manual Priority View: Download New Manual Priority Order Button (Forecast Page) */
+
+.excel-dl-btn-manual {
+  background-color: var(--download-green);
+}
+
+
+/* Download Current Excel Button (None and Column Priority View) */
+
+.excel-dl-btn {
+  border: none;
+  border-radius: var(--button-border-radius);
+  background-color: var(--download-green);
+  color: black;
+  margin-top: 15px;
+  margin-bottom: none;
+}
+
+  
+/* Confirm Exit Session Button (Dashboard Page Modal) */
+
+.session-btn {
+  border: none;
+  border-radius: var(--button-border-radius);
+  background-color: var(--red-button-shade);
+}
+
+
+/* Exit Session Button (Dashboard Page) */
+
+.exit-session-btn {
+  width: 100%;
+  background-color: var(--red-button-shade);
+  color: black;
+  border: none;
+  border-radius: var(--button-border-radius);
+}
+
+
+
+/*==============================
+         MAIN CONTAINERS
+  ==============================*/
+
+
+/* Main Content Container (Override) */
+
+.main.bslib-gap-spacing.html-fill-container {
+  background-color: var(--primary-bg-color) !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+
+/* Main Content Container Metrics (All Pages) */
+
+.result-container {
+  margin: 30px 100px;
+  padding-bottom: 50px;
+}
+
+
+/* Page Titles */
+
+.content-title {
+  font-size: 30px;
+  font-weight: bold;
+}
+
+
+/* Dashboard Page Container Gaps */
+
+.dashboard-box {
+  margin-bottom: 40px;
+}
+
+
+/* Gaps Between Title and Container */
+
+.info-containers {
+  margin-top: 20px;
+}
+
+
+/* Funding and Expense Title Containers */
+
+.input-title-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+
+
+/*==============================
+     FORECAST PAGE COMPONENTS
+  ==============================*/
+  
+/* Upload Container */
+
+.upload-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 15px;
+  gap: 15px;
+}
+
+
+/* Main Forecast Cards Paddings */
+
+.set-priority-card .html-fill-container,
+.upload-card .html-fill-container,
+.priority-container .html-fill-container {
+  padding: 16px 25px;
+}
+
+
+/* Forecast Card Titles */
+
+.card-title {
+  font-size: 20px;
+  margin-bottom: 0;
+  font-weight: 600;
+}
+
+
+/* Background Priority Card Style */
+
+.card-style {
+  padding: 0;
+  background-color: var(--primary-bg-color);
+  border: none;
+}
+
+
+/* Left Upload Excel Side (Forecast Page) */
+
+#left-upload {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  width: 700px;
+}
+
+#left-upload .shiny-input-container {
+  flex: 1 1 auto;
+  width: auto !important;
+  max-width: 100%;
+  margin: 0;
+}
+
+#left-upload .input-group {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+#left-upload .input-group-btn {
+  flex: 0 0 auto;
+}
+
+#left-upload input[type='text'],
+#left-upload .form-control {
+  flex: 1 1 auto;
+  min-width: 120px;
+  max-width: none;
+  margin-left: 12px;
+  border-radius: 10px;
+  margin-top: 3px;
+}
 
 #left-upload .shiny-file-input-progress {
   margin-top: 8px;
-  width: 800px;
 }
+
+#left-upload .progress-bar {
+  width: 100% !important;
+}
+
+
+/* Right Template Download Side (Forecast Page) */
 
 #right-download {
   flex-shrink: 0;
   align-self: flex-start;
 }
 
-.template-download-btn {
-  border: none;
-  border-radius: 15px;
-  background-color: #F0F0F0;
-}
 
-.generate_forecast_btn {
-  width: 100%;
-  background-color: #D1FFE4;
-  color: black;
-  border: none;
-  border-radius: 15px;
-}
+/* Priority Cards Container */
 
-#priority-container {
+.priority-container {
   display: flex;
   gap: 20px;
   width: 100%;
 }
+
+
+/* Each Priority Card */
 
 .priority-cards {
   flex: 1;
   min-width: 0;
 }
 
-/* DATA TABLE IN COL PRIORITY STYLES */
-#priority-container .dataTables_wrapper .dataTables_filter {
-  float: left;
-  text-align: left;
-  width: 100%;
-  min-width: 60px;
-  margin-bottom: 10px;
+
+/* Priority Type Dropdown */
+
+.select-priority-input-type {
+  margin-top: 15px;
 }
 
-#priority-container .dataTables_filter label {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: 0;
-}
-
-#priority-container .dataTables_filter input {
-  flex: 1;
-  max-width: 400px;
-  min-width: 60px;
-  margin-left: 0px !important;
-}
-
-#set-priority-card .html-fill-container,
-#upload-card .html-fill-container {
-  padding: 16px 25px;
-}
-
-#priority-container .html-fill-container {
-  padding: 16px 25px;
-}
-
-.card-style {
-  padding: 0;
-  background-color: #F5F5F5;
+.select-priority-input-type .selectize-input {
   border: none;
+  background-color: #ECF9FF;
+  box-shadow: 0 1px 3px #D4D4D4;
 }
 
 
+/* Each Priority Card Dropdowns */
+
+.select-priority-dropdown .shiny-input-container {
+  width: 100%;
+}
+
+
+/* Overwriting Empty Space Above Radio Buttons */
+
+.control-label.shiny-label-null {
+  display: none;
+}
+
+
+/* Allowed Categories Priority View */
 
 .categories-table {
   border: 1px solid #8D959E;
-
 }
 
 .categories-header {
@@ -233,7 +428,7 @@ hr {
 }
 
 .categories-title {
-  color: #0B2D4F;
+  color: var(--priority-text-color);
   font-weight: 700;
   margin-left: 10px;
 }
@@ -243,7 +438,6 @@ hr {
   margin: 0 !important;
   background-color: #F0F0F0 !important;
 }
-
 
 .allowed-categories .rank-list {
   counter-reset: cat;
@@ -255,7 +449,7 @@ hr {
   grid-template-columns: 30px 1fr;
   align-items: center;
   padding: 0 !important;
-  border-color: #8D959E;
+  border-color: var(--table-border-color);
   height: 40px;
   column-gap: 10px !important;
   margin-bottom: 10px;
@@ -271,44 +465,14 @@ hr {
   align-items: center;
   justify-content: center;
   height: 100%;
-  border-right: 1px solid #8D959E;
-  color: #0B2D4F;
+  border-right: 1px solid var(--table-border-color);
+  color: var(--priority-text-color);
   font-weight: 700;
   pointer-events: none;
 }
 
 
-.select_priority_input_type{
-  margin-top: 15px;
-}
-
-.select_priority_input_type .selectize-input {
-  border: none;
-  background-color: #ECF9FF;
-  box-shadow: 0 1px 3px #D4D4D4;
-}
-
-.select_priority_dropdown .selectize-input {
-  margin-top: 5px;
-  border: none;
-  background-color: #ECF9FF;
-  box-shadow: 0 1px 3px #D4D4D4;
-}
-
-.select_priority_dropdown .shiny-input-container {
-  width: 100%;
-}
-
-
-.no-second-priority {
-  text-align: center;
-  margin: 30px 0 20px 0;
-}
-
-
-.control-label.shiny-label-null {
-  display: none;
-}
+/* Payment Date Priority View */
 
 .shiny-input-radiogroup {
   width: 100% !important;
@@ -333,57 +497,63 @@ hr {
 }
 
 .radio {
-  border: 1px solid #8D959E;
+  border: 1px solid var(--table-border-color);
   border-radius: 5px;
   background-color: white;
   margin-bottom: 10px !important;
 }
 
 .radio-title {
-  color: #0B2D4F;
+  color: var(--priority-text-color);
   font-weight: 700;
   font-size: 15px;
   margin-bottom: 5px;
 }
 
 
-/* Prevent text selection during drag */
-#sample_manual_table tbody td {
-  user-select: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
+
+
+/*==============================
+         MODAL POPUPS
+  ==============================*/
+
+
+/* Exit Session Modal Popup (Dashboard Page) */
+
+.exit-session-popup .modal-header {
+  justify-content: center;
+  position: relative;
+  padding: 20px 20px 0 20px;
 }
 
-/* FUNDING AND EXPENSE PAGES */
-
-.input-title-container {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
+.exit-session-popup .modal-title {
+  font-weight: bold;
 }
 
-.add_data_btn {
-  border: none;
-  border-radius: 15px;
-  background-color: #CACACA;
-
+.exit-session-popup .modal-body {
+  padding: 20px;
+  text-align: center;
 }
 
-.initial-excel-download {
-  border: none;
-  border-radius: 15px;
-  background-color: #D1FFE4;
-  color: black;
-  float: right;
+.exit-session-popup .modal-footer {
+  padding-top: 0;
+  justify-content: center;
 }
+
+
+/* Add Funding and Expense Modal Popups */
 
 .add-funding-popup .modal-header,
 .add-expense-popup .modal-header {
   padding: 20px 25px 0 25px;
 }
 
-#date-container {
+.add-funding-popup .modal-body,
+.add-expense-popup .modal-body {
+  padding: 25px 25px 20px 25px;
+}
+
+.date-container {
   display: flex;
   gap: 20px;
 }
@@ -407,72 +577,69 @@ hr {
   justify-content: center;
 }
 
-.add-funding-popup .modal-body,
-.add-expense-popup .modal-body {
-  padding: 25px 25px 20px 25px;
-}
 
-.add-funding-confirm,
-.add-expense-confirm {
-  width: 100%;
-  background-color: black;
-  color: white;
-  border: none;
-  border-radius: 15px;
-}
+/* Modal Sub-headers */
 
 .data-input-headers {
   margin-bottom: 10px;
   font-weight: bold;
 }
 
-#funding-form .form-control,
-#expense-form .form-control,
-#funding-allowed-categories .selectize-input,
-#expense-categories .selectize-input {
+
+/* Modal Input Boxes Styling */
+
+.funding-form .form-control,
+.expense-form .form-control,
+.funding-allowed-categories .selectize-input,
+.expense-categories .selectize-input {
   border: none;
   border-radius: 10px;
   background-color: #E5E4E4;
 }
 
+.funding-allowed-categories .selectize-input,
+.expense-categories .selectize-input {
+  padding: 6px 12px;
+}
+
+
+/* Forcing Full Width to Modal Input Boxes */
+
 .elongated-input .shiny-input-container,
-#funding-allowed-categories .shiny-input-container,
-#expense-categories .shiny-input-container,
+.funding-allowed-categories .shiny-input-container,
+.expense-categories .shiny-input-container,
 #latest-payment-date .shiny-input-container {
   width: 100%;
 }
 
-#funding-allowed-categories .selectize-input,
-#expense-categories .selectize-input {
-  padding: 6px 12px;
-}
-
-.delete-expense, .delete-funding {
-  display: flex;
-  justify-content: flex-end;
-  width: 100%;
-  position: relative;
-}
 
 
-.delete-data-btn {
-  background-color: #FFDCDC;
-  border: none;
-  border-radius: 10px;
-  position: absolute;
-  z-index: 10;
-  padding: 8px 12px;
-  font-size: 14px;
+/*==============================
+           DATA TABLES
+  ==============================*/
+
+
+/* Prevent text selection during drag */
+#manual_table tbody td {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
 }
 
-.delete-data-btn:hover {
-  background-color: #1D1F21;
-  color: white;
-}
+
+/* Data Table Search Position */
 
 .dataTables_filter {
   margin-top: 20px;
 }
+
+
+
+
+
+
+
+
   
 
 

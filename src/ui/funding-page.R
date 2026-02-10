@@ -1,32 +1,34 @@
-# UI for Funding Page
+
+
 funding_ui <- function() {
+  # ---- Layout of the Funding Page ----
   
   div(
     class = "result-container",
     
     div(
-      id = "funding-container",
       
       div(
         class = "input-title-container",
         
+        ## ---- 1. Funding Title Section ----
         div(
           "Funding",
           class = "content-title"
         ),
-        
         div(
-          actionButton("add_funding", "+ Add Funding", class = "add_data_btn")
+          actionButton("add_funding", "+ Add Funding", class = "add-data-btn")
         )
       ),
       
+      ## ---- 2. Funding Data Table ----
       card(
         div(
           div(
             class = "delete-funding",
             actionButton("delete_funding", "Delete Selected Row(s)", class = "delete-data-btn")
           ),
-          DTOutput("sample_funding_table")
+          DTOutput("funding_table")
         ),
         full_screen = TRUE,
         class = "info-containers",
@@ -38,6 +40,10 @@ funding_ui <- function() {
 
 
 upload_funding_modal <- function(categories) {
+  # ---- Layout of the Add Funding Modal Popup ----
+  #'
+  #' @param categories: avaialble input funding categories from previous inputs
+  
   
   tagAppendAttributes(
     modalDialog(
@@ -49,9 +55,9 @@ upload_funding_modal <- function(categories) {
       footer = actionButton("add_funding_confirm", "Add Funding", class = "add-funding-confirm"),
       
       div(
-        id = "funding-form",
+        class = "funding-form",
         
-        # Funding Source Name
+        ## ---- 1. Funding Source Name ----
         div(
           id = "funding-source",
           class = "elongated-input",
@@ -65,10 +71,9 @@ upload_funding_modal <- function(categories) {
           )
         ),
         
-        
-        # Funding Allowed Categories
+        ## ---- 2. Funding Allowed Categories ----
         div(
-          id = "funding-allowed-categories",
+          class = "funding-allowed-categories",
           
           div("Allowed Categories", class = "data-input-headers"),
           
@@ -87,9 +92,9 @@ upload_funding_modal <- function(categories) {
           )
         ),
         
-        # Validity Date
+        ## ---- 3. Validity Date ----
         div(
-          id = "date-container",
+          class = "date-container",
           
           div(
             class = "date-valid",
@@ -116,7 +121,7 @@ upload_funding_modal <- function(categories) {
           )
         ),
         
-        # Amount
+        ## ---- 4. Funding Amount ----
         div(
           id = "funding-amount",
           class = "elongated-input",
@@ -130,7 +135,7 @@ upload_funding_modal <- function(categories) {
           )
         ),
         
-        # Note
+        ## ---- 5. Funding Note ----
         div(
           id = "funding-note",
           class = "elongated-input",

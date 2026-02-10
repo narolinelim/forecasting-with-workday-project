@@ -137,11 +137,19 @@ data_validation <- function(df, type) {
   # Validate expenses
   else if (type == "expense") {
     expenses <- df
+    
+    required_expense_columns <- c("expense_id", "expense_category", "planned_amount", "latest_payment_date", "priority")
 
-    required_expense_columns <- c("expense_id", "expense_name", "expense_category", "planned_amount", "latest_payment_date", "priority")
     for (column in required_expense_columns) {
       if (any(is.na(expenses[[column]]))) {
         errors <- c(errors, paste("Error: Expense column", column, "contains missing values."))
+      }
+    }
+    
+    unrequired_expense_columns <- c("expense_name")
+    for (column in unrequired_expense_columns) {
+      if (any(is.na(expenses[[column]]))) {
+        errors <- c(errors, paste("Warning: Expense column", column, "contains missing values."))
       }
     }
 

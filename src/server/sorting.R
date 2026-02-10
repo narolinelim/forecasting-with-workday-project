@@ -83,7 +83,12 @@ row_reorder <- function(newOrder, expenses, proxy, id_col) {
   #' @param id_col: name of the column containing unique item IDs
   #' 
   #' @return: updated expenses dataframe with new priority
+  #' 
 
+  if (is.null(newOrder) || length(newOrder) == 0) {
+    return (expenses)
+  }
+  
   new_idx <- match(newOrder, expenses[[id_col]])
   df <- expenses[new_idx, ] |> mutate(priority = seq_len(nrow(expenses)))
   replaceData(proxy, df, resetPaging = FALSE, rownames = FALSE)

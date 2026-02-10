@@ -1,4 +1,4 @@
-# ----Main output ----
+# ---- Main output ----
 main_output <- function(input, output, session, values) {
   #' Function for downloading excel files
 
@@ -30,6 +30,13 @@ main_output <- function(input, output, session, values) {
         )
         saveWorkbook(create_budget_template_wb(), file, overwrite = TRUE)
       }
+    }
+  )
+  
+  output$download_excel <- downloadHandler(
+    filename = function() "current_budget_data.xlsx",
+    content = function(file) {
+      saveWorkbook(input_excel_download(values), file, overwrite = TRUE)
     }
   )
 
@@ -95,7 +102,7 @@ input_excel_download <- function(values) {
     expense_name = "Expense Name",
     expense_category = "Expense Category",
     planned_amount = "Planned Amount",
-    latest_payment_date = "Payment Date",
+    latest_payment_date = "Latest Payment Date",
     notes = "Notes"
   )
   for (old_name in names(expense_name_map)) {
@@ -240,7 +247,7 @@ create_allocation_report_wb <- function(values) {
     expense_category = "Expense Category",
     allocated_amount = "Allocated Amount",
     planned_amount = "Expense Amount",
-    latest_payment_date = "Payment Date",
+    latest_payment_date = "Latest Payment Date",
     status = "Allocation Status"
   )
   

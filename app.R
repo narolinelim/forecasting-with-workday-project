@@ -1,47 +1,45 @@
+
+
+source("requirements/packages.R")
 source("src/main_ui.R")
 source("src/main_server.R")
-source("requirements/packages.R")
 
+# ---- 1. Installing packages from requirements/packages.R ----
 
-# 1. Installing packages
-options(shiny.launch.browser = TRUE)
 run_setup()
 
 
-# 2. Load packages
-library(circlize)
-library(shiny)
-library(bslib)
-library(DT)
-library(dplyr)
-library(readxl)
-library(openxlsx)
-library(tidyr)
-library(rmarkdown)
+# ---- 2. Load packages ----
+library(shiny)              # Main framework for the web app            
+library(bslib)              # For modern UI components (cards, value boxes...)
+library(DT)                 # For displaying data tables
+library(dplyr)              # For manipulating data
+library(readxl)             # For reading Excel spreadsheets
+library(openxlsx)           # For creating and writing Excel spreadsheets
+library(tidyr)              # For tidying up data
+library(rmarkdown)          # For creating reports or documents (used for modelling output for allocation algorithm)
+library(shinyWidgets)       # For input controls (pickerInput)
+library(sortable)           # For sorting feature (dragging categories)
+library(lubridate)          # For manipulating dates and times
+library(plotly)             # For plotting interactive graphs (shortfall graph)
+library(chorddiag)          # For constructing interactive chord diagrams (allocation plot)
+library(htmlwidgets)        # For activating JS in graphical visualizations 
+library(ompr)               # For modelling and solving mized integer linear programs
+library(ompr.roi)           # A solver for ompr that uses R Optimisation Infrastructure (ROI)
+library(ROI)                # R Optimization Infrastructure (solver interface)
+library(ROI.plugin.highs)   # High performance software (highs) for linear optimisation
+library(magrittr)           # Forward-pipe operator (%>%) to construct functions
 library(shinyjs)
-library(tinytex)
-library(RColorBrewer)
-library(palmerpenguins)
-library(shinyWidgets)
-library(sortable)
-library(ggplot2)
-library(plotly)
-library(lubridate)
-library(chorddiag)
-library(ompr)
-library(ompr.roi)
-library(ROI)
-library(ROI.plugin.highs)
-library(magrittr)
-library(rlang)
 
 
-# 3. Load UI
+# ---- 3. Load UI ----
 ui <- main_ui_layout()
 
 
-# 4. Load Server
+# ---- 4. Load Server ----
 server <- function(input, output, session) {
+  
+  # --- Main Reactive Values ----
   values <- reactiveValues(
     funding_sources = data.frame(
       source_id = character(),
@@ -92,12 +90,14 @@ server <- function(input, output, session) {
       status = character()
     )
   )
+  
+  
   main_server_logic(input, output, session, values)
   main_output(input, output, session, values)
 }
 
 
-# 5. Run Shiny App
+# ---- 5. Run Shiny App ----
 shinyApp(ui, server)
 
 
