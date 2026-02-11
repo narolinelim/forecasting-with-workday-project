@@ -146,60 +146,35 @@ main_server_logic <- function(input, output, session, values) {
   })
 
   ### ---- Get available categories for dragging ----
-  available_categories <- reactive({
+  available_categories <- reactiveVal(NULL)
+    
+  observe({
     #### ---- From expenses categories ----
-    exp_cats <- character(0)
-    if (
-      !is.null(values$expenses) &&
-        is.data.frame(values$expenses) &&
-        "expense_category" %in% names(values$expenses)
-    ) {
-      exp_cats_raw <- values$expenses$expense_category
-      if (is.factor(exp_cats_raw)) {
-        exp_cats_raw <- as.character(exp_cats_raw)
-      }
-      exp_cats <- as.character(exp_cats_raw)
-      exp_cats <- trimws(exp_cats)
-      exp_cats <- exp_cats[!is.na(exp_cats) & nzchar(exp_cats)]
-    }
+    req(values$expenses)
+    req(values$funding_sources)
+    
+    available_categories(NULL)  # Reset available categories before recalculating
+ 
+    exp_cats <- unique(values$expenses$expense_category)
+    fund_cats <- unique(unlist(values$funding_sources$allowed_categories))
 
-    #### ---- From funding allowed categories (list-column or comma-separated) ----
-    fund_cats <- character(0)
-    if (
-      !is.null(values$funding_sources) &&
-        is.data.frame(values$funding_sources) &&
-        "allowed_categories" %in% names(values$funding_sources)
-    ) {
-      ac <- values$funding_sources$allowed_categories
-
-      if (is.list(ac)) {
-        fund_cats_raw <- unlist(ac, use.names = FALSE)
-      } else {
-        # atomic vector: might contain comma-separated strings
-        fund_cats_raw <- as.character(ac)
-        fund_cats_raw <- unlist(
-          strsplit(fund_cats_raw[!is.na(fund_cats_raw)], ",\\s*"),
-          use.names = FALSE
-        )
-      }
-
-      fund_cats <- trimws(as.character(fund_cats_raw))
-      fund_cats <- fund_cats[!is.na(fund_cats) & nzchar(fund_cats)]
-    }
-
-    #### ---- combine, dedupe, sort ----
     cats <- sort(unique(c(exp_cats, fund_cats)))
+    cats <- cats[!is.na(cats) & cats != ""]  # Remove NA and empty categories
 
     dr <- drag_order()
     if (!is.null(dr)) {
       # Preserve user-defined order
       dr_filtered <- dr[dr %in% cats]
       extras <- setdiff(cats, dr_filtered)
-      c(dr_filtered, sort(extras))
+      available_categories(c(dr_filtered, sort(extras)))
     } else {
-      cats
+      available_categories(cats)
     }
-  })
+  }) %>%
+    bindEvent(
+      values$expenses,
+      values$funding_sources
+    )
 
   ## ---- EVENT: Manual Row Reordering ----
   
@@ -436,7 +411,6 @@ main_server_logic <- function(input, output, session, values) {
   ## ---- EVENT: Delete Funding Button ----
   observeEvent(input$delete_funding, {
     selected <- input$funding_table_rows_selected
-    print(selected)
     values$funding_sources <- delete_row(values$funding_sources, selected)
   })
 

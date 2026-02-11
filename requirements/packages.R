@@ -13,7 +13,7 @@ run_setup <- function() {
   new_packages <- REQUIRED_PACKAGES[!(REQUIRED_PACKAGES %in% installed.packages()[,"Package"])]
   
   # Install missing packages if any are found
-  if(length(new_packages)) install.packages(new_packages)
+  if(length(new_packages)) install.packages(new_packages, type = "binary")
   
   # Github packages from remotes (for chordDiag)
   if (!requireNamespace("chorddiag", quietly = TRUE)) {

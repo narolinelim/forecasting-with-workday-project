@@ -38,7 +38,13 @@ process_funding_data <- function(df) {
 
     # Convert data types
     mutate(
-      allowed_categories = strsplit(tolower(as.character(allowed_categories)), ",\\s*"),
+      allowed_categories = strsplit(
+        tolower(
+          gsub("\u00a0", "", as.character(allowed_categories))  # Remove non-breaking space
+          |> trimws()
+        ), 
+        ",\\s*"
+      ),
       valid_from = as.Date(valid_from),
       valid_to = as.Date(valid_to),
       amount = as.numeric(amount),
@@ -75,7 +81,10 @@ process_expense_data <- function(df) {
     mutate(
       priority = as.integer(priority),
       expense_name = as.character(expense_name),
-      expense_category = tolower(as.character(expense_category)),
+      expense_category = tolower(
+        gsub("\u00a0", "", as.character(expense_category))  # Remove non-breaking space (U+00A0)
+        |> trimws()  # Then trim regular spaces
+      ),
       planned_amount = as.numeric(planned_amount),
       latest_payment_date = as.Date(latest_payment_date),
       notes = as.character(notes),
