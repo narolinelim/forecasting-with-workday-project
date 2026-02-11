@@ -585,6 +585,8 @@ main_server_logic <- function(input, output, session, values) {
   output$shortfall_plot <- renderUI({
     if (!all_shortfall()) {
       tags$p("No data available.", style = "font-size: 16px; text-align: center;")
+    } else if (shortfall_data()$total_shortfalls == 0) {
+      tags$p("No shortfall for this dataset.", style = "font-size: 16px; text-align: center;")
     } else {
       plotlyOutput("shortfall_bar_plot", height = "100%")
     }
