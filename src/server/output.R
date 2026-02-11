@@ -9,6 +9,15 @@ main_output <- function(input, output, session, values) {
       saveWorkbook(create_budget_template_wb(), file, overwrite = TRUE)
     }
   )
+  
+  # ---- HANDLER: Download a filled Excel file for demo ----
+  output$download_sample_spreadsheet <- downloadHandler(
+    filename = function() "master_spreadsheet.xlsx",
+    content = function(file) {
+      file_path <- "test/base_test.xlsx"
+      file.copy(file_path, file)
+    }
+  )
 
   # ---- HANDLER: Download the Excel file with current data ----
   output$download_excel <- downloadHandler(

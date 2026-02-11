@@ -7,7 +7,19 @@ forecast_ui <- function() {
     class = "result-container",
     
     div(
-      div("Forecast", class = "content-title"),
+      
+      div(
+        class = "input-title-container",
+        
+        ## ---- 1. Expense Title Section ----
+        div(
+          "Forecast",
+          class = "content-title"
+        ),
+        div(
+          downloadButton("download_sample_spreadsheet", "Download Master Spreadsheet (Filled)", class = "add-data-btn")
+        )
+      ),
       
       div(
         class = "info-containers",
