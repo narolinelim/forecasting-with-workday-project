@@ -599,58 +599,159 @@ main_server_logic <- function(input, output, session, values) {
     clicked_month(clicked_bar$x)
   })
   
+  observeEvent(all_input_data(), {
+    
+    req(all_input_data())
+    
+    if (!is.null(clicked_month())) return ()
+      
+    # Default circos plot using the last month of the allocation period
+    expense_df <- values$expenses
+    funding_df <- values$funding_sources
+    default_month <- max(floor_date(c(expense_df$latest_payment_date, funding_df$valid_to), "month"))
+    clicked_month(default_month)
+    print("cm initial")
+    print(cm)
+      
+    
+  })
+  
   
   #### ---- Allocation Chord Diagram ----
   output$circos_container <- renderUI({
-    cm <- clicked_month()
-    
-    if (is.null(cm) && all_input_data()) {
-      
-      # Default circos plot using the last month of the allocation period
-      expense_df <- values$expenses
-      funding_df <- values$funding_sources
-      default_month <- max(floor_date(c(expense_df$latest_payment_date, funding_df$valid_to), "month"))
-      cm <- default_month
-      
-    } 
-    
+
     if (!all_input_data()) {
-      
+
       return (tags$p("No data available.", style = "font-size: 16px; text-align: center;"))
-      
+
     }
     
+    cm <- clicked_month()
     
-    circos_plot_id <- paste0("circos_", gsub("-", "_", as.character(cm)))
+    print("cm in change")
+    print(cm)
     
-    # Re-rendering new circos plot every time user clicks on a month
-    output[[circos_plot_id]] <- renderChorddiag({
-      
-      cutoff <- ceiling_date(as.Date(paste0(cm, "-01")), "month")
-      c <- create_circos_plot(values, month = cutoff)
-      
-      # Activating zooming feature for circos plot
-      onRender(c, "
-        function(el, x) {
-          var svg = d3.select(el).select('svg');
-          var g = svg.select('g');
-  
-          var zoom = d3.zoom()
-            .on('zoom', function() {
-              g.attr('transform', d3.event.transform);
-            })
-  
-          svg.call(zoom);
-        }
-    ")
-      
-    })
+    # monthly_shortfall might be empty: create new month dataframe instead of monthly shortfall dataframe
+    expenses <- values$expenses
+    funding <- values$funding_sources
     
-    tagList(
-      tags$p(paste("Allocation Month: ", format(as.Date(cm), "%b %Y")),
-             style = "font-size: 16px; font-weight: 600;"),
-      chorddiagOutput(circos_plot_id, height = "800px", width = "100%")
+    months_df <- shortfall_data()$months_df
+    
+    months_df <- months_df %>%
+      mutate(
+        year_date = year(Month),
+        year_chr = format(Month, "%Y"),
+        month = format(Month, "%B"),
+        id = format(Month, "%Y-%m-%d")
+      )
+    
+    
+    # Extract distinct years for dynamic accordions
+    distinct_years <- months_df %>%
+      distinct(year_date, year_chr)
+    
+    print("cm in ui")
+    print(cm)
+    print(class(cm))
+    
+    # Configure sidebar for allocation months
+    layout_sidebar(
+      sidebar = sidebar(
+        "Allocation Month",
+        style = "height: 700px; overflow-y: auto; font-size: 15px;",
+        
+        accordion(
+          open = distinct_years$year_chr,
+          
+          lapply(seq_len(nrow(distinct_years)), function(each_year) {
+            
+            each_year_chr <- distinct_years$year_chr[each_year]
+            each_year_date <- distinct_years$year_date[each_year]
+            
+            months_per_year <- months_df %>%
+              filter(year_date == each_year_date)
+            
+            
+            accordion_panel(
+              title = each_year_chr,
+              value = each_year_chr,
+              
+              lapply(seq_len(nrow(months_per_year)), function(i) {
+                
+                month_id <- months_per_year$id[i]
+                
+                actionButton(
+                  inputId = paste0(month_id),
+                  label = months_per_year$month[i],
+                  class = "circos-action-buttons"
+                )
+              })
+            )
+          })
+          
+        )
+      ),
+      tagList(
+        tags$p(paste("Allocation Month: ", format(as.Date(cm), "%b %Y")),
+               style = "font-size: 16px; font-weight: 600; padding: 15px;"),
+        chorddiagOutput("circos_plot", height = "600px", width = "100%")
+      )
+      
     )
+    
+  })
+  
+  
+  #### ---- Observe change in the month clicked ----
+  observe({
+    if (!all_input_data()) return()
+    
+    # validate shortfall data
+    req(shortfall_data())
+    req(shortfall_data()$months_df)
+    
+    months_df <- shortfall_data()$months_df
+    months_chr_df <- months_df %>%
+      mutate(
+        month_chr = format(Month, "%Y-%m-%d")
+      )
+    
+    # Create observeEvent for every single month 
+    lapply(seq_len(nrow(months_chr_df)), function(each_month) {
+      month_id <- months_chr_df$month_chr[each_month]
+      month_date <- months_chr_df$Month[each_month]
+      
+      observeEvent(input[[month_id]], {
+        clicked_month(month_date)
+        
+      })
+    })
+  })
+  
+  
+  output$circos_plot <- renderChorddiag({
+    cm <- clicked_month()
+    req(cm)
+
+    cutoff <- ceiling_date(as.Date(paste0(cm, "-01")), "month")
+    c <- create_circos_plot(values, month = cutoff)
+
+    # Activating zooming feature for circos plot
+    onRender(c, "
+      function(el, x) {
+        var svg = d3.select(el).select('svg');
+        var g = svg.select('g');
+
+
+        var zoom = d3.behavior.zoom()
+          .on('zoom', function() {
+            g.attr('transform', d3.event.transform);
+          })
+
+        svg.call(zoom);
+      }
+  ")
+
   })
   
   ## ---- OUTPUT: Dashboard Result Tables ----
@@ -703,7 +804,7 @@ main_server_logic <- function(input, output, session, values) {
   #### ---- Render unallocated expense data table ----
   output$unallocated_expense_table <- renderDT({
     expense_status_df <- values$expense_status
-    
+
     df <- expense_status_df %>%
       filter(status == "Unfunded") %>%
       select(

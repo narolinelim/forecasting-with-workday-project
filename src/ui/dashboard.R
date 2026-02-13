@@ -55,7 +55,10 @@ dashboard_ui <- function(total_balance) {
             id = "expense-graph",
             card_header("Expense Breakdown"),
             height = "auto",
-            uiOutput("circos_container")
+            card_body(
+              uiOutput("circos_container"),
+              padding = 0
+            )
           ),
         
           style = "font-weight: normal;"

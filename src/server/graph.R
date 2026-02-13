@@ -6,7 +6,7 @@ create_shortfall_bar <- function(values) {
   #'
   #' @param values: reactiveValues containing funding_sources, and expenses
   #'
-  #' @return list of total_balance, shortfall plots, and total shortfall
+  #' @return list of total_balance, shortfall plots, monthly_shortfall and total shortfall
   
   
   
@@ -226,7 +226,9 @@ create_shortfall_bar <- function(values) {
   return (list(
     total_balance = total_balance,
     shortfall_plot = p,
-    total_shortfalls = total_shortfalls
+    total_shortfalls = total_shortfalls,
+    monthly_shortfall = monthly_shortfall,
+    months_df = months_df
   ))
   
 }
@@ -271,7 +273,6 @@ create_circos_plot <- function(values, month) {
   
   ordered_expenses <- expenses[order(expenses$expense_id),]
   
-  print(month)
   funding_valid_from <- funding %>%
     filter(valid_from < month)
   
@@ -297,8 +298,7 @@ create_circos_plot <- function(values, month) {
       )
     ) %>%
     filter(allocation_date < month)
-  print("row until month")
-  print(rows_until_month)
+
   
   
   mat <- matrix(0, nrow = length(sectors), ncol = length(sectors))
