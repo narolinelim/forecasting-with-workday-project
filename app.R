@@ -30,6 +30,7 @@ library(ROI)                # R Optimization Infrastructure (solver interface)
 library(ROI.plugin.highs)   # High performance software (highs) for linear optimisation
 library(magrittr)           # Forward-pipe operator (%>%) to construct functions
 library(shinyjs)            # Useful JS operations for Shiny
+library(jsonlite)           # For converting objects into JSON (for JavaScript)
 
 
 # ---- 3. Load UI ----
@@ -87,7 +88,9 @@ server <- function(input, output, session) {
       allocated_amount = numeric(),
       planned_amount = numeric(),
       latest_payment_date = as.Date(character()),
-      status = character()
+      status = character(),
+      valid_from = as.Date(character()),
+      valid_to = as.Date(character())
     )
   )
   

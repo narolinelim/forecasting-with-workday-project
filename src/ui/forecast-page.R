@@ -17,7 +17,7 @@ forecast_ui <- function() {
           class = "content-title"
         ),
         div(
-          downloadButton("download_sample_spreadsheet", "Download Master Spreadsheet (Filled)", class = "add-data-btn")
+          downloadButton("download_sample_spreadsheet", "Download Filled Template", class = "add-data-btn")
         )
       ),
       

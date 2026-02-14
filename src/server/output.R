@@ -12,9 +12,9 @@ main_output <- function(input, output, session, values) {
   
   # ---- HANDLER: Download a filled Excel file for demo ----
   output$download_sample_spreadsheet <- downloadHandler(
-    filename = function() "master_spreadsheet.xlsx",
+    filename = function() "filled_spreadsheet_template.xlsx",
     content = function(file) {
-      file_path <- "test/base_test.xlsx"
+      file_path <- "test/complex_test_case_1.xlsx"
       file.copy(file_path, file)
     }
   )
@@ -208,6 +208,15 @@ create_allocation_report_wb <- function(values) {
   allocation_result <- allocation_result %>%
     mutate(
       latest_payment_date = format(as.Date(latest_payment_date), "%d-%m-%Y")
+    ) %>%
+    select(
+      source_id,
+      expense_id,
+      expense_category,
+      allocated_amount,
+      planned_amount,
+      latest_payment_date,
+      status
     )
   funding_summary <- values$funding_summary
   funding_sources <- values$funding_sources

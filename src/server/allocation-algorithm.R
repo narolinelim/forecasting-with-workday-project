@@ -349,7 +349,15 @@ create_financial_dfs <- function(mat_x, sources, expenses) {
           planned_amount,
           latest_payment_date,
           status
-        ), by = c("expense_id", "expense_category"))
+        ), by = c("expense_id", "expense_category")) %>%
+    left_join(
+      sources %>%
+        select(
+          source_id,
+          valid_from,
+          valid_to
+        ), by = "source_id"
+    )
 
   
   # Return all 4 as a named list

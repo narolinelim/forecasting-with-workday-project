@@ -146,60 +146,35 @@ main_server_logic <- function(input, output, session, values) {
   })
 
   ### ---- Get available categories for dragging ----
-  available_categories <- reactive({
+  available_categories <- reactiveVal(NULL)
+    
+  observe({
     #### ---- From expenses categories ----
-    exp_cats <- character(0)
-    if (
-      !is.null(values$expenses) &&
-        is.data.frame(values$expenses) &&
-        "expense_category" %in% names(values$expenses)
-    ) {
-      exp_cats_raw <- values$expenses$expense_category
-      if (is.factor(exp_cats_raw)) {
-        exp_cats_raw <- as.character(exp_cats_raw)
-      }
-      exp_cats <- as.character(exp_cats_raw)
-      exp_cats <- trimws(exp_cats)
-      exp_cats <- exp_cats[!is.na(exp_cats) & nzchar(exp_cats)]
-    }
+    req(values$expenses)
+    req(values$funding_sources)
+    
+    available_categories(NULL)  # Reset available categories before recalculating
+ 
+    exp_cats <- unique(values$expenses$expense_category)
+    fund_cats <- unique(unlist(values$funding_sources$allowed_categories))
 
-    #### ---- From funding allowed categories (list-column or comma-separated) ----
-    fund_cats <- character(0)
-    if (
-      !is.null(values$funding_sources) &&
-        is.data.frame(values$funding_sources) &&
-        "allowed_categories" %in% names(values$funding_sources)
-    ) {
-      ac <- values$funding_sources$allowed_categories
-
-      if (is.list(ac)) {
-        fund_cats_raw <- unlist(ac, use.names = FALSE)
-      } else {
-        # atomic vector: might contain comma-separated strings
-        fund_cats_raw <- as.character(ac)
-        fund_cats_raw <- unlist(
-          strsplit(fund_cats_raw[!is.na(fund_cats_raw)], ",\\s*"),
-          use.names = FALSE
-        )
-      }
-
-      fund_cats <- trimws(as.character(fund_cats_raw))
-      fund_cats <- fund_cats[!is.na(fund_cats) & nzchar(fund_cats)]
-    }
-
-    #### ---- combine, dedupe, sort ----
     cats <- sort(unique(c(exp_cats, fund_cats)))
+    cats <- cats[!is.na(cats) & cats != ""]  # Remove NA and empty categories
 
     dr <- drag_order()
     if (!is.null(dr)) {
       # Preserve user-defined order
       dr_filtered <- dr[dr %in% cats]
       extras <- setdiff(cats, dr_filtered)
-      c(dr_filtered, sort(extras))
+      available_categories(c(dr_filtered, sort(extras)))
     } else {
-      cats
+      available_categories(cats)
     }
-  })
+  }) %>%
+    bindEvent(
+      values$expenses,
+      values$funding_sources
+    )
 
   ## ---- EVENT: Manual Row Reordering ----
   
@@ -343,7 +318,8 @@ main_server_logic <- function(input, output, session, values) {
         showNotification(
           paste("Upload failed:", e$message),
           type = "error",
-          duration = 3
+          duration = 3,
+          ignoreInit = FALSE
         )
       }
     )
@@ -397,6 +373,8 @@ main_server_logic <- function(input, output, session, values) {
           values$funding_sources,
           values$expenses
         )
+        
+        req(allocation_data)
         values$allocation_result <- allocation_data$allocations
         values$funding_summary <- allocation_data$funds
         values$expense_status <- allocation_data$expenses
@@ -411,7 +389,7 @@ main_server_logic <- function(input, output, session, values) {
       },
       error = function(e) {
         showNotification(
-          paste("Allocation Failed:", e$message),
+          paste("Allocation Failed: No data input."),
           type = "error",
           duration = 3
         )
@@ -436,7 +414,6 @@ main_server_logic <- function(input, output, session, values) {
   ## ---- EVENT: Delete Funding Button ----
   observeEvent(input$delete_funding, {
     selected <- input$funding_table_rows_selected
-    print(selected)
     values$funding_sources <- delete_row(values$funding_sources, selected)
   })
 
@@ -567,6 +544,12 @@ main_server_logic <- function(input, output, session, values) {
   ## ---- OUTPUT: Dashboard Information and Graphical Section ----
   
   ### ---- Data validation for dashboard output ----
+  all_input_data <- reactive(
+    nrow(values$funding_sources) > 0 &&
+      nrow(values$expenses) > 0
+  )
+  
+  ### ---- Data validation for dashboard output ----
   all_shortfall <- reactive(
     nrow(values$allocation_result) > 0 &&
       nrow(values$funding_summary) > 0 &&
@@ -577,13 +560,13 @@ main_server_logic <- function(input, output, session, values) {
   
   #### ---- Activating and creating shortfall data ----
   shortfall_data <- reactive({
-    req(all_shortfall)
+    req(all_input_data)
     c <- create_shortfall_bar(values)
   })
 
   #### ---- 1. Shortfall Bar Graph ----
   output$shortfall_plot <- renderUI({
-    if (!all_shortfall()) {
+    if (!all_input_data()) {
       tags$p("No data available.", style = "font-size: 16px; text-align: center;")
     } else if (shortfall_data()$total_shortfalls == 0) {
       tags$p("No shortfall for this dataset.", style = "font-size: 16px; text-align: center;")
@@ -598,7 +581,7 @@ main_server_logic <- function(input, output, session, values) {
   
   #### ---- 2. Total Number of Shortfalls ----
   output$shortfall_number <- renderUI({
-    if (!all_shortfall()) {
+    if (!all_input_data()) {
       tags$p("No data available", style = "font-size: 20px; color: red;")
     } else {
       shortfall_data()$total_shortfalls
@@ -607,7 +590,7 @@ main_server_logic <- function(input, output, session, values) {
   
   #### ---- 3. Total Funding Balance ----
   output$total_balance <- renderUI({
-    if (!all_shortfall()) {
+    if (!all_input_data()) {
       tags$p("No data available", style = "font-size: 20px; color: red;")
     } else {
       shortfall_data()$total_balance
@@ -626,58 +609,165 @@ main_server_logic <- function(input, output, session, values) {
     clicked_month(clicked_bar$x)
   })
   
+
+  
   
   #### ---- Allocation Chord Diagram ----
   output$circos_container <- renderUI({
     cm <- clicked_month()
+
     
-    if (is.null(cm) && all_shortfall()) {
+    if (is.null(cm) && all_input_data()) {
       
       # Default circos plot using the last month of the allocation period
       expense_df <- values$expenses
       funding_df <- values$funding_sources
       default_month <- max(floor_date(c(expense_df$latest_payment_date, funding_df$valid_to), "month"))
-      cm <- default_month
+      cm <- clicked_month(default_month)
       
     } 
-    
-    if (!all_shortfall()) {
-      
-      return (tags$p("No data available.", style = "font-size: 16px; text-align: center;"))
-      
+
+    if (!all_input_data()) {
+
+      return (tags$p("No data available.", style = "font-size: 16px; text-align: center; padding: 16px;"))
+
     }
+    
+    expenses <- values$expenses
+    funding <- values$funding_sources
+    
+    months_df <- shortfall_data()$months_df
+    
+    months_df <- months_df %>%
+      mutate(
+        year_date = year(Month),
+        year_chr = format(Month, "%Y"),
+        month = format(Month, "%B"),
+        id = format(Month, "%Y-%m-%d")
+      )
+    
+    
+    # Extract distinct years for dynamic accordions
+    distinct_years <- months_df %>%
+      distinct(year_date, year_chr)
+    
+    
+    cm_date <- as.Date(cm)
     
     circos_plot_id <- paste0("circos_", gsub("-", "_", as.character(cm)))
     
-    # Re-rendering new circos plot every time user clicks on a month
-    output[[circos_plot_id]] <- renderChorddiag({
+    # Sidebar for allocation navigation by month
+    layout_sidebar(
+      sidebar = sidebar(
+        width = 250,
+        open = "always",
+        "Allocation By Month",
+        style = "height: 800px; overflow-y: auto; font-size: 15px; font-weight: 800; text-align: center;",
+        
+        accordion(
+          open = distinct_years$year_chr,
+          
+          lapply(seq_len(nrow(distinct_years)), function(each_year) {
+            
+            each_year_chr <- distinct_years$year_chr[each_year]
+            each_year_date <- distinct_years$year_date[each_year]
+            
+            months_per_year <- months_df %>%
+              filter(year_date == each_year_date)
+            
+            
+            # One accordion panel for each distinct year
+            accordion_panel(
+              title = each_year_chr,
+              value = each_year_chr,
+              
+              lapply(seq_len(nrow(months_per_year)), function(i) {
+                
+                month_id <- months_per_year$id[i]
+                
+                # All months within the year involved in allocation
+                actionButton(
+                  inputId = paste0(month_id),
+                  label = months_per_year$month[i],
+                  class = "circos-action-buttons"
+                )
+              })
+            )
+          })
+          
+        )
+      ),
       
-      cutoff <- ceiling_date(as.Date(paste0(cm, "-01")), "month")
-      c <- create_circos_plot(values, month = cutoff)
+
+      tags$p(paste("Allocation Month: ", format(cm_date, "%b %Y")),
+             style = "font-size: 16px; font-weight: 600; padding: 15px 15px 5px 15px;"),
       
-      # Activating zooming feature for circos plot
-      onRender(c, "
-        function(el, x) {
-          var svg = d3.select(el).select('svg');
-          var g = svg.select('g');
-  
-          var zoom = d3.zoom()
-            .on('zoom', function() {
-              g.attr('transform', d3.event.transform);
-            })
-  
-          svg.call(zoom);
-        }
-    ")
-      
-    })
+      output[[circos_plot_id]] <- renderChorddiag({
+        cm <- clicked_month()
+        req(cm)
+        
+        cutoff <- ceiling_date(as.Date(paste0(cm, "-01")), "month")
+        circos <- create_circos_plot(values, month = cutoff)
+        
+        
+        # Activating zooming feature for circos plot
+        onRender(circos, "
+          function(el, x) {
+            var svg = d3.select(el).select('svg');
+            var g = svg.select('g');
+            
+            if (d3.zoom) {
+              var zoom = d3.zoom()
+                .on('zoom', function() {
+                  g.attr('transform', d3.event.transform);
+                });
+              
+              svg.call(zoom);
+            } else if (d3.behavior && d3.behavior.zoom) {
+              var zoom = d3.behavior.zoom()
+                .on('zoom', function() {
+                  g.attr('transform', 'translate(' + d3.event.translate + ')scale(' + d3.event.scale + ')');
+                });
     
-    tagList(
-      tags$p(paste("Allocation Month: ", format(as.Date(cm), "%b %Y")),
-             style = "font-size: 16px; font-weight: 600;"),
-      chorddiagOutput(circos_plot_id, height = "800px", width = "100%")
+              svg.call(zoom);
+            } 
+        
+          }
+        ")
+        
+        
+      })
+
     )
+    
   })
+  
+  #### ---- Observe change in the month clicked ----
+  observe({
+    if (!all_input_data()) return()
+    
+    # validate shortfall data
+    req(shortfall_data())
+    req(shortfall_data()$months_df)
+    
+    months_df <- shortfall_data()$months_df
+    months_chr_df <- months_df %>%
+      mutate(
+        month_chr = format(Month, "%Y-%m-%d")
+      )
+    
+    # Create observeEvent for every single month 
+    lapply(seq_len(nrow(months_chr_df)), function(each_month) {
+      month_id <- months_chr_df$month_chr[each_month]
+      month_date <- months_chr_df$Month[each_month]
+      
+      observeEvent(input[[month_id]], {
+        clicked_month(month_date)
+        
+      })
+    })
+  })
+  
   
   ## ---- OUTPUT: Dashboard Result Tables ----
   
@@ -690,21 +780,65 @@ main_server_logic <- function(input, output, session, values) {
     expense_category = "Expense Category",
     allocated_amount = "Allocated Amount",
     planned_amount = "Expense Amount",
-    latest_payment_date = "Payment Date",
+    latest_payment_date = "Latest Payment Date",
     status = "Allocation Status"
   )
   
   #### ---- Render budget allocation data table ----
   output$budget_allocation_table <- renderDT({
     req(values$full_budget_allocation_df)
-    df <- values$full_budget_allocation_df
+    df <- values$full_budget_allocation_df %>%
+      select(
+        source_id,
+        expense_id,
+        expense_category,
+        allocated_amount,
+        planned_amount,
+        latest_payment_date,
+        status
+      )
     
     colnames(df) <- display_budget_allocation_names[names(df)]
     
     datatable(df)
   })
   
-  ### ---- 2. Unallocated Funding Section ----
+  ### ---- 2. Unallocated Expense Section ----
+  display_unallocated_expense_names <- c(
+    expense_id = "Expense ID",
+    expense_name = "Expense Name",
+    expense_category = "Expense Category",
+    planned_amount = "Expense Amount",
+    latest_payment_date = "Latest Payment Date",
+    notes = "Notes",
+    status = "Allocation Status"
+  )
+  
+  #### ---- Display unallocated expense data table headers ----
+  
+  #### ---- Render unallocated expense data table ----
+  output$unallocated_expense_table <- renderDT({
+    expense_status_df <- values$expense_status
+
+    df <- expense_status_df %>%
+      filter(status == "Unfunded") %>%
+      select(
+        expense_id,
+        expense_name,
+        expense_category,
+        planned_amount,
+        latest_payment_date,
+        notes,
+        status
+      )
+
+    colnames(df) <- display_unallocated_expense_names[names(df)]
+    
+    datatable(df)
+  })
+  
+  
+  ### ---- 3. Unallocated Funding Section ----
   
   #### ---- Display unallocated funding data table headers ----
   display_unallocated_funding_names <- c(

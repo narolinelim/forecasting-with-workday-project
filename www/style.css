@@ -14,6 +14,7 @@
   --priority-text-color: #0B2D4F;
   --table-border-color: #8D959E;
   --button-border-radius: 15px;
+  --button-hover-color: #404040;
 }
 
 /* Horizontal Line Above Result Table (Forecast Page) */
@@ -25,11 +26,18 @@ hr {
 /*==============================
             SIDEBAR
   ==============================*/
-        
+
+/* App Main Sidebar Action Buttons */
 .tab-buttons {
   border: none;
   border-radius: 25px;
   background-color: #D8F1FF;
+}
+
+
+/* Circos Plot Sidebar Action Buttons */
+.circos-action-buttons {
+  border: none;
 }
 
 
@@ -126,7 +134,7 @@ hr {
 }
 
 #left-upload .btn-file:hover {
-  background-color: #404040;
+  background-color: var(--button-hover-color);
 }
 
 
@@ -207,6 +215,7 @@ hr {
   border: none;
   border-radius: var(--button-border-radius);
 }
+
 
 
 
@@ -623,6 +632,16 @@ hr {
 }
 
 
+/*==============================
+             OTHERS
+  ==============================*/
+  
+  
+/* Override Chord Diagram Container */
+
+.chorddiag.html-widget.html-widget-output {
+  width: 100% !important;
+}
 
 
 
