@@ -359,7 +359,7 @@ create_financial_dfs <- function(mat_x, sources, expenses) {
         ), by = "source_id"
     )
 
-  
+  print(df_expenses_status)
   # Return all 4 as a named list
   return(list(
     allocations = df_allocations,

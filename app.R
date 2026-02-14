@@ -74,9 +74,11 @@ server <- function(input, output, session) {
     ),
     expense_status = data.frame(
       expense_id = character(),
+      expense_name = character(),
       expense_category = character(),
       planned_amount = character(),
       latest_payment_date = as.Date(character()),
+      notes = character(),
       filled_amount = numeric(),
       is_filled = logical(),
       status = character()

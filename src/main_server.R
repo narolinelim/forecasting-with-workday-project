@@ -566,7 +566,7 @@ main_server_logic <- function(input, output, session, values) {
 
   #### ---- 1. Shortfall Bar Graph ----
   output$shortfall_plot <- renderUI({
-    if (!all_input_data()) {
+    if (!all_input_data() || !all_shortfall()) {
       tags$p("No data available.", style = "font-size: 16px; text-align: center;")
     } else if (shortfall_data()$total_shortfalls == 0) {
       tags$p("No shortfall for this dataset.", style = "font-size: 16px; text-align: center;")
@@ -581,7 +581,7 @@ main_server_logic <- function(input, output, session, values) {
   
   #### ---- 2. Total Number of Shortfalls ----
   output$shortfall_number <- renderUI({
-    if (!all_input_data()) {
+    if (!all_input_data() || !all_shortfall()) {
       tags$p("No data available", style = "font-size: 20px; color: red;")
     } else {
       shortfall_data()$total_shortfalls
@@ -590,7 +590,7 @@ main_server_logic <- function(input, output, session, values) {
   
   #### ---- 3. Total Funding Balance ----
   output$total_balance <- renderUI({
-    if (!all_input_data()) {
+    if (!all_input_data() || !all_shortfall()) {
       tags$p("No data available", style = "font-size: 20px; color: red;")
     } else {
       shortfall_data()$total_balance
@@ -627,7 +627,7 @@ main_server_logic <- function(input, output, session, values) {
       
     } 
 
-    if (!all_input_data()) {
+    if (!all_input_data() || !all_shortfall()) {
 
       return (tags$p("No data available.", style = "font-size: 16px; text-align: center; padding: 16px;"))
 
