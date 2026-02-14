@@ -1,8 +1,8 @@
 
 source("src/ui/dashboard.R")
 source("src/ui/forecast-page.R")
-source("src/ui/funding-page.R")
-source("src/ui/expense-page.R")
+source("src/ui/edit-page.R")
+source("src/ui/input-page.R")
 
 main_ui_layout <- function() {
   #' Contains all UI components from ui folder
@@ -39,8 +39,8 @@ main_ui_layout <- function() {
     sidebar = sidebar(
       width = 270,
       
-      actionButton("funding_tab", "Funding", class = "funding_tab_btn", class = "tab-buttons"),
-      actionButton("expense_tab", "Expense", class = "expense_tab_btn", class = "tab-buttons"),
+      actionButton("input_tab", "Input", class = "input_tab_btn", class = "tab-buttons"),
+      actionButton("edit_tab", "Edit", class = "edit_tab_btn", class = "tab-buttons"),
       actionButton("forecast_tab", "Forecast", class = "forecast_tab_btn", class = "tab-buttons"),
       actionButton("dashboard_tab", "Dashboard", class = "dashboard_tab_btn", class = "tab-buttons")
     ),
