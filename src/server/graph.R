@@ -457,12 +457,25 @@ create_circos_plot <- function(values, month) {
     tooltipGroupConnector = " → "
   )
   
+  ### ---- 6. Manually controlling chord colors ----
+  circos <- onRender(circos, "
+      function(el, x) {
+        setTimeout(function() {
+          d3.selectAll('.chords path').each(function() {
+            d3.select(this)
+              .style('fill', 'green')
+          });
+        }, 10)
+      }
+  ")
   
-  ### ---- 6. Activating Highlights For Current Month Allocations and Shadows For Other Allocations ----
+  
+  
+  ### ---- 7. Activating Highlights For Current Month Allocations and Shadows For Other Allocations ----
   current_allocation_json <- toJSON(current_allocations)
   circos <- onRender(circos, sprintf("
       function(el, x) {
-        console.log('running');
+      
         setTimeout(function() {
         
           var currentAllocation = %s;
@@ -479,9 +492,12 @@ create_circos_plot <- function(values, month) {
               var isCurrentMonth = currentAllocation.indexOf(allocatedPart) !== -1;
               
               if (isCurrentMonth) {
-                path.style('fill', 'rgba(76, 187, 23, 1)').style('fill-opacity', 1);
+                path.style('fill', 'rgba(76, 187, 23, 1)')
+                  .style('fill-opacity', 1);
               } else {
-                path.style('fill', 'rgba(107, 107, 107, 1)').style('fill-opacity', 0.2);
+                path.style('fill', 'rgba(107, 107, 107, 1)')
+                  .style('stroke', 'rgba(107, 107, 107, 1)')
+                  .style('fill-opacity', 0.2);
               }
             }
           });
@@ -505,7 +521,7 @@ create_circos_plot <- function(values, month) {
                   .style('fill-opacity', 1)
                   .style('stroke', 'rgba(0, 78, 56, 1)');
               } else {
-                path.style('fill', 'rgba(211, 211, 211, 1)').style('fill-opacity', 0.2);
+                path.style('fill-opacity', 0.3);
               }
             }
           });
