@@ -293,8 +293,7 @@ forecast_server <- function(input, output, session, values, current_view) {
 
   ## ---- EVENT: Activating Forecasting Button ----
   observeEvent(input$generate_forecast, {
-    print(values$funding_sources)
-    print(values$expenses)
+
     tryCatch(
       {
         req(values$funding_sources)

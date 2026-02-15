@@ -45,7 +45,7 @@ hr {
             BUTTONS
   ==============================*/
 
-/* Downloading Budget Allocation Button */
+/* Downloading Budget Allocation Button (Dashboard) */
 
 .budget-download-btn {
   background-color: var(--download-green);
@@ -57,7 +57,7 @@ hr {
 }
 
 
-/* Excel Download Button (Forecast Page) */
+/* Excel Download Button (Input & Review Page) */
 
 .excel-download-btn {
   border: none;
@@ -77,7 +77,7 @@ hr {
 }
 
 
-/* Add Funding and Expense Buttons (Funding and Expense Page) */
+/* Add Funding and Expense Buttons (Input & Review Page) */
 
 .add-data-btn {
   border: none;
@@ -98,7 +98,7 @@ hr {
 }
 
 
-/* Delete Data Button (Funding and Expense Page) */
+/* Delete Data Button (Input & Review Page) */
 
 .delete-data-btn {
   background-color: var(--red-button-shade);
@@ -123,7 +123,7 @@ hr {
 }
 
 
-/* Upload Excel File Button (Forecast Page) */
+/* Upload Excel File Button (Input & Review Page) */
 
 .btn.btn-default.btn-file {
   border: none;
@@ -138,7 +138,7 @@ hr {
 }
 
 
-/* Empty Template Download Button (Forecast Page) */
+/* Empty Template Download Button (Input & Review Page) */
 
 .template-download-btn {
   border: none;
@@ -220,7 +220,7 @@ hr {
 
 
 /*==============================
-         MAIN CONTAINERS
+     MAIN CONTAINERS & CARDS
   ==============================*/
 
 
@@ -249,9 +249,10 @@ hr {
 }
 
 
-/* Dashboard Page Container Gaps */
+/* Dashboard and Input Page Container Gaps */
 
-.dashboard-box {
+.dashboard-box, 
+.input-box {
   margin-bottom: 40px;
 }
 
@@ -272,11 +273,20 @@ hr {
   width: 100%;
 }
 
+/* Main Upload and Priority Cards Paddings */
+
+.set-priority-card .html-fill-container,
+.upload-card .html-fill-container,
+.priority-container .html-fill-container {
+  padding: 16px 25px;
+}
 
 
-/*==============================
-     FORECAST PAGE COMPONENTS
-  ==============================*/
+
+
+/*========================================
+    OTHER INPUT & REVIEW PAGE COMPONENTS
+  ========================================*/
   
 /* Upload Container */
 
@@ -289,34 +299,7 @@ hr {
 }
 
 
-/* Main Forecast Cards Paddings */
-
-.set-priority-card .html-fill-container,
-.upload-card .html-fill-container,
-.priority-container .html-fill-container {
-  padding: 16px 25px;
-}
-
-
-/* Forecast Card Titles */
-
-.card-title {
-  font-size: 20px;
-  margin-bottom: 0;
-  font-weight: 600;
-}
-
-
-/* Background Priority Card Style */
-
-.card-style {
-  padding: 0;
-  background-color: var(--primary-bg-color);
-  border: none;
-}
-
-
-/* Left Upload Excel Side (Forecast Page) */
+/* Left Upload Excel Side (Input & Review Page) */
 
 #left-upload {
   display: flex;
@@ -361,11 +344,36 @@ hr {
 }
 
 
-/* Right Template Download Side (Forecast Page) */
+/* Right Template Download Side (Input & Review Page) */
 
 #right-download {
   flex-shrink: 0;
   align-self: flex-start;
+}
+
+
+
+
+
+/*====================================
+        FORECAST PAGE COMPONENTS
+  ====================================*/
+
+/* Forecast Card Titles */
+
+.card-title {
+  font-size: 20px;
+  margin-bottom: 0;
+  font-weight: 600;
+}
+
+
+/* Background Priority Card Style */
+
+.card-style {
+  padding: 0;
+  background-color: var(--primary-bg-color);
+  border: none;
 }
 
 

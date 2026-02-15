@@ -1,3 +1,4 @@
+
 source("src/server/components/graph.R")
 source("src/server/components/output.R")
 
@@ -14,8 +15,8 @@ dashboard_server <- function(input, output, session, values, current_view) {
 
   ### ---- Data validation for dashboard output ----
   all_shortfall <- reactive(
-    nrow(values$allocation_result) > 0 &&
-      nrow(values$funding_summary) > 0 &&
+    nrow(values$allocation_result) > 0 ||
+      nrow(values$funding_summary) > 0 ||
       nrow(values$expense_status) > 0
   )
 
@@ -29,7 +30,7 @@ dashboard_server <- function(input, output, session, values, current_view) {
 
   #### ---- 1. Shortfall Bar Graph ----
   output$shortfall_plot <- renderUI({
-    if (!all_input_data()) {
+    if (!all_input_data() || !all_shortfall()) {
       tags$p(
         "No data available.",
         style = "font-size: 16px; text-align: center;"
@@ -50,7 +51,7 @@ dashboard_server <- function(input, output, session, values, current_view) {
 
   #### ---- 2. Total Number of Shortfalls ----
   output$shortfall_number <- renderUI({
-    if (!all_input_data()) {
+    if (!all_input_data() || !all_shortfall()) {
       tags$p("No data available", style = "font-size: 20px; color: red;")
     } else {
       shortfall_data()$total_shortfalls
@@ -59,7 +60,7 @@ dashboard_server <- function(input, output, session, values, current_view) {
 
   #### ---- 3. Total Funding Balance ----
   output$total_balance <- renderUI({
-    if (!all_input_data()) {
+    if (!all_input_data() || !all_shortfall()) {
       tags$p("No data available", style = "font-size: 20px; color: red;")
     } else {
       shortfall_data()$total_balance
@@ -93,7 +94,7 @@ dashboard_server <- function(input, output, session, values, current_view) {
       cm <- clicked_month(default_month)
     }
 
-    if (!all_input_data()) {
+    if (!all_input_data() || !all_shortfall()) {
       return(tags$p(
         "No data available.",
         style = "font-size: 16px; text-align: center; padding: 16px;"
@@ -117,7 +118,6 @@ dashboard_server <- function(input, output, session, values, current_view) {
     distinct_years <- months_df %>%
       distinct(year_date, year_chr)
 
-    cm_date <- as.Date(cm)
 
     circos_plot_id <- paste0("circos_", gsub("-", "_", as.character(cm)))
 
@@ -160,7 +160,7 @@ dashboard_server <- function(input, output, session, values, current_view) {
       ),
 
       tags$p(
-        paste("Allocation Month: ", format(cm_date, "%b %Y")),
+        paste("Allocation Month: ", format(cm, "%b %Y")),
         style = "font-size: 16px; font-weight: 600; padding: 15px 15px 5px 15px;"
       ),
 
@@ -169,7 +169,7 @@ dashboard_server <- function(input, output, session, values, current_view) {
         req(cm)
 
         cutoff <- ceiling_date(as.Date(paste0(cm, "-01")), "month")
-        circos <- create_circos_plot(values, month = cutoff)
+        circos <- create_circos_plot(values, expense_month_status = shortfall_data()$expense_month_status, month = cutoff)
 
         # Activating zooming feature for circos plot
         onRender(

@@ -2,7 +2,6 @@
 source("src/ui/dashboard-ui.R")
 source("src/ui/forecast-page-ui.R")
 source("src/ui/edit-page-ui.R")
-source("src/ui/input-page-ui.R")
 
 main_ui_layout <- function() {
   #' Contains all UI components from ui folder
@@ -39,8 +38,7 @@ main_ui_layout <- function() {
     sidebar = sidebar(
       width = 270,
       
-      actionButton("input_tab", "Input", class = "input_tab_btn", class = "tab-buttons"),
-      actionButton("edit_tab", "Review", class = "edit_tab_btn", class = "tab-buttons"),
+      actionButton("input_review_tab", "Input & Review", class = "edit_tab_btn", class = "tab-buttons"),
       actionButton("forecast_tab", "Forecast", class = "forecast_tab_btn", class = "tab-buttons"),
       actionButton("dashboard_tab", "Dashboard", class = "dashboard_tab_btn", class = "tab-buttons")
     ),

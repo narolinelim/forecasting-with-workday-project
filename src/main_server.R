@@ -1,14 +1,13 @@
 
 source("src/server/dashboard-server.R")
 source("src/server/forecast-page-server.R")
-source("src/server/input-page-server.R")
 source("src/server/edit-page-server.R")
 
 main_server_logic <- function(input, output, session, values) {
   # ---- 1. GENERAL LOGIC ----
 
   ## ---- Current page ----
-  current_view <- reactiveVal("input")
+  current_view <- reactiveVal("input_review")
 
   ## ---- Data Validation ----
   errors <- reactiveVal(NULL)
@@ -40,26 +39,19 @@ main_server_logic <- function(input, output, session, values) {
   ## ---- EVENT: Navigation between tabs ----
   observeEvent(input$dashboard_tab, current_view("dashboard"))
   observeEvent(input$forecast_tab, current_view("forecast"))
-  observeEvent(input$input_tab, current_view("input"))
-  observeEvent(input$edit_tab, current_view("edit"))
+  observeEvent(input$input_review_tab, current_view("input_review"))
 
   ## ---- OUTPUT: Switching between tabs ----
   output$tab_content <- renderUI({
     switch(
       current_view(),
-      "dashboard" = dashboard_ui(
-        total_balance = sum(values$funding_sources$amount)
-      ),
+      "dashboard" = dashboard_ui(),
       "forecast" = forecast_ui(),
-      "input" = input_ui(),
-      "edit" = edit_ui()
+      "input_review" = input_review_ui()
     )
   })
 
   
-  # ---- 2. INPUT PAGE LOGIC ----
-  input_server(input, output, session, values, current_view)
-
   # ---- 3. FORECAST PAGE LOGIC ----
   forecast_server(input, output, session, values, current_view)
 

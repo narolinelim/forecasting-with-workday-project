@@ -9,29 +9,43 @@ forecast_ui <- function() {
     div(
       
       div(
-        class = "info-containers",
         
-        ## ---- 2. Setting Expense Priority Section ----
-        card(
-          class = "set-priority-card",
-          full_screen = TRUE,
+        ## ---- 1. Forecast Title Section ----
+        div(
+          "Forecast",
+          class = "content-title"
+        ),
+        
+        
+        div(
           
-          div(
-            p("Set Priority", class = "card-title"),
+          class = "info-containers",
+          
+          
+          ## ---- 2. Setting Expense Priority Section ----
+          card(
+            class = "set-priority-card",
+            full_screen = TRUE,
             
             div(
-              class = "select-priority-input-type",
-              selectInput(
-                "select_priority",
-                label = NULL,
-                choices = c("Column Priority", "Manual Priority", "None"),
-                selected = "None"
-              )
+              p("Set Priority", class = "card-title"),
+              
+              div(
+                class = "select-priority-input-type",
+                selectInput(
+                  "select_priority",
+                  label = NULL,
+                  choices = c("Column Priority", "Manual Priority", "None"),
+                  selected = "None"
+                )
+              ),
+              uiOutput("priority_card")
             ),
-            uiOutput("priority_card")
-          ),
-          style = "padding: 0; font-weight: normal;"
+            style = "padding: 0; font-weight: normal;"
+          )
+          
         )
+    
       ),
       actionButton("generate_forecast", "Generate Forecast", class = "generate-forecast-btn")
     )

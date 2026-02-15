@@ -1,12 +1,70 @@
-edit_ui <- function() {
-  # ---- Layout of the Edit Page ----
+
+input_review_ui <- function() {
+  # ---- Layout of the Input And Review Page ----
 
   div(
     class = "edit-page-container",
+    class = "result-container",
+    
+    ## ---- Upload Input Section ----
+    div(
+      class = "input-box",
+      
+      div(
+        
+        div(
+          class = "input-title-container",
+          
+          ## ---- 1. Expense Title Section ----
+          div(
+            "Input Data",
+            class = "content-title"
+          ),
+          div(
+            downloadButton("download_sample_spreadsheet", "Download Filled Template", class = "add-data-btn")
+          )
+        ),
+        
+        div(
+          class = "info-containers",
+          
+          ## ---- 1. Upload Excel File Section ----
+          card(
+            class = "upload-card",
+            
+            div(
+              p("Upload the Excel file", class = "card-title"),
+              
+              div(
+                class = "upload-container",
+                
+                div(
+                  id = "left-upload",
+                  
+                  fileInput(
+                    inputId = "spreadsheet_upload",
+                    label = NULL,
+                    buttonLabel = "Choose File",
+                    placeholder = "No file chosen",
+                    accept = c(".xlsx", ".xls")
+                  )
+                ),
+                
+                div(
+                  id = "right-download",
+                  downloadButton("download_template", "Download Template",
+                                 class = "template-download-btn")
+                )
+              )
+            )
+          ),
+        )
+      )
+    ),
 
     ## ---- Expense Section ----
     div(
-      class = "result-container",
+      class = "input-box",
 
       div(
         div(
@@ -15,7 +73,7 @@ edit_ui <- function() {
           ### ---- 1. Expense Title Section ----
           div(
             "Expense",
-            class = "content-title"
+            class = "content-title",
           ),
           div(
             actionButton("add_expense", "+ Add Expense", class = "add-data-btn")
@@ -44,7 +102,7 @@ edit_ui <- function() {
 
     ## ---- Funding Section ----
     div(
-      class = "result-container",
+      class = "input-box",
 
       div(
         div(
