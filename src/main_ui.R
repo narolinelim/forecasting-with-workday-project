@@ -40,7 +40,7 @@ main_ui_layout <- function() {
       width = 270,
       
       actionButton("input_tab", "Input", class = "input_tab_btn", class = "tab-buttons"),
-      actionButton("edit_tab", "Edit", class = "edit_tab_btn", class = "tab-buttons"),
+      actionButton("edit_tab", "Review", class = "edit_tab_btn", class = "tab-buttons"),
       actionButton("forecast_tab", "Forecast", class = "forecast_tab_btn", class = "tab-buttons"),
       actionButton("dashboard_tab", "Dashboard", class = "dashboard_tab_btn", class = "tab-buttons")
     ),
