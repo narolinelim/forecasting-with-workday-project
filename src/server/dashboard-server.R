@@ -118,6 +118,7 @@ dashboard_server <- function(input, output, session, values, current_view) {
     distinct_years <- months_df %>%
       distinct(year_date, year_chr)
 
+    cm_date <- as.Date(cm)
 
     circos_plot_id <- paste0("circos_", gsub("-", "_", as.character(cm)))
 
@@ -160,7 +161,7 @@ dashboard_server <- function(input, output, session, values, current_view) {
       ),
 
       tags$p(
-        paste("Allocation Month: ", format(cm, "%b %Y")),
+        paste("Allocation Month: ", format(cm_date, "%b %Y")),
         style = "font-size: 16px; font-weight: 600; padding: 15px 15px 5px 15px;"
       ),
 

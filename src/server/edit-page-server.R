@@ -1,7 +1,7 @@
 source("src/server/components/edit-rows.R")
 source("src/server/components/data-processing.R")
 
-edit_server <- function(input, output, session, values, current_view) {
+edit_server <- function(input, output, session, values, current_view, available_categories) {
   
   ## ---- EVENT: Upload Expenses and Funding Data ----
   observeEvent(input$spreadsheet_upload, {
@@ -17,15 +17,23 @@ edit_server <- function(input, output, session, values, current_view) {
         values$funding_sources <- funding_sources_df
         values$expenses <- expense_df
         
-        showNotification("Data saved successfully", type = "message", duration = 3)
-        
-        current_view("forecast")
+        showNotification(
+          "Data saved successfully",
+          type = "message",
+          duration = 3
+        )
       },
       error = function(e) {
-        showNotification(paste("Upload failed:", e$message), type = "error", duration = 3, ignoreInit = FALSE)
+        showNotification(
+          paste("Upload failed:", e$message),
+          type = "error",
+          duration = 3,
+          ignoreInit = FALSE
+        )
       }
     )
   })
+  
   
   # ---- 3. FUNDING PAGE SERVER LOGIC ----
 

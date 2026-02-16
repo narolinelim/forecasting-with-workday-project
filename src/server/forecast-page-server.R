@@ -4,7 +4,7 @@ source("src/server/components/output.R")
 source("src/server/components/sorting.R")
 source("src/server/components/graph.R")
 
-forecast_server <- function(input, output, session, values, current_view) {
+forecast_server <- function(input, output, session, values, current_view, available_categories) {
   # ---- 2. FORECAST PAGE SERVER LOGIC ----
 
   ## ---- OUTPUT: Render priority mode ----
@@ -93,23 +93,20 @@ forecast_server <- function(input, output, session, values, current_view) {
   observeEvent(input$drag_categories, {
     drag_order(input$drag_categories)
   })
-
-  ### ---- Get available categories for dragging ----
-  available_categories <- reactiveVal(NULL)
-
+  
   observe({
     #### ---- From expenses categories ----
     req(values$expenses)
     req(values$funding_sources)
-
+    
     available_categories(NULL) # Reset available categories before recalculating
-
+    
     exp_cats <- unique(values$expenses$expense_category)
     fund_cats <- unique(unlist(values$funding_sources$allowed_categories))
-
+    
     cats <- sort(unique(c(exp_cats, fund_cats)))
     cats <- cats[!is.na(cats) & cats != ""] # Remove NA and empty categories
-
+    
     dr <- drag_order()
     if (!is.null(dr)) {
       # Preserve user-defined order

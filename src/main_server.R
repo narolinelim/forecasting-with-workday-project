@@ -50,13 +50,16 @@ main_server_logic <- function(input, output, session, values) {
       "input_review" = input_review_ui()
     )
   })
+  
+  available_categories <- reactiveVal(NULL)
+  print(available_categories)
 
   
   # ---- 3. FORECAST PAGE LOGIC ----
-  forecast_server(input, output, session, values, current_view)
+  forecast_server(input, output, session, values, current_view, available_categories)
 
   # ---- 4. EDIT PAGE LOGIC ----
-  edit_server(input, output, session, values, current_view)
+  edit_server(input, output, session, values, current_view, available_categories)
 
   # ---- 5. DASHBOARD PAGE LOGIC ----
   dashboard_server(input, output, session, values, current_view)
