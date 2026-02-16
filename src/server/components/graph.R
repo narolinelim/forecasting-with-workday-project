@@ -6,7 +6,7 @@ create_shortfall_bar <- function(values) {
   #'
   #' @param values: reactiveValues containing funding_sources, and expenses
   #'
-  #' @return list of total_balance, shortfall plots, monthly_shortfall and total shortfall
+  #' @return list of total_balance, shortfall plots, monthly shortfall, month dataframe, all monthly expense status and total shortfall
   
   
   
@@ -219,14 +219,15 @@ create_shortfall_bar <- function(values) {
     shortfall_plot = p,
     total_shortfalls = total_shortfalls,
     monthly_shortfall = monthly_shortfall,
-    months_df = months_df
+    months_df = months_df,
+    expense_month_status = expenses_month_status
   ))
   
 }
 
 
 # ---- SECTION 2: ALLOCATION PLOT (CHORD DIAGRAM) ---- 
-create_circos_plot <- function(values, month) {
+create_circos_plot <- function(values, month, expense_month_status) {
   #' Create a circos plot showing allocations up to a specified month
   #'
   #' @param values: reactiveValues containing funding_sources, expenses
@@ -297,17 +298,15 @@ create_circos_plot <- function(values, month) {
   colnames(mat) <- sectors
   
 
-  ## ---- Step 2: Direct Expense And Funding Allocations ----
+  ## ---- Step 2: Allocation Cases For Chord Diagram ----
   
   if (nrow(rows_until_month) > 0) {
-    
 
+    ### ---- Direct Expense And Funding Allocations ----
     for (i in 1:nrow(rows_until_month)) {
       mat[rows_until_month$source_id[i], rows_until_month$expense_id[i]] <- rows_until_month$allocated_amount[i]
       mat[rows_until_month$expense_id[i], rows_until_month$source_id[i]] <- rows_until_month$allocated_amount[i]
     }
-    
-    ## ---- Step 3: Allocation Cases For Chord Diagram ----
     
     ### ---- Case 1: Partial leftover expenses at the current time ----
     leftover_expenses <- rows_until_month %>%
@@ -396,9 +395,11 @@ create_circos_plot <- function(values, month) {
   
   
   
-  ## ---- Step 4: Current Month Allocation Highlights ----
+  ## ---- Step 4: Current Month Allocation Diagram Highlights ----
   
-  ### ---- 1. Current Month Allocation Data Frame ----
+  ### ---- Case 1: Current Month Allocation ----
+  
+  #### ---- 1. Current Month Allocation Data Frame ----
   month_before_current <- month - months(1)
   
   rows_before_current_month <- rows_until_month %>%
@@ -407,7 +408,7 @@ create_circos_plot <- function(values, month) {
   current_month_allocation <- setdiff(rows_until_month, rows_before_current_month)
 
   
-  ### ---- 2. Current Month Allocation Matrix ----
+  #### ---- 2. Current Month Allocation Matrix ----
   current_month_mat <- matrix(0, nrow = length(sectors), ncol = length(sectors))
   rownames(current_month_mat) <- sectors
   colnames(current_month_mat) <- sectors
@@ -419,7 +420,7 @@ create_circos_plot <- function(values, month) {
     }
   }
   
-  ### ---- 3. Extracting Current Month Allocations Into Vectors ----
+  #### ---- 3. Extracting Current Month Allocations Into Vectors ----
   data_id <- rownames(current_month_mat)
   n <- length(data_id)
   current_allocations <- c()
@@ -436,16 +437,28 @@ create_circos_plot <- function(values, month) {
   funding_length <- length(sources_ids)
   expense_length <- length(expenses_ids)
   
-  ### ---- 4. Setting Two-tone Colours For Chord Diagram ----
-  funding_colors <- rep("green", funding_length)
-  expense_colors <- rep("red", expense_length)
+  #### ---- 4. Setting Two-tone Colours For Chord Diagram ----
+  funding_colors <- rep("rgb(0, 100, 0)", funding_length)
+  expense_colors <- rep("rgb(230, 0, 0)", expense_length)
   all_colors <- c(funding_colors, expense_colors)
-
   
-  ### ---- 5. Chord Diagram For Allocation Up Until Current Month ----
+  
+  ### ---- Case 2: Current Month Shortfall ----
+  
+  #### ---- 1. Extracting Current Month Expense Shortfall ----
+  current_month_shortfall <- expense_month_status %>%
+    filter(is_short == TRUE & Month == month_before_current) %>%
+    pull(expense_id)
+  
+  current_shortfalls <- paste0(current_month_shortfall, "-", current_month_shortfall)
+ 
+  
+  ### ---- Case 3: No Allocation AT ALL ----
+  no_allocation_at_all <- nrow(rows_until_month) == 0
+  
+  ### ---- Chord Diagram For Allocation Up Until Current Month ----
   circos <- chorddiag(
     data = mat,
-    chordedgeColor = "green",
     groupColors = all_colors,
     showTicks = FALSE,
     margin = 80,
@@ -471,39 +484,146 @@ create_circos_plot <- function(values, month) {
   
   
   
-  ### ---- 7. Activating Highlights For Current Month Allocations and Shadows For Other Allocations ----
+  
+  
+  ### ---- Manually Modifying Chord Diagram Colors ----
   current_allocation_json <- toJSON(current_allocations)
+  current_shortfall_json <- toJSON(current_shortfalls)
+  no_allocation_json <- tolower(as.character(no_allocation_at_all))
+  
   circos <- onRender(circos, sprintf("
       function(el, x) {
       
         setTimeout(function() {
         
           var currentAllocation = %s;
+          var currentShortfall = %s;
+          var noAllocation = %s;
           
-          /* Chord Colors */
+          /* Converting object to Array */
+          if (typeof currentAllocation === 'object' && !Array.isArray(currentAllocation)) {
+            currentAllocation = Object.values(currentAllocation);
+          }
+          
+          if (typeof currentShortfall === 'object' && !Array.isArray(currentShortfall)) {
+            currentShortfall = Object.values(currentShortfall);
+          }
+ 
+ 
+          /*----------------------------------------------
+                  No Active Allocation Chord Colors 
+          ------------------------------------------------*/
+          var isAllNotActive = (currentAllocation.length == 0);
+          
+          console.log(isAllNotActive);
+          console.log(noAllocation);
+          if (isAllNotActive && !noAllocation) {
+          
+            /* Case 1: Had allocations before, but not the current month */
+            
+            d3.selectAll('.chords path')
+              .style('fill', 'rgb(107, 107, 107)')
+              .style('stroke', 'rgb(107, 107, 107)')
+              .style('fill-opacity', '0.3');
+              
+          } else if (isAllNotActive && noAllocation) {
+          
+            /* Case 2: Had no allocations before */
+            
+            // Arrange chord colors by funding and expense
+            d3.selectAll('.chords path').each(function() {
+              var path = d3.select(this);
+              var pathId = path.attr('id');
+              
+              if (pathId && pathId.startsWith('chord-')) {
+                var allocatedPart = pathId.replace('chord-', '');
+                
+                var allParts = allocatedPart.split('-');
+                var fromPart = allParts[0];
+                var toPart = allParts[2];
+                
+                if (fromPart == 'E' && toPart == 'E') {
+                  path.style('fill', 'rgb(255, 0, 0)')
+                    .style('stroke', 'rgb(230, 0, 0)')
+                    .style('fill-opacity', '1');
+                } else if (fromPart == 'F' && toPart == 'F') {
+                  path.style('fill', 'rgb(0, 160, 0)')
+                    .style('stroke', 'rgb(0, 100, 0)')
+                    .style('stroke-opacity', '1');
+                }
+                
+              }
+            });
+            
+            
+            // Arrange arc colors by funding and expense
+            d3.selectAll('.groups path').each(function() {
+              var path = d3.select(this);
+              var archPathId = path.attr('id');
+              
+              if (archPathId && archPathId.startsWith('group-')) {
+                var allocatedPart = archPathId.replace('group-', '');
+                
+                
+                if (allocatedPart.startsWith('E')) {
+                  path.style('fill', 'rgb(230, 0, 0)')
+                    .style('stroke', 'rgb(230, 0, 0)');
+                    
+                } else if (allocatedPart.startsWith('F')) {
+                  path.style('fill', 'rgb(0, 100, 0)')
+                    .style('stroke', 'rgb(0, 100, 0)')
+                    .style('stroke-opacity', '1');
+                }
+              }
+            });
+            
+          };
+          
+          
+          
+          /*----------------------------------------------
+              Main Allocation and Shortfall Chord Colors 
+          ------------------------------------------------*/
+          
           d3.selectAll('.chords path').each(function() {
             var path = d3.select(this);
             var pathId = path.attr('id');
             
             if (pathId && pathId.startsWith('chord-')) {
               var allocatedPart = pathId.replace('chord-', '');
-          
               
+              
+              /* Active Allocation Chords */
               var isCurrentMonth = currentAllocation.indexOf(allocatedPart) !== -1;
               
-              if (isCurrentMonth) {
-                path.style('fill', 'rgba(76, 187, 23, 1)')
-                  .style('fill-opacity', 1);
+              /* Shortfall Chords */
+              var isShortfall = currentShortfall.indexOf(allocatedPart) !== -1;
+              
+              if (isShortfall) {
+                path.style('fill', 'rgb(252, 140, 0)')
+                  .style('stroke', 'rgb(252, 120, 0)')
+                  .style('fill-opacity', '1');
+                  
+              } else if (isCurrentMonth) {
+                path.style('fill', 'rgb(0, 160, 0)')
+                  .style('stroke', 'rgb(0, 100, 0)')
+                  .style('fill-opacity', '1')
+                  .style('stroke-opacity', '1');
+                  
               } else {
-                path.style('fill', 'rgba(107, 107, 107, 1)')
-                  .style('stroke', 'rgba(107, 107, 107, 1)')
-                  .style('fill-opacity', 0.2);
+                path.style('fill', 'rgb(107, 107, 107)')
+                  .style('stroke', 'rgb(107, 107, 107)')
+                  .style('fill-opacity', '0.3');
               }
             }
           });
           
           
-          /* Group Arc Colors */
+
+          /*--------------------------------------------------
+             Main Allocation and Shortfall Group Arc Colors 
+          ----------------------------------------------------*/
+          
           d3.selectAll('.groups path').each(function() {
             var path = d3.select(this);
             var archPathId = path.attr('id');
@@ -511,15 +631,39 @@ create_circos_plot <- function(values, month) {
             if (archPathId && archPathId.startsWith('group-')) {
               var allocatedPart = archPathId.replace('group-', '');
               
+              
+              /* Active Allocation Arcs */
               var isCurrentMonth = currentAllocation.some(function(pair) {
                 return pair.startsWith(allocatedPart + '-') || pair.endsWith('-' + allocatedPart)
-              })
+              });
               
               
-              if (isCurrentMonth) {
-                path.style('fill', 'rgba(0, 78, 56, 1)')
-                  .style('fill-opacity', 1)
-                  .style('stroke', 'rgba(0, 78, 56, 1)');
+              /* Shortfall Arcs */
+              var isShortfall = currentShortfall.some(function(pair) {
+                return pair.startsWith(allocatedPart + '-') || pair.endsWith('-' + allocatedPart)
+              });
+              
+              
+              
+              if (isShortfall) {
+                path.style('fill', 'rgb(230, 0, 0)')
+                  .style('stroke', 'rgb(230, 0, 0)');
+                    
+              } else if (isCurrentMonth) {
+              
+                var allParts = allocatedPart.split('-');
+                var fromPart = allParts[0];
+                var toPart = allParts[2];
+                
+                if (fromPart == 'E' || toPart == 'E') {
+                  path.style('fill', 'rgb(230, 0, 0)')
+                    .style('stroke', 'rgb(230, 0, 0)');
+                    
+                } else {
+                  path.style('fill', 'rgb(0, 100, 0)')
+                    .style('stroke', 'rgb(0, 100, 0)');
+                }
+                
               } else {
                 path.style('fill-opacity', 0.3);
               }
@@ -530,7 +674,7 @@ create_circos_plot <- function(values, month) {
         
       }
                      
-    ", current_allocation_json))
+    ", current_allocation_json, current_shortfall_json, no_allocation_json))
   
   
   return (circos)

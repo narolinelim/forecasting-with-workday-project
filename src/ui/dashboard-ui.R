@@ -1,6 +1,6 @@
 
 
-dashboard_ui <- function(total_balance) {
+dashboard_ui <- function() {
   # ---- Layout of the Dashboard Page ----
   
   div(

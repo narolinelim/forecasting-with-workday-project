@@ -1,3 +1,4 @@
+
 # ---- Column-based Sorting ----
 col_ordering <- function(expenses_data, ordering_rules) {
   #' This function sorts the expenses data based on column priorities and dynamic category order.

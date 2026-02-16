@@ -9,73 +9,43 @@ forecast_ui <- function() {
     div(
       
       div(
-        class = "input-title-container",
         
-        ## ---- 1. Expense Title Section ----
+        ## ---- 1. Forecast Title Section ----
         div(
           "Forecast",
           class = "content-title"
         ),
-        div(
-          downloadButton("download_sample_spreadsheet", "Download Filled Template", class = "add-data-btn")
-        )
-      ),
-      
-      div(
-        class = "info-containers",
         
-        ## ---- 1. Upload Excel File Section ----
-        card(
-          class = "upload-card",
+        
+        div(
           
-          div(
-            p("Upload the Excel file", class = "card-title"),
+          class = "info-containers",
+          
+          
+          ## ---- 2. Setting Expense Priority Section ----
+          card(
+            class = "set-priority-card",
+            full_screen = TRUE,
             
             div(
-              class = "upload-container",
+              p("Set Priority", class = "card-title"),
               
               div(
-                id = "left-upload",
-                
-                fileInput(
-                  inputId = "spreadsheet_upload",
+                class = "select-priority-input-type",
+                selectInput(
+                  "select_priority",
                   label = NULL,
-                  buttonLabel = "Choose File",
-                  placeholder = "No file chosen",
-                  accept = c(".xlsx", ".xls")
+                  choices = c("Column Priority", "Manual Priority", "None"),
+                  selected = "None"
                 )
               ),
-              
-              div(
-                id = "right-download",
-                downloadButton("download_template", "Download Template",
-                                 class = "template-download-btn")
-              )
-            )
-          )
-        ),
-        
-        ## ---- 2. Setting Expense Priority Section ----
-        card(
-          class = "set-priority-card",
-          full_screen = TRUE,
-          
-          div(
-            p("Set Priority", class = "card-title"),
-            
-            div(
-              class = "select-priority-input-type",
-              selectInput(
-                "select_priority",
-                label = NULL,
-                choices = c("Column Priority", "Manual Priority", "None"),
-                selected = "None"
-              )
+              uiOutput("priority_card")
             ),
-            uiOutput("priority_card")
-          ),
-          style = "padding: 0; font-weight: normal;"
+            style = "padding: 0; font-weight: normal;"
+          )
+          
         )
+    
       ),
       actionButton("generate_forecast", "Generate Forecast", class = "generate-forecast-btn")
     )
