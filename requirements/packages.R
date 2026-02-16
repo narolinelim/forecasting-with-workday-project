@@ -1,30 +1,21 @@
 
 options(repos = c(CRAN = "https://cloud.r-project.org"))
 
-REQUIRED_PACKAGES <- c("shiny", "bslib", "DT", "dplyr", "readxl", 
-                       "openxlsx", "tidyr", "rmarkdown", "shinyjs", 
-                       "tinytex", "RColorBrewer", "palmerpenguins", 
-                       "shinyWidgets", "sortable", "ggplot2", "plotly", 
-                       "lubridate", "circlize", "ompr", "ompr.roi", "ROI", 
-                       "ROI.plugin.highs", "magrittr", "rlang")
+REQUIRED_PACKAGES <- c("magrittr", "shiny", "bslib", "DT", "dplyr", "readxl", 
+                       "openxlsx", "tidyr", "rmarkdown", "shinyWidgets", 
+                       "sortable", "plotly", "htmlwidgets", "ompr",
+                       "ompr.roi", "ROI", "ROI.plugin.highs",
+                       "lubridate", "remotes", "shinyjs", "jsonlite")
 
 run_setup <- function() {
+  
   # Identify which packages are not yet installed on the system
   new_packages <- REQUIRED_PACKAGES[!(REQUIRED_PACKAGES %in% installed.packages()[,"Package"])]
   
   # Install missing packages if any are found
-  if(length(new_packages)) install.packages(new_packages)
+  if(length(new_packages)) install.packages(new_packages, type = "binary")
   
-  # Ensure TinyTeX is installed for PDF generation immediately during setup
-  if (!tinytex::is_tinytex()) {
-    tinytex::install_tinytex(force = TRUE)
-  }  
-  
-  # Github packages (for chordDiag)
-  if (!requireNamespace("remotes", quietly = TRUE)) {
-    install.packages("remotes")
-  }
-  
+  # Github packages from remotes (for chordDiag)
   if (!requireNamespace("chorddiag", quietly = TRUE)) {
     remotes::install_github("mattflor/chorddiag") 
   }

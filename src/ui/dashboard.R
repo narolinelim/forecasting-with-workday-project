@@ -1,9 +1,12 @@
-# UI for Dashboard
+
+
 dashboard_ui <- function(total_balance) {
+  # ---- Layout of the Dashboard Page ----
+  
   div(
     class = "result-container",
 
-    # Main Dashboard Section
+    ## ---- 1. Main Dashboard Section ----
     div(
       "Dashboard",
       class = "content-title",
@@ -11,6 +14,8 @@ dashboard_ui <- function(total_balance) {
       
       div(
         class = "info-containers",
+        
+        ### --- 1.1. Total Balance & Total Number Of Shortfalls ----
         layout_columns(
           col_widths = c(6, 6),
           
@@ -35,6 +40,7 @@ dashboard_ui <- function(total_balance) {
           class = "graphic-output",
           p("Expense and Shortfall Breakdown", style = "font-size: 16px;"),
             
+          ### ---- 1.2. Shortfall Graph ----
           card(
             id = "shortfall-graph",
             card_header("Shortfall Breakdown"),
@@ -44,11 +50,15 @@ dashboard_ui <- function(total_balance) {
             )
           ),
             
+          ### ---- 1.3. Allocation Chord Diagram ----
           card(
             id = "expense-graph",
             card_header("Expense Breakdown"),
             height = "auto",
-            uiOutput("circos_container")
+            card_body(
+              uiOutput("circos_container"),
+              padding = 0
+            )
           ),
         
           style = "font-weight: normal;"
@@ -56,7 +66,7 @@ dashboard_ui <- function(total_balance) {
       )
     ),
     
-    # Budget Allocation Section
+    ## ---- 2. Budget Allocation Section ----
     div(
       "Budget Allocation",
       class = "content-title",
@@ -74,7 +84,27 @@ dashboard_ui <- function(total_balance) {
       )
     ),
     
-    # Unallocated Funding Section
+    
+    ## ---- 3. Unallocated Expense Section ----
+    div(
+      "Unallocated Expenses",
+      class = "content-title",
+      class = "dashboard-box",
+      
+      div(
+        class = "info-containers",
+        card(
+          div(
+            DTOutput("unallocated_expense_table")
+          ),
+          full_screen = TRUE,
+          style = "padding: 16px; font-weight: 400; font-size: 16px;"
+        )
+      )
+    ),
+    
+    
+    ## ---- 4. Unallocated Funding Section ----
     div(
       "Unallocated Funding",
       class = "content-title",
@@ -91,7 +121,11 @@ dashboard_ui <- function(total_balance) {
         )
       )
     ),
-    downloadButton("budget_download", "Download Budget Allocation", class = "budget_download_btn"),
-    actionButton("exit_session", "Exit Session", class = "exit_session_btn")
+    
+    ## ---- 5. Button Components ----
+    downloadButton("budget_download", "Download Budget Allocation", class = "budget-download-btn"),
+    actionButton("exit_session", "Exit Session", class = "exit-session-btn")
   )
+  
 }
+

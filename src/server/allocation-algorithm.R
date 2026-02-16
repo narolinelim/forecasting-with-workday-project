@@ -18,13 +18,14 @@ date_to_int <- function(date_str, base_date) {
   return(as.numeric(dt - base_date) + 1)
 }
 
+
 build_compatibility_matrix <- function(sources, expenses) {
   #' Build a compatibility matrix between funding sources and expenses
   #'
   #' @param sources DataFrame of funding sources
   #' @param expenses DataFrame of expenses
   #'
-  #' @return A compatibility matrix (data.frame) indicating valid funding sources for each expense
+  #' @return A list of compatibility matrices indicating valid funding sources for each expense
 
   # Dynamically setting the time
   # 1. Collect all date columns from both dataframes
@@ -41,6 +42,7 @@ build_compatibility_matrix <- function(sources, expenses) {
   # This is a matrix with size n_sources x n_expenses (row is each funding sources, and column is each expenses sources), such that if the payment date of the expense fall within the valid from and valid to of the funding AND categories of the expense match with the allowed category of the source, then it will be marked as 1, otherwise 0
   # We build a Compatibility Matrix (Valid = 1, Invalid = 0)
   compatibility <- matrix(0, nrow = n_sources, ncol = n_expenses)
+  compatibility_again <- matrix(0, nrow = n_sources, ncol = n_expenses)
   
   for (i in 1:n_sources) {
     for (j in 1:n_expenses) {
@@ -57,6 +59,7 @@ build_compatibility_matrix <- function(sources, expenses) {
       # LOGIC: The payment date must be INSIDE the funding window (Inclusive)
       # ValidFrom <= PaymentDate <= ValidTo
       time_match <- (e_date >= s_from & e_date <= s_to)
+      time_match_modified <- (e_date < s_to)
       
       # Combine Checks
       if (cat_match && time_match) {
@@ -64,13 +67,24 @@ build_compatibility_matrix <- function(sources, expenses) {
       } else {
         compatibility[i, j] <- 0
       }
+      
+      if (cat_match && time_match_modified) {
+        compatibility_again[i, j] <- 1
+      } else {
+        compatibility_again[i, j] <- 0
+      }
     }
   }
   
-  return (compatibility)
+  return (list(
+    first_compatibility = compatibility, 
+    second_compatibility = compatibility_again
+    ))
+  
 }
 
-solve_constraint_model <- function(sources, expenses, compatibility) {
+
+solve_constraint_model <- function(sources, expenses, compatibilities) {
   #' Solve the MIP model for funding allocation
   #'
   #' @param sources DataFrame of funding sources
@@ -113,7 +127,7 @@ solve_constraint_model <- function(sources, expenses, compatibility) {
     
     # 3. Compatibility Constraint
     # If compatibility[i, j] == 0, then x[i, j] must be 0
-    add_constraint(x[i, j] == 0, i = 1:n_sources, j = 1:n_expenses, compatibility[i, j] == 0)
+    add_constraint(x[i, j] == 0, i = 1:n_sources, j = 1:n_expenses, compatibilities$first_compatibility[i, j] == 0)
   
   result <- solve_model(model, with_ROI(solver = "highs"))
   
@@ -122,13 +136,13 @@ solve_constraint_model <- function(sources, expenses, compatibility) {
 
 
 
-apply_greedy_fill <- function(result, sources, expenses, compatibility) {
+apply_greedy_fill <- function(result, sources, expenses, compatibilities) {
   #' Apply a greedy fill algorithm to allocate remaining funds to unfunded expenses
   #'
   #' @param result The result of the solved MIP model
   #' @param sources DataFrame of funding sources
   #' @param expenses DataFrame of expenses
-  #' @param compatibility Compatibility matrix between sources and expenses
+  #' @param compatibilities List of compatibility matrices between sources and expenses
   #' 
   #' @return A matrix representing the final allocation of funds to expenses
   
@@ -162,7 +176,7 @@ apply_greedy_fill <- function(result, sources, expenses, compatibility) {
       if (amount_needed < 1e-6) break 
       
       # Check compatibility AND available funds
-      if (source_remaining[i] > 1e-6) {
+      if (compatibilities$second_compatibility[i, j] == 1 && source_remaining[i] > 1e-6) {
         take_amount <- min(amount_needed, source_remaining[i])
         
         # Update Matrix & Balances
@@ -324,6 +338,8 @@ create_financial_dfs <- function(mat_x, sources, expenses) {
   # Clean up negative zeros
   df_funds_summary$remaining_amount[df_funds_summary$remaining_amount < 0] <- 0
   
+  
+  # --- 4. Full Allocation DataFrame (for output display) ---
   df_full_allocation <- df_allocations %>%
     left_join(
       df_expenses_status %>%
@@ -333,9 +349,18 @@ create_financial_dfs <- function(mat_x, sources, expenses) {
           planned_amount,
           latest_payment_date,
           status
-        ), by = c("expense_id", "expense_category"))
-  
-  # Return all 3 as a named list
+        ), by = c("expense_id", "expense_category")) %>%
+    left_join(
+      sources %>%
+        select(
+          source_id,
+          valid_from,
+          valid_to
+        ), by = "source_id"
+    )
+
+  print(df_expenses_status)
+  # Return all 4 as a named list
   return(list(
     allocations = df_allocations,
     expenses = df_expenses_status,
@@ -343,6 +368,7 @@ create_financial_dfs <- function(mat_x, sources, expenses) {
     full_allocation_data = df_full_allocation
   ))
 }
+
 
 activate_allocation_algorithm <- function(sources, expenses) {
   #' Main function to run the allocation algorithm
@@ -352,14 +378,14 @@ activate_allocation_algorithm <- function(sources, expenses) {
   #' 
   #' @return A list containing three DataFrames: allocations, expenses status, and funds summary
   
-  compatibility <- build_compatibility_matrix(sources, expenses)
+  compatibilities <- build_compatibility_matrix(sources, expenses)
   
-  result <- solve_constraint_model(sources, expenses, compatibility)
+  result <- solve_constraint_model(sources, expenses, compatibilities)
   
   if (result$status == "optimal" || result$status == "success") {
     
     # Partial fill
-    final_matrix <- apply_greedy_fill(result, sources, expenses, compatibility)
+    final_matrix <- apply_greedy_fill(result, sources, expenses, compatibilities)
     
     # Print report in R for testing
     # print_financial_report(final_matrix, sources, expenses)

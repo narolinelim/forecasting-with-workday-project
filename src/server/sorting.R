@@ -1,4 +1,4 @@
-# --- Column-based Sorting ---
+# ---- Column-based Sorting ----
 col_ordering <- function(expenses_data, ordering_rules) {
   #' This function sorts the expenses data based on column priorities and dynamic category order.
   #'
@@ -73,7 +73,7 @@ col_ordering <- function(expenses_data, ordering_rules) {
 }
 
 
-# --- Manual Row Reordering ---
+# ---- Manual Row Reordering ----
 row_reorder <- function(newOrder, expenses, proxy, id_col) {
   #' Updates the expenses dataframe based on the new order provided by the user.
   #'
@@ -83,7 +83,12 @@ row_reorder <- function(newOrder, expenses, proxy, id_col) {
   #' @param id_col: name of the column containing unique item IDs
   #' 
   #' @return: updated expenses dataframe with new priority
+  #' 
 
+  if (is.null(newOrder) || length(newOrder) == 0) {
+    return (expenses)
+  }
+  
   new_idx <- match(newOrder, expenses[[id_col]])
   df <- expenses[new_idx, ] |> mutate(priority = seq_len(nrow(expenses)))
   replaceData(proxy, df, resetPaging = FALSE, rownames = FALSE)

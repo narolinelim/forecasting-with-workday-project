@@ -1,43 +1,51 @@
-# UI for Expense Page
+
+
 expense_ui <- function() {
-  # note: content-title messing with bold text!
+  # ---- Layout of the Expense Page ----
+  
   div(
     class = "result-container",
     
     div(
-      id = "expense-container",
       
       div(
         class = "input-title-container",
         
+        ## ---- 1. Expense Title Section ----
         div(
           "Expense",
           class = "content-title"
         ),
-        
         div(
-          actionButton("add_expense", "+ Add Expense", class = "add_data_btn")
+          actionButton("add_expense", "+ Add Expense", class = "add-data-btn")
         )
       ),
       
+      ## ---- 2. Expense Data Table ----
       card(
         div(
           div(
             class = "delete-expense",
             actionButton("delete_expense", "Delete Selected Row(s)", class = "delete-data-btn")
           ),
-          DTOutput("sample_expense_table")
+          DTOutput("expense_table")
         ),
         full_screen = TRUE,
         class = "info-containers",
         style = "padding: 16px;"
       )
-    ),
-    downloadButton("initial_download", "Download Excel file", class = "initial-excel-download") 
+    ) 
+  
   )
 }
 
+
 upload_expense_modal <- function(categories) {  
+  # ---- Layout of the Add Expense Modal Popup ----
+  #'
+  #' @param categories: available input expense categories from previous inputs
+  
+  
   tagAppendAttributes(
     modalDialog(
       title = div(
@@ -48,9 +56,9 @@ upload_expense_modal <- function(categories) {
       footer = actionButton("add_expense_confirm", "Add Expense", class = "add-expense-confirm"),
     
       div(
-        id = "expense-form",
+        class = "expense-form",
 
-        # Expense Name
+        ## ---- 1. Expense Name ----
         div(
           id = "expense-name",
           class = "elongated-input",
@@ -63,9 +71,9 @@ upload_expense_modal <- function(categories) {
           )
         ),
         
-        # Expense Categories
+        ## ---- 2. Expense Categories ----
         div(
-          id = "expense-categories",
+          class = "expense-categories",
           
           div("Expense Categories", class = "data-input-headers"),
           
@@ -84,7 +92,7 @@ upload_expense_modal <- function(categories) {
           )
         ),
         
-        # Amount
+        ## ---- 3. Expense Amount ----
         div(
           id = "expense-amount",
           class = "elongated-input",
@@ -98,7 +106,8 @@ upload_expense_modal <- function(categories) {
           )
         ),
         
-        # Latest Payment Date
+        
+        ## ---- 4. Payment Date ----
         div(
           id = "latest-payment-date",
           class = "date-valid",
@@ -112,7 +121,7 @@ upload_expense_modal <- function(categories) {
           )
         ),
         
-        # Note
+        ## ---- 5. Expense Note ----
         div(
           id = "expense-note",
           class = "elongated-input",
@@ -124,6 +133,7 @@ upload_expense_modal <- function(categories) {
             placeholder = "Enter note... (optional)"
           )
         )
+        
       )
     ),
     class = "add-expense-popup"
