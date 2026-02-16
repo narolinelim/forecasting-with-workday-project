@@ -1,3 +1,4 @@
+
 read_excel_data <- function(file_path, sheet_name) {
   #' Read and process the uploaded Excel data
   #'
@@ -118,6 +119,7 @@ data_validation <- function(df, type) {
     funding_sources <- df
     invalid_funding_dates <- funding_sources %>%
       filter(!is.na(valid_from) & !is.na(valid_to) & valid_from > valid_to)
+    
     if (nrow(invalid_funding_dates) > 0) {
       errors <- c(errors, "Error: Some funding sources have 'valid_from' date later than 'valid_to' date.")
     }

@@ -1,7 +1,7 @@
 
 source("src/server/dashboard-server.R")
 source("src/server/forecast-page-server.R")
-source("src/server/edit-page-server.R")
+source("src/server/input-review-server.R")
 
 main_server_logic <- function(input, output, session, values) {
   # ---- 1. GENERAL LOGIC ----
@@ -51,17 +51,17 @@ main_server_logic <- function(input, output, session, values) {
     )
   })
   
+  ## ---- REACTIVE: All Unique Available Categories ----
   available_categories <- reactiveVal(NULL)
-  print(available_categories)
 
   
-  # ---- 3. FORECAST PAGE LOGIC ----
+  # ---- 2. FORECAST PAGE LOGIC ----
   forecast_server(input, output, session, values, current_view, available_categories)
 
-  # ---- 4. EDIT PAGE LOGIC ----
-  edit_server(input, output, session, values, current_view, available_categories)
+  # ---- 3. INPUT & REVIEW PAGE LOGIC ----
+  input_review_server(input, output, session, values, current_view, available_categories)
 
-  # ---- 5. DASHBOARD PAGE LOGIC ----
+  # ---- 4. DASHBOARD PAGE LOGIC ----
   dashboard_server(input, output, session, values, current_view)
   
   

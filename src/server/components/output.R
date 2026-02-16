@@ -1,6 +1,7 @@
+
 # ---- Main output ----
 main_output <- function(input, output, session, values) {
-  #' Function for downloading excel files
+  # ---- Function for downloading excel files ----
 
   # ---- HANDLER: Download Excel Template ----
   output$download_template <- downloadHandler(

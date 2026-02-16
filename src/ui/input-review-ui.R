@@ -3,7 +3,6 @@ input_review_ui <- function() {
   # ---- Layout of the Input And Review Page ----
 
   div(
-    class = "edit-page-container",
     class = "result-container",
     
     ## ---- Upload Input Section ----
@@ -15,7 +14,7 @@ input_review_ui <- function() {
         div(
           class = "input-title-container",
           
-          ## ---- 1. Expense Title Section ----
+          ### ---- 1. Input Data Title Section ----
           div(
             "Input Data",
             class = "content-title"
@@ -28,7 +27,7 @@ input_review_ui <- function() {
         div(
           class = "info-containers",
           
-          ## ---- 1. Upload Excel File Section ----
+          ### ---- 2. Upload Excel File Section ----
           card(
             class = "upload-card",
             

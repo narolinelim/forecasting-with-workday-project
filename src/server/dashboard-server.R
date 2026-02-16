@@ -3,26 +3,28 @@ source("src/server/components/graph.R")
 source("src/server/components/output.R")
 
 dashboard_server <- function(input, output, session, values, current_view) {
-  # ---- 5. DASHBOARD PAGE SERVER LOGIC ----
+  # ---- DASHBOARD PAGE SERVER LOGIC ----
 
+  
   ## ---- OUTPUT: Dashboard Information and Graphical Section ----
 
-  ### ---- Data validation for dashboard output ----
+  ### ---- REACTIVE: Data Validation For Input Data ----
   all_input_data <- reactive(
     nrow(values$funding_sources) > 0 &&
       nrow(values$expenses) > 0
   )
 
-  ### ---- Data validation for dashboard output ----
+  ### ---- REACTIVE: Data Validation For Dashboard Output ----
   all_shortfall <- reactive(
     nrow(values$allocation_result) > 0 ||
       nrow(values$funding_summary) > 0 ||
       nrow(values$expense_status) > 0
   )
 
+  
   ### ---- SECTION 1: SHORTFALL ----
 
-  #### ---- Activating and creating shortfall data ----
+  #### ---- REACTIVE: Activating Aand Creating Shortfall Data ----
   shortfall_data <- reactive({
     req(all_input_data)
     c <- create_shortfall_bar(values)
@@ -67,9 +69,10 @@ dashboard_server <- function(input, output, session, values, current_view) {
     }
   })
 
+  
   ### ---- SECTION 2: ALLOCATION ----
 
-  #### ---- Keep tracks of which bar in the bar graph is clicked ----
+  #### ---- REACTIVE: Kepp Track Of Clicked Month In The Bar Graph and Allocation Plot Sidebar ----
   clicked_month <- reactiveVal(NULL)
 
   #### ---- EVENT: Change Clicked Month State ----
@@ -79,11 +82,11 @@ dashboard_server <- function(input, output, session, values, current_view) {
     clicked_month(clicked_bar$x)
   })
 
-  #### ---- Allocation Chord Diagram ----
+  #### ---- OUTPUT: Allocation Chord Diagram ----
   output$circos_container <- renderUI({
-    cm <- clicked_month()
+    selected_month <- clicked_month()
 
-    if (is.null(cm) && all_input_data()) {
+    if (is.null(selected_month) && all_input_data()) {
       # Default circos plot using the last month of the allocation period
       expense_df <- values$expenses
       funding_df <- values$funding_sources
@@ -91,7 +94,7 @@ dashboard_server <- function(input, output, session, values, current_view) {
         c(expense_df$latest_payment_date, funding_df$valid_to),
         "month"
       ))
-      cm <- clicked_month(default_month)
+      selected_month <- clicked_month(default_month)
     }
 
     if (!all_input_data() || !all_shortfall()) {
@@ -117,10 +120,12 @@ dashboard_server <- function(input, output, session, values, current_view) {
     # Extract distinct years for dynamic accordions
     distinct_years <- months_df %>%
       distinct(year_date, year_chr)
+    
+    
+    selected_month_date <- as.Date(as.character(selected_month), format = "%Y-%m-%d")
 
-    cm_date <- as.Date(cm)
 
-    circos_plot_id <- paste0("circos_", gsub("-", "_", as.character(cm)))
+    circos_plot_id <- paste0("circos_", gsub("-", "_", as.character(selected_month)))
 
     # Sidebar for allocation navigation by month
     layout_sidebar(
@@ -161,15 +166,15 @@ dashboard_server <- function(input, output, session, values, current_view) {
       ),
 
       tags$p(
-        paste("Allocation Month: ", format(cm_date, "%b %Y")),
+        paste("Allocation Month: ", format(selected_month_date, "%b %Y")),
         style = "font-size: 16px; font-weight: 600; padding: 15px 15px 5px 15px;"
       ),
 
       output[[circos_plot_id]] <- renderChorddiag({
-        cm <- clicked_month()
-        req(cm)
+        selected_month <- clicked_month()
+        req(selected_month)
 
-        cutoff <- ceiling_date(as.Date(paste0(cm, "-01")), "month")
+        cutoff <- ceiling_date(as.Date(paste0(selected_month, "-01")), "month")
         circos <- create_circos_plot(values, expense_month_status = shortfall_data()$expense_month_status, month = cutoff)
 
         # Activating zooming feature for circos plot
@@ -209,7 +214,6 @@ dashboard_server <- function(input, output, session, values, current_view) {
       return()
     }
 
-    # validate shortfall data
     req(shortfall_data())
     req(shortfall_data()$months_df)
 

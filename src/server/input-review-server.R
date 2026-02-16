@@ -1,9 +1,13 @@
+
 source("src/server/components/edit-rows.R")
 source("src/server/components/data-processing.R")
 
-edit_server <- function(input, output, session, values, current_view, available_categories) {
+input_review_server <- function(input, output, session, values, current_view, available_categories) {
+  # ---- INPUT & REVIEW PAGE LOGIC ----
   
-  ## ---- EVENT: Upload Expenses and Funding Data ----
+  ## ---- 1. UPLOAD SECTION SERVER LOGIC ----
+  
+  ### ---- EVENT: Upload Expenses and Funding Data ----
   observeEvent(input$spreadsheet_upload, {
     req(input$spreadsheet_upload)
     path <- input$spreadsheet_upload$datapath
@@ -35,28 +39,28 @@ edit_server <- function(input, output, session, values, current_view, available_
   })
   
   
-  # ---- 3. FUNDING PAGE SERVER LOGIC ----
+  ## ---- 2. FUNDING SECTION SERVER LOGIC ----
 
-  ## ---- EVENT: Add Funding Button Form ----
+  ### ---- EVENT: Add Funding Button Form ----
   observeEvent(input$add_funding, {
     showModal(upload_funding_modal(categories = available_categories()))
   })
 
-  ## ---- EVENT: Add Funding To Storage ----
+  ### ---- EVENT: Add Funding To Storage ----
   observeEvent(input$add_funding_confirm, {
     add_funding_button(input, values)
     removeModal()
   })
 
-  ## ---- EVENT: Delete Funding Button ----
+  ### ---- EVENT: Delete Funding Button ----
   observeEvent(input$delete_funding, {
     selected <- input$funding_table_rows_selected
     values$funding_sources <- delete_row(values$funding_sources, selected)
   })
 
-  ## ---- OUTPUT: Funding Data Table ----
+  ### ---- OUTPUT: Funding Data Table ----
 
-  ### --- Displaying funding data table headers ----
+  #### --- Displaying funding data table headers ----
   display_funding_names <- c(
     priority = "Priority",
     source_id = "Source ID",
@@ -68,7 +72,7 @@ edit_server <- function(input, output, session, values, current_view, available_
     notes = "Notes"
   )
 
-  ### --- Render funding data table ----
+  #### --- Render funding data table ----
   output$funding_table <- renderDT(
     {
       req(values$funding_sources)
@@ -108,28 +112,28 @@ edit_server <- function(input, output, session, values, current_view, available_
     server = FALSE
   )
 
-  # ---- 4. EXPENSE PAGE SERVER LOGIC ----
+  ## ---- 3. EXPENSE SECTION SERVER LOGIC ----
 
-  ## ---- EVENT: Add Expense Button Form ----
+  ### ---- EVENT: Add Expense Button Form ----
   observeEvent(input$add_expense, {
     showModal(upload_expense_modal(categories = available_categories()))
   })
 
-  ## ---- EVENT: Add Expense To Storage ----
+  ### ---- EVENT: Add Expense To Storage ----
   observeEvent(input$add_expense_confirm, {
     add_expense_button(input, values)
     removeModal()
   })
 
-  ## ---- EVENT: Delete Expense Button ----
+  ### ---- EVENT: Delete Expense Button ----
   observeEvent(input$delete_expense, {
     selected <- input$expense_table_rows_selected
     values$expenses <- delete_row(values$expenses, selected)
   })
 
-  ## ---- OUTPUT: Expense Data Table ----
+  ### ---- OUTPUT: Expense Data Table ----
 
-  ### ---- Displaying expense data table headers ----
+  #### ---- Displaying expense data table headers ----
   display_expense_names <- c(
     priority = "Priority",
     expense_id = "Expense ID",
@@ -140,7 +144,7 @@ edit_server <- function(input, output, session, values, current_view, available_
     notes = "Notes"
   )
 
-  ### ---- Render expense data table ----
+  #### ---- Render expense data table ----
   output$expense_table <- renderDT(
     {
       req(values$expenses)

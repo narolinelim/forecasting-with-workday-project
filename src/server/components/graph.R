@@ -514,7 +514,6 @@ create_circos_plot <- function(values, month, expense_month_status) {
               .style('fill-opacity', '0.3');
               
           } else if (isAllNotActive && noAllocation) {
-            console.log('no allocation')
           
             /* Case 2: Had no allocations before */
             

@@ -1,3 +1,4 @@
+
 source("src/server/components/allocation-algorithm.R")
 source("src/server/components/data-processing.R")
 source("src/server/components/output.R")
@@ -5,7 +6,8 @@ source("src/server/components/sorting.R")
 source("src/server/components/graph.R")
 
 forecast_server <- function(input, output, session, values, current_view, available_categories) {
-  # ---- 2. FORECAST PAGE SERVER LOGIC ----
+  
+  # ---- FORECAST PAGE SERVER LOGIC ----
 
   ## ---- OUTPUT: Render priority mode ----
   output$priority_card <- renderUI({
@@ -48,7 +50,7 @@ forecast_server <- function(input, output, session, values, current_view, availa
   })
 
   
-## ---- EVENT: Mutual Exclusion for Priority Dropdowns ----
+  ## ---- EVENT: Mutual Exclusion for Priority Dropdowns ----
   
   observeEvent(input$select_first_priority_item, {
     ### ---- 1. Get the current value of the 1st Priority ----
@@ -315,7 +317,7 @@ forecast_server <- function(input, output, session, values, current_view, availa
       },
       error = function(e) {
         showNotification(
-          paste("Allocation Failed:", e$message),
+          paste("Allocation Failed: No data input."),
           type = "error",
           duration = 3
         )
