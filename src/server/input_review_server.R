@@ -1,6 +1,5 @@
-
-source("src/server/components/edit-rows.R")
-source("src/server/components/data-processing.R")
+source("src/server/components/edit_rows.R")
+source("src/server/components/data_processing.R")
 
 input_review_server <- function(input, output, session, values, current_view, available_categories) {
   # ---- INPUT & REVIEW PAGE LOGIC ----

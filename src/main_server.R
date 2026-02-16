@@ -1,7 +1,7 @@
 
-source("src/server/dashboard-server.R")
-source("src/server/forecast-page-server.R")
-source("src/server/input-review-server.R")
+source("src/server/dashboard_server.R")
+source("src/server/forecast_page_server.R")
+source("src/server/input_review_server.R")
 
 main_server_logic <- function(input, output, session, values) {
   # ---- 1. GENERAL LOGIC ----

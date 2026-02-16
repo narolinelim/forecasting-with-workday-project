@@ -1,6 +1,6 @@
 
-source("src/server/components/allocation-algorithm.R")
-source("src/server/components/data-processing.R")
+source("src/server/components/allocation_algorithm.R")
+source("src/server/components/data_processing.R")
 source("src/server/components/output.R")
 source("src/server/components/sorting.R")
 source("src/server/components/graph.R")
