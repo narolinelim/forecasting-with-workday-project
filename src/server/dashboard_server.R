@@ -165,9 +165,28 @@ dashboard_server <- function(input, output, session, values, current_view) {
         )
       ),
 
-      tags$p(
-        paste("Allocation Month: ", format(selected_month_date, "%b %Y")),
-        style = "font-size: 16px; font-weight: 600; padding: 15px 15px 5px 15px;"
+      div(
+        class = "allocation-plot",
+        div("Allocation Month: ", format(selected_month_date, "%b %Y"), class = "allocation-plot-info"),
+        div(
+          class = "color-labels",
+          div(
+            div(class = "color-box", id = "active-alloc"),
+            div("Active Allocation")
+          ),
+          div(
+            div(class = "color-box", id = "prev-alloc"),
+            div("Previous Allocation")
+          ),
+          div(
+            div(class = "color-box", id = "inactive-alloc"),
+            div("Inactive Allocation")
+          ),
+          div(
+            div(class = "color-box", id = "shortfall-color"),
+            div("Shortfall")
+          )
+        )
       ),
 
       output[[circos_plot_id]] <- renderChorddiag({

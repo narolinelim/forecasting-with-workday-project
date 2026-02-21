@@ -387,6 +387,7 @@ create_circos_plot <- function(values, month, expense_month_status) {
     
   } else if (nrow(funding_valid_from) > 0) {
     
+      ### ---- Showing Funding Sources When It Becomes Available ----
       for (i in 1:nrow(funding_valid_from)) {
         mat[funding_valid_from$source_id[i], funding_valid_from$source_id[i]] <- funding_valid_from$amount[i]
       }
@@ -408,7 +409,7 @@ create_circos_plot <- function(values, month, expense_month_status) {
   current_month_allocation <- setdiff(rows_until_month, rows_before_current_month)
 
   
-  #### ---- 2. Current Month Allocation Matrix ----
+  #### ---- 2. Current Month Allocation And Previous Months Allocation Matrices ----
   current_month_mat <- matrix(0, nrow = length(sectors), ncol = length(sectors))
   rownames(current_month_mat) <- sectors
   colnames(current_month_mat) <- sectors
@@ -420,24 +421,50 @@ create_circos_plot <- function(values, month, expense_month_status) {
     }
   }
   
-  #### ---- 3. Extracting Current Month Allocations Into Vectors ----
-  data_id <- rownames(current_month_mat)
-  n <- length(data_id)
+  prev_month_mat <- matrix(0, nrow = length(sectors), ncol = length(sectors))
+  rownames(prev_month_mat) <- sectors
+  colnames(prev_month_mat) <- sectors
+  
+  if (nrow(rows_before_current_month) > 0) {
+    for (i in 1:nrow(rows_before_current_month)) {
+      prev_month_mat[rows_before_current_month$source_id[i], rows_before_current_month$expense_id[i]] <- rows_before_current_month$allocated_amount[i]
+      prev_month_mat[rows_before_current_month$expense_id[i], rows_before_current_month$source_id[i]] <- rows_before_current_month$allocated_amount[i]
+    }
+  }
+  
+
+  #### ---- 3. Extracting Current Month Allocations And Previous Allocation Matrices Into Vectors ----
+  current_data_id <- rownames(current_month_mat)
+  n <- length(current_data_id)
   current_allocations <- c()
   
   for (i in 1:n) {
     for (j in 1:n) {
       if (current_month_mat[i, j] > 0) {
-        allocated <- paste0(data_id[i], "-", data_id[j])
+        allocated <- paste0(current_data_id[i], "-", current_data_id[j])
         current_allocations <- c(current_allocations, allocated)
       }
     }
   }
   
+  previous_data_id <- rownames(prev_month_mat)
+  n <- length(previous_data_id)
+  previous_allocations <- c()
+  
+  for (i in 1:n) {
+    for (j in 1:n) {
+      if (prev_month_mat[i, j] > 0) {
+        allocated <- paste0(previous_data_id[i], "-", previous_data_id[j])
+        previous_allocations <- c(previous_allocations, allocated)
+      }
+    }
+  }
+  
+  
+  #### ---- 4. Setting Two-tone Colours For Chord Diagram ----
   funding_length <- length(sources_ids)
   expense_length <- length(expenses_ids)
   
-  #### ---- 4. Setting Two-tone Colours For Chord Diagram ----
   funding_colors <- rep("rgb(0, 100, 0)", funding_length)
   expense_colors <- rep("rgb(230, 0, 0)", expense_length)
   all_colors <- c(funding_colors, expense_colors)
@@ -470,24 +497,10 @@ create_circos_plot <- function(values, month, expense_month_status) {
     tooltipGroupConnector = " → "
   )
   
-  ### ---- 6. Manually controlling chord colors ----
-  circos <- onRender(circos, "
-      function(el, x) {
-        setTimeout(function() {
-          d3.selectAll('.chords path').each(function() {
-            d3.select(this)
-              .style('fill', 'green')
-          });
-        }, 10)
-      }
-  ")
-  
-  
-  
-  
-  
+
   ### ---- Manually Modifying Chord Diagram Colors ----
   current_allocation_json <- toJSON(current_allocations)
+  previous_allocation_json <- toJSON(previous_allocations)
   current_shortfall_json <- toJSON(current_shortfalls)
   no_allocation_json <- tolower(as.character(no_allocation_at_all))
   
@@ -497,6 +510,7 @@ create_circos_plot <- function(values, month, expense_month_status) {
         setTimeout(function() {
         
           var currentAllocation = %s;
+          var previousAllocation = %s;
           var currentShortfall = %s;
           var noAllocation = %s;
           
@@ -505,14 +519,18 @@ create_circos_plot <- function(values, month, expense_month_status) {
             currentAllocation = Object.values(currentAllocation);
           }
           
+          if (typeof previousAllocation === 'object' && !Array.isArray(previousAllocation)) {
+            previousAllocation = Object.values(previousAllocation);
+          }
+          
           if (typeof currentShortfall === 'object' && !Array.isArray(currentShortfall)) {
             currentShortfall = Object.values(currentShortfall);
           }
  
  
-          /*----------------------------------------------
-                  No Active Allocation Chord Colors 
-          ------------------------------------------------*/
+          /*---------------------------------------------------
+                  No Active Allocation Chord And Arc Colors 
+          -----------------------------------------------------*/
           var isAllNotActive = (currentAllocation.length == 0);
           
           console.log(isAllNotActive);
@@ -596,6 +614,9 @@ create_circos_plot <- function(values, month, expense_month_status) {
               /* Active Allocation Chords */
               var isCurrentMonth = currentAllocation.indexOf(allocatedPart) !== -1;
               
+              /* Previous Allocation Chords */
+              var isPrevious = previousAllocation.indexOf(allocatedPart) !== -1;
+              
               /* Shortfall Chords */
               var isShortfall = currentShortfall.indexOf(allocatedPart) !== -1;
               
@@ -608,6 +629,12 @@ create_circos_plot <- function(values, month, expense_month_status) {
                 path.style('fill', 'rgb(0, 160, 0)')
                   .style('stroke', 'rgb(0, 100, 0)')
                   .style('fill-opacity', '1')
+                  .style('stroke-opacity', '1');
+              
+              } else if (isPrevious) {
+                path.style('fill', 'rgb(136, 231, 136)')
+                  .style('stroke', 'rgb(0, 100, 0)')
+                  .style('fill-opacity', '0.7')
                   .style('stroke-opacity', '1');
                   
               } else {
@@ -674,7 +701,7 @@ create_circos_plot <- function(values, month, expense_month_status) {
         
       }
                      
-    ", current_allocation_json, current_shortfall_json, no_allocation_json))
+    ", current_allocation_json, previous_allocation_json, current_shortfall_json, no_allocation_json))
   
   
   return (circos)

@@ -297,11 +297,13 @@ forecast_server <- function(input, output, session, values, current_view, availa
       {
         req(values$funding_sources)
         req(values$expenses)
+        funds <- values$funding_sources
+        values$funding_sources <- funds[order(as.Date(funds$valid_from, format = "%d/%m/%Y")), ]
         allocation_data <- activate_allocation_algorithm(
           values$funding_sources,
           values$expenses
         )
-
+      
         req(allocation_data)
         values$allocation_result <- allocation_data$allocations
         values$funding_summary <- allocation_data$funds

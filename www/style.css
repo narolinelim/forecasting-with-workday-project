@@ -652,6 +652,52 @@ hr {
 }
 
 
+/* Allocation Plot Info Section */
+.allocation-plot {
+  font-size: 16px;
+  font-weight: 600;
+  padding: 15px 15px 5px 15px;
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.color-labels {
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+  align-items: center;
+}
+
+.color-box {
+  border: 1px solid black;
+  height: 16px;
+  width: 16px;
+  min-width: 10px;
+  display: inline-block;
+}
+
+.color-labels > div {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+
+#active-alloc { background-color: rgba(0, 160, 0, 1); }
+#prev-alloc { background-color: rgba(136, 231, 136, 0.7); }
+#inactive-alloc { background-color: rgba(107, 107, 107, 0.3); }
+#shortfall-color { background-color: rgba(252, 140, 0, 1); }
+
+
+
+
+
+
+
+
+
 
 
 
