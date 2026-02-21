@@ -210,7 +210,7 @@ upload_expense_modal <- function(categories) {
         div(
           id = "latest-payment-date",
           class = "date-valid",
-          div("Latest Payment Date", class = "data-input-headers"),
+          div("Payment Date", class = "data-input-headers"),
           airDatepickerInput(
             inputId = "latest_payment_date",
             label = NULL,
